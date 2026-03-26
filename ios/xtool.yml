@@ -1,0 +1,20 @@
+version: 1
+bundleID: com.abgames.battleships
+resources:
+  - Battleships/Resources/Assets.xcassets
+  - Battleships/Resources/AppIcon120.png
+  - Battleships/Resources/AppIcon180.png
+  - Battleships/Resources/AppIcon1024.png
+  - Battleships/Resources/bgm_menu.m4a
+  - Battleships/Resources/bgm_placement.m4a
+  - Battleships/Resources/bgm_battle.m4a
+  - Battleships/Resources/bgm_victory.m4a
+  - Battleships/Resources/bgm_defeat.m4a
+infoPlist:
+  NSAppTransportSecurity:
+    NSAllowsArbitraryLoads: true
+  UIBackgroundModes:
+    - audio
+  CFBundleDisplayName: Battleships
+  UILaunchScreen: {}
+  CFBundleIconFile: AppIcon180
