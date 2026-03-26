@@ -1,0 +1,319 @@
+/* ============================================================================
+ * BATTLESHIPS CLIENT - Performance-Optimized CSS
+ * ============================================================================ */
+
+/* Smooth transitions for interactive elements */
+button {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.2s ease, 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease;
+}
+
+input, select, textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus, select:focus, textarea:focus {
+  transform: scale(1.01);
+}
+
+/* ── Deep ocean background ──────────────────────────────────────── */
+.theme-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 5%,  rgba(30, 64, 175, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 90%, rgba(91, 33, 182, 0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(6, 78, 59, 0.07)   0%, transparent 70%),
+    linear-gradient(180deg, #020c1b 0%, #030f22 50%, #020c1b 100%);
+  position: relative;
+}
+
+/* Sonar coordinate grid overlay — gives the whole page a tactical map feel */
+.theme-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== LIGHT THEME OVERRIDES ===== */
+[data-theme="light"] {
+  --bg-from: #e0e7ff;
+  --bg-via: #dbeafe;
+  --bg-to: #e0e7ff;
+}
+
+[data-theme="light"] .theme-bg {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%) !important;
+  color: #1e293b;
+}
+
+[data-theme="light"] .theme-bg::before {
+  background-image:
+    linear-gradient(rgba(30, 64, 175, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 64, 175, 0.06) 1px, transparent 1px);
+}
+
+[data-theme="light"] .theme-header {
+  background: rgba(15, 23, 42, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+[data-theme="light"] .theme-card {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
+}
+
+[data-theme="light"] .theme-card .text-slate-400 { color: #64748b !important; }
+[data-theme="light"] .theme-card .text-white     { color: #1e293b !important; }
+[data-theme="light"] .theme-input {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+[data-theme="light"] .theme-msg { color: #334155; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes serverInfoSlideIn {
+  0%   { opacity: 0; transform: scale(0.92) translateY(-8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes chatSlideUp {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeSlideIn {
+  0%   { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shotPop {
+  0%   { transform: scale(1.7); opacity: 0.3; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes boardEntry {
+  0%   { opacity: 0; transform: scale(0.94) translateY(8px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+@keyframes floatBubble {
+  0%   { transform: translateY(0)   scale(1);   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-110vh) scale(0.4); opacity: 0; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Background ships sailing across the screen */
+@keyframes sailRight {
+  0%   { transform: scaleX(1) translateX(-60px); }
+  100% { transform: scaleX(1) translateX(calc(100vw + 60px)); }
+}
+@keyframes sailLeft {
+  0%   { transform: scaleX(-1) translateX(calc(-100vw - 60px)); }
+  100% { transform: scaleX(-1) translateX(60px); }
+}
+
+/* Sonar-ring ping — used on the turn indicator when it's your turn */
+@keyframes sonarRing {
+  0%   { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70%  { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(52, 211, 153, 0); }
+}
+
+.animate-fade-in       { animation: fadeSlideIn 0.3s ease-out; }
+.animate-shot-pop      { animation: shotPop 0.4s ease-out; }
+.animate-board-entry   { animation: boardEntry 0.4s ease-out; }
+.animate-float-slow    { animation: floatSlow 3s ease-in-out infinite; }
+
+/* ===== GLOW UTILITIES ===== */
+/* Used to give hit/sunk cells a coloured inner glow */
+.cell-glow-hit  { box-shadow: inset 0 0 8px 2px rgba(251, 146, 60, 0.5),  0 0 6px 1px rgba(251, 146, 60, 0.3); }
+.cell-glow-sunk { box-shadow: inset 0 0 10px 3px rgba(185, 28,  28, 0.6),  0 0 8px 2px rgba(185, 28,  28, 0.35); }
+
+/* Water cell targeting shimmer on hover (desktop only) */
+@media (hover: hover) {
+  .cell-target-hover:hover {
+    background: radial-gradient(circle at center, rgba(103, 232, 249, 0.35) 0%, rgba(59, 130, 246, 0.15) 70%);
+    box-shadow: inset 0 0 0 2px rgba(103, 232, 249, 0.6);
+  }
+}
+
+/* ===== KEYBOARD FOCUS RING ===== */
+.cell-focus-ring {
+  box-shadow: inset 0 0 0 2px #facc15, 0 0 10px 3px rgba(250, 204, 21, 0.45);
+  z-index: 20;
+}
+
+/* ===== YOUR-TURN INDICATOR ===== */
+.your-turn-card {
+  animation: sonarRing 1.8s ease-out infinite;
+}
+
+/* ===== GLASS CARD ===== */
+/* Enhanced frosted-glass panel with improved depth perception */
+.glass-card {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.82) 0%, 
+    rgba(15, 23, 42, 0.68) 50%,
+    rgba(15, 23, 42, 0.75) 100%);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.03) 50%, 
+    transparent 100%);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .glass-card:hover::before {
+    left: 100%;
+  }
+}
+
+/* Corner-bracket decoration — used on the room code card in the waiting room */
+.corner-brackets {
+  position: relative;
+}
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(250, 204, 21, 0.7);
+  border-style: solid;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.corner-brackets::before {
+  top: 10px;
+  left: 10px;
+  border-width: 2.5px 0 0 2.5px;
+}
+.corner-brackets::after {
+  bottom: 10px;
+  right: 10px;
+  border-width: 0 2.5px 2.5px 0;
+}
+@media (hover: hover) {
+  .corner-brackets:hover::before,
+  .corner-brackets:hover::after {
+    border-color: rgba(250, 204, 21, 0.9);
+  }
+  .corner-brackets:hover::before {
+    top: 8px;
+    left: 8px;
+  }
+  .corner-brackets:hover::after {
+    bottom: 8px;
+    right: 8px;
+  }
+}
+
+/* Scanline sweep — subtle animated line across WaitingRoom code card */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  20%  { opacity: 0.6; }
+  80%  { opacity: 0.6; }
+  100% { transform: translateY(100%);  opacity: 0; }
+}
+.scanline-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.scanline-sweep::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(250, 204, 21, 0.45) 50%, transparent 100%);
+  animation: scanline 3.5s ease-in-out infinite;
+}
+
+/* Slot glow (waiting room player slots) */
+.slot-ready {
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 
+    inset 0 0 14px rgba(52, 211, 153, 0.12), 
+    0 0 12px rgba(52, 211, 153, 0.15),
+    0 4px 16px rgba(52, 211, 153, 0.08);
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+@media (hover: hover) {
+  .slot-ready:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      inset 0 0 16px rgba(52, 211, 153, 0.15), 
+      0 0 16px rgba(52, 211, 153, 0.2),
+      0 6px 20px rgba(52, 211, 153, 0.12);
+  }
+}
+/* Pulse animation for waiting slot */
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: inset 0 0 14px rgba(59, 130, 246, 0.06);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+  50% { 
+    box-shadow: inset 0 0 18px rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+}
+.slot-waiting {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 0 14px rgba(59, 130, 246, 0.06);
+  transition: all 0.3s ease;
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}

@@ -1,0 +1,43 @@
+const GRID_SIZE = 10;
+const SHIPS = [5, 4, 3, 3, 2];
+const SHIP_NAMES = ['Carrier', 'Battleship', 'Destroyer', 'Submarine', 'Patrol'];
+const TOTAL_SEGMENTS = SHIPS.reduce((a, b) => a + b, 0);
+const RATE_LIMIT_SHOTS_PER_SECOND = 10;
+const RATE_LIMIT_PLACEMENTS_PER_SECOND = 5;
+const RATE_LIMIT_CHAT_PER_SECOND = 3;
+const MAX_CHAT_LENGTH = 200;
+const MAX_SPECTATORS = 10;
+const MIN_GAME_TIME_SECONDS = 120;
+const MAX_GAME_TIME_SECONDS = 600;
+const DEFAULT_GAME_TIME_SECONDS = 300;
+
+const CellState = {
+    WATER: 'W',
+    SHIP: 'S',
+    HIT: 'H',
+    MISS: 'M',
+};
+
+const GameState = {
+    WAITING_FOR_PLAYERS: 'WAITING_FOR_PLAYERS',
+    PLACEMENT_PHASE: 'PLACEMENT_PHASE',
+    BATTLE_PHASE: 'BATTLE_PHASE',
+    GAME_OVER: 'GAME_OVER',
+};
+
+module.exports = {
+    GRID_SIZE,
+    SHIPS,
+    SHIP_NAMES,
+    TOTAL_SEGMENTS,
+    RATE_LIMIT_SHOTS_PER_SECOND,
+    RATE_LIMIT_PLACEMENTS_PER_SECOND,
+    RATE_LIMIT_CHAT_PER_SECOND,
+    MAX_CHAT_LENGTH,
+    MAX_SPECTATORS,
+    MIN_GAME_TIME_SECONDS,
+    MAX_GAME_TIME_SECONDS,
+    DEFAULT_GAME_TIME_SECONDS,
+    CellState,
+    GameState,
+};

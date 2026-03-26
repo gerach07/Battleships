@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: battleships-server-jtit
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000,http://localhost:3001,http://localhost:5000,https://abbattleships.web.app,https://abbattleships.firebaseapp.com

@@ -1,0 +1,29 @@
+{
+  "name": "battleships",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Battleships online multiplayer game - Firebase Hosted",
+  "scripts": {
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "dev": "node start.js",
+    "dev:internal": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm start",
+    "dev:server": "cd server && npm run dev",
+    "build": "npm run build:client",
+    "build:client": "cd client && npm run build",
+    "test": "npm run test:server",
+    "test:server": "cd server && npm test",
+    "start": "cd server && npm start",
+    "lint": "cd client && npm run lint --if-present",
+    "clean": "rm -rf client/build client/node_modules server/node_modules node_modules",
+    "deploy:client": "cd client && npm run build && cd .. && firebase deploy --only hosting",
+    "deploy": "npm run deploy:client",
+    "firebase:init": "firebase login && firebase use --add"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
