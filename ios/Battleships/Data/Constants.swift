@@ -1,0 +1,30 @@
+import Foundation
+
+let GRID_SIZE = 10
+
+// Change to "http://localhost:3001" for local dev
+let SERVER_URL = "https://battleships-server-jtit.onrender.com"
+
+struct ShipDef: Identifiable {
+    let id: Int
+    let length: Int
+    let name: String
+    let emoji: String
+}
+
+let SHIPS: [ShipDef] = [
+    ShipDef(id: 0, length: 5, name: "Carrier", emoji: "🛥️"),
+    ShipDef(id: 1, length: 4, name: "Battleship", emoji: "⛵"),
+    ShipDef(id: 2, length: 3, name: "Destroyer", emoji: "🚢"),
+    ShipDef(id: 3, length: 3, name: "Submarine", emoji: "🤿"),
+    ShipDef(id: 4, length: 2, name: "Patrol", emoji: "🚤"),
+]
+
+enum CellState {
+    static let WATER = "W"
+    static let SHIP  = "S"
+    static let HIT   = "H"
+    static let MISS  = "M"
+    static let SUNK  = "X"
+    static let SAFE  = "Z"
+}

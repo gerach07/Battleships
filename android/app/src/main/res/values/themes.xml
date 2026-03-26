@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- The splash/system-chrome theme before Compose takes over -->
+    <style name="Base.Theme.Battleships" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/slate_background</item>
+        <item name="android:navigationBarColor">@color/slate_background</item>
+        <item name="android:windowBackground">@color/slate_background</item>
+    </style>
+    <style name="Theme.Battleships" parent="Base.Theme.Battleships" />
+</resources>

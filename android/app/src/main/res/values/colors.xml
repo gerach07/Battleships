@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- App palette (matches Compose theme / Tailwind web design) -->
+    <color name="slate_background">#FF0F172A</color>
+    <color name="slate_surface">#FF1E293B</color>
+    <color name="slate_card">#FF334155</color>
+    <color name="slate_border">#FF475569</color>
+    <color name="slate_text">#FFCBD5E1</color>
+    <color name="slate_text_dim">#FF94A3B8</color>
+
+    <color name="blue_primary">#FF3B82F6</color>
+    <color name="blue_dark">#FF2563EB</color>
+    <color name="purple_accent">#FF8B5CF6</color>
+
+    <color name="yellow_accent">#FFFDE047</color>
+    <color name="green_success">#FF22C55E</color>
+    <color name="emerald_success">#FF10B981</color>
+    <color name="red_error">#FFEF4444</color>
+    <color name="orange_warning">#FFF97316</color>
+
+    <!-- Board cell colours -->
+    <color name="cell_water">#FF1E3A5F</color>
+    <color name="cell_ship">#FF22C55E</color>
+    <color name="cell_hit">#FFEF4444</color>
+    <color name="cell_miss">#FF475569</color>
+    <color name="cell_sunk">#FF7F1D1D</color>
+    <color name="cell_safe">#FF1E293B</color>
+
+    <!-- Status bar / navigation bar -->
+    <color name="status_bar">#FF0F172A</color>
+    <color name="navigation_bar">#FF0F172A</color>
+</resources>

@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Battleships</string>
+
+    <!-- Game phases -->
+    <string name="phase_login">Login</string>
+    <string name="phase_waiting">Waiting for Opponent</string>
+    <string name="phase_placement">Place Your Ships</string>
+    <string name="phase_battle">Battle!</string>
+    <string name="phase_game_over">Game Over</string>
+
+    <!-- Actions -->
+    <string name="action_create_game">Create Game</string>
+    <string name="action_join_game">Join Game</string>
+    <string name="action_ready">Ready</string>
+    <string name="action_surrender">Surrender</string>
+    <string name="action_play_again">Play Again</string>
+    <string name="action_back_to_menu">Main Menu</string>
+    <string name="action_leave_room">Leave Room</string>
+    <string name="action_spectate">Spectate</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Game Status</string>
+    <string name="notif_channel_desc">Shows time remaining before game forfeit when app is in background</string>
+    <string name="notif_game_paused">Battleships \u2014 Match Paused</string>
+    <string name="notif_forfeit_countdown">Game forfeits in %1$ds. Tap to return.</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_toggle_sound">Toggle sound effects</string>
+    <string name="cd_toggle_music">Toggle background music</string>
+    <string name="cd_chat">Open chat</string>
+    <string name="cd_send_message">Send message</string>
+</resources>
