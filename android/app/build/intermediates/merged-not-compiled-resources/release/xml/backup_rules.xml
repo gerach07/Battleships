@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Back up user preferences (name, sound/music toggles) -->
-<full-backup-content>
-    <include domain="sharedpref" path="battleships.xml" />
-</full-backup-content>

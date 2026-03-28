@@ -1,3 +1,0 @@
-module SocketIO {
-    header "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/include/SocketIO-Swift.h"
-}

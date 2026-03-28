@@ -1,3 +1,0 @@
-module Starscream {
-    header "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Starscream.build/include/Starscream-Swift.h"
-}

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Base.Theme.Battleships" parent="android:Theme.Material.NoActionBar">
-        <item name="android:statusBarColor">@color/slate_background</item>
-        <item name="android:navigationBarColor">@color/slate_background</item>
-        <item name="android:windowBackground">@color/slate_background</item>
-    </style>
-</resources>
