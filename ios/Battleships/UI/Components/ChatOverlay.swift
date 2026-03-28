@@ -37,7 +37,7 @@ struct ChatOverlay: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(vm.chatMessages.enumerated()), id: \.element.id) { index, msg in
-                            let showName = (index == 0) || (vm.chatMessages[index - 1].senderName != msg.senderName) || vm.chatMessages[index - 1].isSystem || msg.isSystem
+                            let showName = shouldShowName(index: index, msg: msg)
                             chatBubble(msg, showName: showName)
                                 .id(msg.id)
                         }
@@ -77,6 +77,15 @@ struct ChatOverlay: View {
                 .fill(Color(red: 0.08, green: 0.12, blue: 0.22).opacity(0.97))
         )
         .onAppear { vm.chatUnread = 0 }
+    }
+
+    private func shouldShowName(index: Int, msg: ChatMessage) -> Bool {
+        if index == 0 { return true }
+        if msg.isSystem { return true }
+        let prev = vm.chatMessages[index - 1]
+        if prev.isSystem { return true }
+        if prev.senderName != msg.senderName { return true }
+        return false
     }
 
     private func send() {

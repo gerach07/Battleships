@@ -22,6 +22,7 @@ struct ChatMessage: Identifiable, Equatable {
     let timestamp: Double
     var isMine: Bool = false
     var isImportant: Bool = false
+    var isSystem: Bool = false
 }
 
 struct PlacedShip: Equatable {
