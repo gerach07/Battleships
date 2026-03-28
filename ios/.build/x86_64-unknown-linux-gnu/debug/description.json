@@ -1,0 +1,1459 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships_Battleships.resources/Assets.xcassets" : {
+      "inputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Resources/Assets.xcassets"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "directory",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships_Battleships.resources/Assets.xcassets"
+        }
+      ]
+    },
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream_Starscream.resources/PrivacyInfo.xcprivacy" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/PrivacyInfo.xcprivacy"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream_Starscream.resources/PrivacyInfo.xcprivacy"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.Battleships-x86_64-unknown-linux-gnu-debug.module" : {
+      "executable" : "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "fileList" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/sources",
+      "importPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/BattleshipsApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Constants.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/I18n/Strings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Networking/SocketManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/BackgroundShips.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ChatOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ConnectionOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/CreditsSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameBoard.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameTimer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/BattleScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/GameOverScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/LoginScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/PlacementScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/WaitingRoomScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/GameHelpers.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/MusicManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/SoundManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/ViewModel/GameViewModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/swift-version-20518196F8EC174C.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<Battleships-x86_64-unknown-linux-gnu-debug.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/SocketIO.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "Battleships",
+      "moduleOutputPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/Battleships.swiftmodule",
+      "objects" : [
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BattleshipsApp.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Constants.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Models.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Strings.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/SocketManager.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BackgroundShips.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ChatOverlay.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ConnectionOverlay.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/CreditsSheet.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameBoard.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameTimer.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ContentView.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BattleScreen.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameOverScreen.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/LoginScreen.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/PlacementScreen.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/WaitingRoomScreen.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameHelpers.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/MusicManager.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/SoundManager.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameViewModel.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-unknown-linux-gnu",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/include/Battleships-Swift.h",
+        "-swift-version",
+        "5",
+        "-g",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ios",
+        "-Xcc",
+        "-fno-omit-frame-pointer"
+      ],
+      "outputFileMapPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BattleshipsApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Constants.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/Strings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/SocketManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BackgroundShips.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ChatOverlay.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ConnectionOverlay.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/CreditsSheet.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameBoard.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameTimer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/BattleScreen.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameOverScreen.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/LoginScreen.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/PlacementScreen.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/WaitingRoomScreen.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameHelpers.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/MusicManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/SoundManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/GameViewModel.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/Battleships.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/BattleshipsApp.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Constants.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Models.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/I18n/Strings.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Networking/SocketManager.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/BackgroundShips.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ChatOverlay.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ConnectionOverlay.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/CreditsSheet.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameBoard.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameTimer.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/ContentView.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/BattleScreen.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/GameOverScreen.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/LoginScreen.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/PlacementScreen.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/WaitingRoomScreen.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/GameHelpers.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/MusicManager.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/SoundManager.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/Battleships/ViewModel/GameViewModel.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.SocketIO-x86_64-unknown-linux-gnu-debug.module" : {
+      "executable" : "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "fileList" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/sources",
+      "importPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckEmitter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketAnyEvent.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketEventHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientConfiguration.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientOption.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOStatus.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketRawView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePacketType.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePollable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineWebsocket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManagerSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketPacket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketParsable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketExtensions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketLogger.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketStringReader.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketTypes.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/swift-version-20518196F8EC174C.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/Starscream.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "SocketIO",
+      "moduleOutputPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/SocketIO.swiftmodule",
+      "objects" : [
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAckEmitter.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAckManager.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAnyEvent.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEventHandler.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClient.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientConfiguration.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientOption.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientSpec.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOStatus.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketRawView.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngine.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineClient.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEnginePacketType.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEnginePollable.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineSpec.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineWebsocket.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketManager.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketManagerSpec.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketPacket.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketParsable.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketExtensions.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketLogger.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketStringReader.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketTypes.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-unknown-linux-gnu",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/include/SocketIO-Swift.h",
+        "-swift-version",
+        "5",
+        "-g",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-suppress-warnings",
+        "-Xcc",
+        "-fno-omit-frame-pointer"
+      ],
+      "outputFileMapPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAckEmitter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAckManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketAnyEvent.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEventHandler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientConfiguration.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientOption.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOClientSpec.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketIOStatus.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketRawView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEnginePacketType.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEnginePollable.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineSpec.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketEngineWebsocket.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketManagerSpec.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketPacket.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketParsable.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketExtensions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketLogger.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketStringReader.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/SocketTypes.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/SocketIO.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckEmitter.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckManager.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketAnyEvent.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketEventHandler.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClient.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientConfiguration.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientOption.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientSpec.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOStatus.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketRawView.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngine.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineClient.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePacketType.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePollable.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineSpec.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineWebsocket.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManager.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManagerSpec.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketPacket.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketParsable.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketExtensions.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketLogger.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketStringReader.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketTypes.swift"
+      ],
+      "tempsPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.Starscream-x86_64-unknown-linux-gnu-debug.module" : {
+      "executable" : "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "fileList" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/sources",
+      "importPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/Compression.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/WSCompression.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/DataBytes/Data+Extensions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/Engine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/NativeEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/WSEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPServerHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FrameCollector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/Framer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/HTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/StringHTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/FoundationSecurity.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/Security.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/Server.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/WebSocketServer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Starscream/WebSocket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/FoundationTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/TCPTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/Transport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/swift-version-20518196F8EC174C.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<Starscream-x86_64-unknown-linux-gnu-debug.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "Starscream",
+      "moduleOutputPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/Starscream.swiftmodule",
+      "objects" : [
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Compression.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WSCompression.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Data+Extensions.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Engine.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/NativeEngine.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WSEngine.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationHTTPHandler.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationHTTPServerHandler.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FrameCollector.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Framer.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/HTTPHandler.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/StringHTTPHandler.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationSecurity.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Security.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Server.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WebSocketServer.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WebSocket.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationTransport.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/TCPTransport.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Transport.swift.o",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "x86_64-unknown-linux-gnu",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/include/Starscream-Swift.h",
+        "-swift-version",
+        "5",
+        "-g",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-suppress-warnings",
+        "-Xcc",
+        "-fno-omit-frame-pointer"
+      ],
+      "outputFileMapPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Compression.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WSCompression.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Data+Extensions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Engine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/NativeEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WSEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationHTTPHandler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationHTTPServerHandler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FrameCollector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Framer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/HTTPHandler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/StringHTTPHandler.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationSecurity.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Security.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Server.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WebSocketServer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/WebSocket.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/FoundationTransport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/TCPTransport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/Transport.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules/Starscream.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/Compression.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/WSCompression.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/DataBytes/Data+Extensions.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/Engine.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/NativeEngine.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/WSEngine.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPHandler.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPServerHandler.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FrameCollector.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/Framer.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/HTTPHandler.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/StringHTTPHandler.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/FoundationSecurity.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/Security.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/Server.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/WebSocketServer.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Starscream/WebSocket.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/FoundationTransport.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/TCPTransport.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/Transport.swift",
+        "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "Battleships" : [
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "-module-name",
+      "Battleships",
+      "-package-name",
+      "ios",
+      "-c",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/BattleshipsApp.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Constants.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Models.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/I18n/Strings.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Networking/SocketManager.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/BackgroundShips.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ChatOverlay.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ConnectionOverlay.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/CreditsSheet.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameBoard.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameTimer.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/ContentView.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/BattleScreen.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/GameOverScreen.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/LoginScreen.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/PlacementScreen.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/WaitingRoomScreen.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/GameHelpers.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/MusicManager.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/SoundManager.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/Battleships/ViewModel/GameViewModel.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "-target",
+      "x86_64-unknown-linux-gnu",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/include/Battleships-Swift.h",
+      "-swift-version",
+      "5",
+      "-g",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ios",
+      "-Xcc",
+      "-fno-omit-frame-pointer",
+      "-driver-use-frontend-path",
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc"
+    ],
+    "SocketIO" : [
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "-module-name",
+      "SocketIO",
+      "-c",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckEmitter.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckManager.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketAnyEvent.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketEventHandler.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClient.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientConfiguration.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientOption.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientSpec.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOStatus.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketRawView.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngine.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineClient.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePacketType.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePollable.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineSpec.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineWebsocket.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManager.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManagerSpec.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketPacket.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketParsable.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketExtensions.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketLogger.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketStringReader.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketTypes.swift",
+      "-I",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "-target",
+      "x86_64-unknown-linux-gnu",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/include/SocketIO-Swift.h",
+      "-swift-version",
+      "5",
+      "-g",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-suppress-warnings",
+      "-Xcc",
+      "-fno-omit-frame-pointer",
+      "-driver-use-frontend-path",
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc"
+    ],
+    "Starscream" : [
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc",
+      "-module-name",
+      "Starscream",
+      "-c",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/Compression.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/WSCompression.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/DataBytes/Data+Extensions.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/Engine.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/NativeEngine.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/WSEngine.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPHandler.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPServerHandler.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FrameCollector.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/Framer.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/HTTPHandler.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/StringHTTPHandler.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/FoundationSecurity.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/Security.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/Server.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/WebSocketServer.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Starscream/WebSocket.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/FoundationTransport.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/TCPTransport.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/Transport.swift",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Modules",
+      "-target",
+      "x86_64-unknown-linux-gnu",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/include/Starscream-Swift.h",
+      "-swift-version",
+      "5",
+      "-g",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-suppress-warnings",
+      "-Xcc",
+      "-fno-omit-frame-pointer",
+      "-driver-use-frontend-path",
+      "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "Battleships" : [
+      "SocketIO",
+      "Starscream"
+    ],
+    "SocketIO" : [
+      "Starscream"
+    ],
+    "Starscream" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/BattleshipsApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Constants.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/I18n/Strings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Networking/SocketManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/BackgroundShips.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ChatOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ConnectionOverlay.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/CreditsSheet.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameBoard.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameTimer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/BattleScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/GameOverScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/LoginScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/PlacementScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/WaitingRoomScreen.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/GameHelpers.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/MusicManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/SoundManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/Battleships/ViewModel/GameViewModel.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Battleships.build/sources"
+    },
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckEmitter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Ack/SocketAckManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketAnyEvent.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketEventHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientConfiguration.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientOption.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOClientSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketIOStatus.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Client/SocketRawView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePacketType.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEnginePollable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Engine/SocketEngineWebsocket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Manager/SocketManagerSpec.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketPacket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Parse/SocketParsable.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketExtensions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketLogger.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketStringReader.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/socket.io-client-swift/Source/SocketIO/Util/SocketTypes.swift"
+        }
+      ],
+      "outputFilePath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/SocketIO.build/sources"
+    },
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/Compression.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Compression/WSCompression.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/DataBytes/Data+Extensions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/Engine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/NativeEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Engine/WSEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FoundationHTTPServerHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/FrameCollector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/Framer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/HTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Framer/StringHTTPHandler.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/FoundationSecurity.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Security/Security.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/Server.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Server/WebSocketServer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Starscream/WebSocket.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/FoundationTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/TCPTransport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/checkouts/Starscream/Sources/Transport/Transport.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/Starscream.build/sources"
+    },
+    "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/swift-version-20518196F8EC174C.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/adrians/swift-6.2.4-RELEASE-ubuntu24.04/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/home/adrians/AB GAMES/Battleships/ios/.build/x86_64-unknown-linux-gnu/debug/swift-version-20518196F8EC174C.txt"
+    }
+  }
+}

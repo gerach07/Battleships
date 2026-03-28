@@ -1,0 +1,67 @@
+{
+  "name": "abbattleships",
+  "version": "1.0.0",
+  "description": "AB Battleships — Multiplayer battleships game for Windows desktop",
+  "main": "main.js",
+  "author": "AB Battleships",
+  "license": "MIT",
+  "homepage": "https://abbattleships.web.app",
+  "scripts": {
+    "start": "electron .",
+    "build:client": "cd ../Battleships-web/client && npm install && npm run build",
+    "copy:client": "node scripts/copy-client.js",
+    "build:dir": "electron-builder --win dir",
+    "build:exe": "electron-builder --win nsis",
+    "build:portable": "electron-builder --win portable",
+    "dist": "npm run build:client && npm run copy:client && npm run build:dir",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.abbattleships.app",
+    "productName": "AB Battleships",
+    "artifactName": "ABBattleships-Setup-${version}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "AB Battleships",
+      "verifyUpdateCodeSignature": false,
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AB Battleships",
+      "menuCategory": "Games",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "ABBattleships-Setup-${version}.${ext}",
+      "license": "resources/LICENSE.rtf",
+      "include": "resources/installer.nsh"
+    }
+  }
+}

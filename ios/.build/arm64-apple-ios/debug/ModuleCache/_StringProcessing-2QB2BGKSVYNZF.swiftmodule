@@ -1,0 +1,16 @@
+---
+path:            '/home/adrians/.swiftpm/swift-sdks/darwin.artifactbundle/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.2/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftmodule'
+dependencies:
+  - mtime:           1772526634696640230
+    path:            '/home/adrians/.swiftpm/swift-sdks/darwin.artifactbundle/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.2/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftmodule'
+    size:            83612
+  - mtime:           1772526625552668437
+    path:            'usr/lib/swift/Swift.swiftmodule/arm64e-apple-ios.swiftinterface'
+    size:            2257762
+    sdk_relative:    true
+  - mtime:           1772526625548427771
+    path:            'usr/lib/swift/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftinterface'
+    size:            24455
+    sdk_relative:    true
+version:         1
+...

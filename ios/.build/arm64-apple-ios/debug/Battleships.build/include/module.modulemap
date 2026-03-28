@@ -1,0 +1,3 @@
+module Battleships {
+    header "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/include/Battleships-Swift.h"
+}

@@ -99,13 +99,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _theirSunkCount = MutableStateFlow(0)
     val theirSunkCount: StateFlow<Int> = _theirSunkCount
 
-    // ── Shot / Explosion Animations ──
-    /** "row,col" key of the most recent shot for pop animation, auto-clears after 500ms */
-    private val _lastShotKey = MutableStateFlow<String?>(null)
-    val lastShotKey: StateFlow<String?> = _lastShotKey
-    /** Set of "row,col" keys currently showing explosion overlay, auto-clears after 1.5s */
-    private val _explosionKeys = MutableStateFlow<Set<String>>(emptySet())
-    val explosionKeys: StateFlow<Set<String>> = _explosionKeys
+    // ── Shot / Explosion Animations (per-board to avoid showing shot on wrong board) ──
+    private val _opponentLastShotKey = MutableStateFlow<String?>(null)
+    val opponentLastShotKey: StateFlow<String?> = _opponentLastShotKey
+    private val _playerLastShotKey = MutableStateFlow<String?>(null)
+    val playerLastShotKey: StateFlow<String?> = _playerLastShotKey
+    private val _opponentExplosionKeys = MutableStateFlow<Set<String>>(emptySet())
+    val opponentExplosionKeys: StateFlow<Set<String>> = _opponentExplosionKeys
+    private val _playerExplosionKeys = MutableStateFlow<Set<String>>(emptySet())
+    val playerExplosionKeys: StateFlow<Set<String>> = _playerExplosionKeys
 
     // ── Surrender Confirmation ──
     private val _showSurrenderDialog = MutableStateFlow(false)
@@ -496,6 +498,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _mySunkCount.value = 0
         _theirSunkCount.value = 0
         resetSunk()
+        _opponentLastShotKey.value = null
+        _playerLastShotKey.value = null
+        _opponentExplosionKeys.value = emptySet()
+        _playerExplosionKeys.value = emptySet()
     }
 
     private fun resetFullGameState() {
@@ -729,10 +735,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 val shotRow = data.optInt("row", -1)
                 val shotCol = data.optInt("col", -1)
                 if (shotRow >= 0 && shotCol >= 0) {
-                    _lastShotKey.value = "$shotRow,$shotCol"
+                    if (iShot) _opponentLastShotKey.value = "$shotRow,$shotCol"
+                    else _playerLastShotKey.value = "$shotRow,$shotCol"
                     viewModelScope.launch {
                         kotlinx.coroutines.delay(500)
-                        _lastShotKey.value = null
+                        _opponentLastShotKey.value = null
+                        _playerLastShotKey.value = null
                     }
                 }
 
@@ -753,10 +761,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
                         // Explosion overlay animation (auto-clears after 1.5s)
                         val expKeys = cells.map { "${it.first},${it.second}" }.toSet()
-                        _explosionKeys.value = _explosionKeys.value + expKeys
-                        viewModelScope.launch {
-                            kotlinx.coroutines.delay(1500)
-                            _explosionKeys.value = _explosionKeys.value - expKeys
+                        if (iShot) {
+                            _opponentExplosionKeys.value = _opponentExplosionKeys.value + expKeys
+                            viewModelScope.launch {
+                                kotlinx.coroutines.delay(1500)
+                                _opponentExplosionKeys.value = _opponentExplosionKeys.value - expKeys
+                            }
+                        } else {
+                            _playerExplosionKeys.value = _playerExplosionKeys.value + expKeys
+                            viewModelScope.launch {
+                                kotlinx.coroutines.delay(1500)
+                                _playerExplosionKeys.value = _playerExplosionKeys.value - expKeys
+                            }
                         }
                     }
                 }

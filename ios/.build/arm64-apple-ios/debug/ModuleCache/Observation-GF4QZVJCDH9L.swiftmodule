@@ -1,0 +1,20 @@
+---
+path:            '/home/adrians/.swiftpm/swift-sdks/darwin.artifactbundle/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.2/Observation.swiftmodule/arm64e-apple-ios.swiftmodule'
+dependencies:
+  - mtime:           1772526634825462491
+    path:            '/home/adrians/.swiftpm/swift-sdks/darwin.artifactbundle/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.2/Observation.swiftmodule/arm64e-apple-ios.swiftmodule'
+    size:            30500
+  - mtime:           1772526625552668437
+    path:            'usr/lib/swift/Swift.swiftmodule/arm64e-apple-ios.swiftinterface'
+    size:            2257762
+    sdk_relative:    true
+  - mtime:           1772526625554121117
+    path:            'usr/lib/swift/_Concurrency.swiftmodule/arm64e-apple-ios.swiftinterface'
+    size:            407491
+    sdk_relative:    true
+  - mtime:           1772526625562831507
+    path:            'usr/lib/swift/Observation.swiftmodule/arm64e-apple-ios.swiftinterface'
+    size:            5638
+    sdk_relative:    true
+version:         1
+...

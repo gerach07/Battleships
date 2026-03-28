@@ -48,8 +48,10 @@ fun BattleScreen(viewModel: GameViewModel) {
 
     val mySunkCount by viewModel.mySunkCount.collectAsState()
     val theirSunkCount by viewModel.theirSunkCount.collectAsState()
-    val lastShotKey by viewModel.lastShotKey.collectAsState()
-    val explosionKeys by viewModel.explosionKeys.collectAsState()
+    val opponentLastShotKey by viewModel.opponentLastShotKey.collectAsState()
+    val playerLastShotKey by viewModel.playerLastShotKey.collectAsState()
+    val opponentExplosionKeys by viewModel.opponentExplosionKeys.collectAsState()
+    val playerExplosionKeys by viewModel.playerExplosionKeys.collectAsState()
 
     val isMyTurn by remember { derivedStateOf { !isSpectator && currentTurn == myId } }
 
@@ -165,7 +167,7 @@ fun BattleScreen(viewModel: GameViewModel) {
                 GameBoard(
                     board = sb.board,
                     label = sb.playerName,
-                    showShips = true,
+                    showShips = false,
                     interactive = false,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -177,8 +179,8 @@ fun BattleScreen(viewModel: GameViewModel) {
                 label = "🎯 ${s.enemyWaters}",
                 showShips = false,
                 interactive = isMyTurn,
-                lastShotKey = lastShotKey,
-                explosionKeys = explosionKeys,
+                lastShotKey = opponentLastShotKey,
+                explosionKeys = opponentExplosionKeys,
                 onCellClick = { r, col ->
                     val cell = opponentBoard[r][col]
                     if (cell == CellState.WATER) viewModel.handleShoot(r, col)
@@ -191,8 +193,8 @@ fun BattleScreen(viewModel: GameViewModel) {
                 label = "🚥 ${s.yourFleet}",
                 showShips = true,
                 interactive = false,
-                lastShotKey = lastShotKey,
-                explosionKeys = explosionKeys,
+                lastShotKey = playerLastShotKey,
+                explosionKeys = playerExplosionKeys,
             )
         }
 

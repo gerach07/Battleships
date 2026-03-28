@@ -149,7 +149,7 @@ struct BattleScreen: View {
     private var normalBoards: some View {
         VStack(spacing: 14) {
             // Your fleet
-            boardCard(label: s.yourFleet, isHighlighted: false) {
+            boardCard(label: s.yourFleet, isHighlighted: false, showShipLegend: true) {
                 GameBoardView(
                     board: vm.playerBoard,
                     isOpponentBoard: false,
@@ -192,7 +192,7 @@ struct BattleScreen: View {
     }
 
     @ViewBuilder
-    private func boardCard<Content: View>(label: String, isHighlighted: Bool, @ViewBuilder content: () -> Content) -> some View {
+    private func boardCard<Content: View>(label: String, isHighlighted: Bool, showShipLegend: Bool = false, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.bold())
@@ -203,7 +203,9 @@ struct BattleScreen: View {
             // Legend
             HStack(spacing: 10) {
                 legendItem(.blue.opacity(0.7), "Water")
-                legendItem(.green.opacity(0.6), "Ship")
+                if showShipLegend {
+                    legendItem(.green.opacity(0.6), "Ship")
+                }
                 legendItem(.red.opacity(0.8), "Hit")
                 legendItem(.gray.opacity(0.5), "Miss")
                 legendItem(Color(red: 0.6, green: 0.1, blue: 0.1), "Sunk")

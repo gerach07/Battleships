@@ -1,0 +1,152 @@
+{
+  "": {
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/master.swiftdeps"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/BattleshipsApp.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleshipsApp.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleshipsApp.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleshipsApp~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleshipsApp.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleshipsApp.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Constants.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Constants.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Constants.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Constants~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Constants.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Constants.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Data/Models.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Models.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Models.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Models.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Models.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/I18n/Strings.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Strings.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Strings.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Strings~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Strings.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/Strings.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Networking/SocketManager.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SocketManager.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SocketManager.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SocketManager~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SocketManager.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SocketManager.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/BackgroundShips.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BackgroundShips.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BackgroundShips.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BackgroundShips~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BackgroundShips.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BackgroundShips.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ChatOverlay.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ChatOverlay.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ChatOverlay.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ChatOverlay~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ChatOverlay.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ChatOverlay.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/ConnectionOverlay.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ConnectionOverlay.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ConnectionOverlay.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ConnectionOverlay~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ConnectionOverlay.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ConnectionOverlay.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameBoard.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameBoard.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameBoard.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameBoard~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameBoard.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameBoard.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Components/GameTimer.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameTimer.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameTimer.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameTimer~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameTimer.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameTimer.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/ContentView.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ContentView.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ContentView.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ContentView.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/ContentView.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/BattleScreen.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleScreen.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleScreen.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleScreen~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleScreen.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/BattleScreen.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/GameOverScreen.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameOverScreen.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameOverScreen.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameOverScreen~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameOverScreen.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameOverScreen.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/LoginScreen.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/LoginScreen.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/LoginScreen.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/LoginScreen~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/LoginScreen.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/LoginScreen.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/PlacementScreen.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/PlacementScreen.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/PlacementScreen.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/PlacementScreen~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/PlacementScreen.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/PlacementScreen.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/UI/Screens/WaitingRoomScreen.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/WaitingRoomScreen.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/WaitingRoomScreen.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/WaitingRoomScreen~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/WaitingRoomScreen.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/WaitingRoomScreen.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/GameHelpers.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameHelpers.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameHelpers.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameHelpers~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameHelpers.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameHelpers.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/MusicManager.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/MusicManager.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/MusicManager.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/MusicManager~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/MusicManager.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/MusicManager.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/Util/SoundManager.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SoundManager.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SoundManager.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SoundManager~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SoundManager.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/SoundManager.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/Battleships/ViewModel/GameViewModel.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameViewModel.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameViewModel.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameViewModel~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameViewModel.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/GameViewModel.dia"
+  },
+  "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/resource_bundle_accessor.d",
+    "object": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/home/adrians/AB GAMES/Battleships/ios/.build/arm64-apple-ios/debug/Battleships.build/resource_bundle_accessor.dia"
+  }
+}

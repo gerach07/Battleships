@@ -1,0 +1,12 @@
+# Generated files
+node_modules/
+renderer/
+dist/
+
+# Generated icons
+assets/icon.png
+assets/icon.ico
+assets/icons/
+
+# Electron builder cache
+.electron-builder-cache/

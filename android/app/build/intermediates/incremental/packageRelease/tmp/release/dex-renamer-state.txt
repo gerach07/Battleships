@@ -1,0 +1,4 @@
+#Wed Mar 25 16:30:06 EET 2026
+base.0=/home/adrians/AB GAMES/Battleships/android/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
