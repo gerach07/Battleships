@@ -1,12 +1,5 @@
 import SwiftUI
 
-// Loaded once from bundle; nil if asset is missing (falls back to orange overlay)
-private let explosionUIImage: UIImage? = {
-    guard let url = Bundle.main.url(forResource: "ship-sink-explosion", withExtension: "webp"),
-          let data = try? Data(contentsOf: url) else { return nil }
-    return UIImage(data: data)
-}()
-
 struct GameBoardView: View {
     let board: Board
     let isOpponentBoard: Bool
@@ -30,21 +23,11 @@ struct GameBoardView: View {
                                 .overlay(
                                     isShot ? Color.white.opacity(0.4) : Color.clear
                                 )
+                                .overlay(
+                                    isExplosion ? Color.orange.opacity(0.6) : Color.clear
+                                )
 
                             cellContent(cell)
-
-                            if isExplosion {
-                                if let img = explosionUIImage {
-                                    Image(uiImage: img)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                        .clipped()
-                                        .allowsHitTesting(false)
-                                } else {
-                                    Color.orange.opacity(0.7)
-                                }
-                            }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .aspectRatio(1, contentMode: .fit)

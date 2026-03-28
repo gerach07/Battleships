@@ -18,17 +18,10 @@ let package = Package(
             ],
             path: "Battleships",
             exclude: ["Info.plist", "Resources/AppIcon120.png", "Resources/AppIcon180.png", "Resources/AppIcon1024.png",
-                      "Resources/bgm_menu.ogg", "Resources/bgm_placement.ogg", "Resources/bgm_battle.ogg",
-                      "Resources/bgm_victory.ogg", "Resources/bgm_defeat.ogg",
-                      "Resources/ship-sink-explosion.webp"],
+                      "Resources/bgm_menu.m4a", "Resources/bgm_placement.m4a", "Resources/bgm_battle.m4a",
+                      "Resources/bgm_victory.m4a", "Resources/bgm_defeat.m4a"],
             resources: [
                 .process("Resources/Assets.xcassets"),
-                .copy("Resources/bgm_menu.m4a"),
-                .copy("Resources/bgm_placement.m4a"),
-                .copy("Resources/bgm_battle.m4a"),
-                .copy("Resources/bgm_victory.m4a"),
-                .copy("Resources/bgm_defeat.m4a"),
-                .copy("Resources/ship-sink-explosion.webp"),
             ]
         ),
     ]

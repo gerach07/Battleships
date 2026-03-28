@@ -2,6 +2,9 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var vm = GameViewModel()
+    @ObservedObject private var mm = MusicManager.shared
+    @State private var showCredits = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -26,6 +29,39 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 // Header bar
                 headerBar
+
+                // Now-playing strip
+                if mm.enabled, let trackName = mm.currentTrackName {
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue.opacity(0.18))
+                                .frame(width: 20, height: 20)
+                            Image(systemName: "music.note")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.blue.opacity(0.9))
+                        }
+                        MarqueeText(trackName, font: .system(size: 11, weight: .medium), color: .white.opacity(0.75))
+                        Spacer()
+                        Button { showCredits = true } label: {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 14))
+                                .foregroundColor(.blue.opacity(0.65))
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 5)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.blue.opacity(0.10), Color.indigo.opacity(0.06)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(Color.blue.opacity(0.12)).frame(height: 0.5)
+                    }
+                    .transition(.opacity)
+                }
 
                 // Phase content
                 phaseContent
@@ -55,6 +91,19 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .animation(.easeInOut(duration: 0.3), value: vm.phase)
         .animation(.easeInOut(duration: 0.2), value: vm.chatOpen)
+        .onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .active:
+                vm.handleSceneActive()
+            case .background, .inactive:
+                vm.handleSceneBackground()
+            @unknown default:
+                break
+            }
+        }
+        .sheet(isPresented: $showCredits) {
+            CreditsSheet()
+        }
     }
 
     // MARK: - Header

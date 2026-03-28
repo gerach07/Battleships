@@ -10,7 +10,6 @@ resources:
   - Battleships/Resources/bgm_battle.m4a
   - Battleships/Resources/bgm_victory.m4a
   - Battleships/Resources/bgm_defeat.m4a
-  - Battleships/Resources/ship-sink-explosion.webp
 infoPlist:
   NSAppTransportSecurity:
     NSAllowsArbitraryLoads: true

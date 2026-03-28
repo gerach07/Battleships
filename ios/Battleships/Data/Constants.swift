@@ -20,6 +20,13 @@ let SHIPS: [ShipDef] = [
     ShipDef(id: 4, length: 2, name: "Patrol", emoji: "🚤"),
 ]
 
+// Validation limits (must match server)
+let MAX_CHAT_LENGTH = 200
+let MAX_SPECTATORS = 10
+let MIN_GAME_TIME_SECONDS = 120
+let MAX_GAME_TIME_SECONDS = 600
+let DEFAULT_GAME_TIME_SECONDS = 300
+
 enum CellState {
     static let WATER = "W"
     static let SHIP  = "S"

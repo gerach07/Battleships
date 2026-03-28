@@ -16,7 +16,10 @@ struct BattleScreen: View {
                         currentTurn: vm.currentTurn,
                         myId: vm.playerIdRef,
                         opponentName: vm.opponentName,
-                        strings: s
+                        strings: s,
+                        spectatorPlayerNames: vm.isSpectator
+                            ? Dictionary(uniqueKeysWithValues: vm.spectatorBoards.map { ($0.playerId, $0.playerName) })
+                            : [:]
                     )
                 }
 
@@ -53,6 +56,11 @@ struct BattleScreen: View {
                     if vm.isSpectator {
                         Text("👁️").foregroundColor(.purple)
                         Text(s.spectating).font(.headline).foregroundColor(.purple)
+                        if let turnName = vm.spectatorBoards.first(where: { $0.playerId == vm.currentTurn })?.playerName {
+                            Text("— \(s.namesTurn.fmt(turnName))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     } else if vm.isMyTurn {
                         Text("⚡").foregroundColor(.green)
                         Text(s.yourTurnFire).font(.headline).foregroundColor(.green)
@@ -62,11 +70,9 @@ struct BattleScreen: View {
                     }
                 }
 
-                if !vm.isSpectator && vm.isMyTurn {
-                    Text(s.extraShotHint)
-                        .font(.caption2)
-                        .foregroundColor(.green.opacity(0.6))
-                }
+                Text(!vm.isSpectator && vm.isMyTurn ? s.extraShotHint : " ")
+                    .font(.caption2)
+                    .foregroundColor(.green.opacity(vm.isMyTurn ? 0.6 : 0))
             }
 
             Spacer()
@@ -149,7 +155,7 @@ struct BattleScreen: View {
     private var normalBoards: some View {
         VStack(spacing: 14) {
             // Your fleet
-            boardCard(label: s.yourFleet, isHighlighted: false, showShipLegend: true) {
+            boardCard(label: s.yourFleet, isHighlighted: false) {
                 GameBoardView(
                     board: vm.playerBoard,
                     isOpponentBoard: false,
@@ -192,7 +198,7 @@ struct BattleScreen: View {
     }
 
     @ViewBuilder
-    private func boardCard<Content: View>(label: String, isHighlighted: Bool, showShipLegend: Bool = false, @ViewBuilder content: () -> Content) -> some View {
+    private func boardCard<Content: View>(label: String, isHighlighted: Bool, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.bold())
@@ -203,9 +209,7 @@ struct BattleScreen: View {
             // Legend
             HStack(spacing: 10) {
                 legendItem(.blue.opacity(0.7), "Water")
-                if showShipLegend {
-                    legendItem(.green.opacity(0.6), "Ship")
-                }
+                legendItem(.green.opacity(0.6), "Ship")
                 legendItem(.red.opacity(0.8), "Hit")
                 legendItem(.gray.opacity(0.5), "Miss")
                 legendItem(Color(red: 0.6, green: 0.1, blue: 0.1), "Sunk")

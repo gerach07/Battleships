@@ -1,0 +1,85 @@
+# =========================
+# Ignored platform folders
+# =========================
+Battleships-linux/
+Battleships-windows/
+
+# =========================
+# Node.js / Web
+# =========================
+node_modules/
+package-lock.json
+yarn.lock
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.firebase/
+coverage/
+.nyc_output/
+.cache/
+
+# =========================
+# Android
+# =========================
+*.iml
+.gradle/
+android/local.properties
+android/.idea/
+android/build/
+android/app/build/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/keystore.properties
+*.jks
+*.keystore
+
+# =========================
+# iOS
+# =========================
+ios/*.xcodeproj/
+ios/*.xcworkspace/
+ios/Pods/
+ios/.build/
+ios/DerivedData/
+ios/Build/
+ios/xtool/
+ios/test-icon-app/
+ios/Package.resolved
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.xcscmblueprint
+xcuserdata/
+
+# =========================
+# Build outputs / release artifacts
+# =========================
+build/
+dist/
+publish/
+out/
+*.tmp
+*.bak
+tmp/
+*.apk
+*.aab
+*.ipa
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

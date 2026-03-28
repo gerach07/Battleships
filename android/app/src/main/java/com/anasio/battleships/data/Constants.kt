@@ -15,6 +15,13 @@ val SHIPS = listOf(
     ShipDef(4, 2, "Patrol", "🚤"),
 )
 
+// Validation limits (must match server)
+const val MAX_CHAT_LENGTH = 200
+const val MAX_SPECTATORS = 10
+const val MIN_GAME_TIME_SECONDS = 120
+const val MAX_GAME_TIME_SECONDS = 600
+const val DEFAULT_GAME_TIME_SECONDS = 300
+
 object CellState {
     const val WATER = "W"
     const val SHIP = "S"

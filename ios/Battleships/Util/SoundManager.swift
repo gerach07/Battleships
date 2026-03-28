@@ -6,39 +6,51 @@ final class SoundManager {
     var enabled = true
 
     private let sampleRate: Double = 44100
+    private let engine = AVAudioEngine()
+    private let mixerNode: AVAudioMixerNode
+    private var engineRunning = false
+    private let queue = DispatchQueue(label: "SoundManager", qos: .userInteractive)
 
-    private init() {}
+    private init() {
+        mixerNode = engine.mainMixerNode
+    }
+
+    private func ensureEngine() {
+        guard !engineRunning else { return }
+        do {
+            try engine.start()
+            engineRunning = true
+        } catch {}
+    }
 
     private func playTone(freq: Float, durationMs: Int, volume: Float = 0.3) {
         guard enabled else { return }
-        DispatchQueue.global(qos: .userInteractive).async { [sampleRate] in
+        queue.async { [self] in
+            ensureEngine()
+
             let dur = Float(durationMs) / 1000.0
             let numSamples = Int(sampleRate * Double(dur))
-            var samples = [Float](repeating: 0, count: numSamples)
-            for i in 0..<numSamples {
-                let t = Float(i) / Float(sampleRate)
-                let envelope = max(1.0 - t / dur, 0.001)
-                samples[i] = volume * envelope * sin(2.0 * .pi * freq * t)
-            }
 
             let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
             guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(numSamples)) else { return }
             buffer.frameLength = AVAudioFrameCount(numSamples)
             if let channelData = buffer.floatChannelData?[0] {
-                for i in 0..<numSamples { channelData[i] = samples[i] }
+                for i in 0..<numSamples {
+                    let t = Float(i) / Float(sampleRate)
+                    let envelope = max(1.0 - t / dur, 0.001)
+                    channelData[i] = volume * envelope * sin(2.0 * .pi * freq * t)
+                }
             }
 
-            let engine = AVAudioEngine()
             let player = AVAudioPlayerNode()
             engine.attach(player)
-            engine.connect(player, to: engine.mainMixerNode, format: format)
-            do {
-                try engine.start()
-                player.scheduleBuffer(buffer, completionHandler: nil)
-                player.play()
-                Thread.sleep(forTimeInterval: Double(dur) + 0.05)
-                engine.stop()
-            } catch {}
+            engine.connect(player, to: mixerNode, format: format)
+            player.scheduleBuffer(buffer) { [weak engine] in
+                DispatchQueue.global().async {
+                    engine?.detach(player)
+                }
+            }
+            player.play()
         }
     }
 

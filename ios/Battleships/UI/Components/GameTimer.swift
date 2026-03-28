@@ -8,11 +8,13 @@ struct GameTimerView: View {
     let myId: String
     let opponentName: String
     let strings: I18nStrings
+    var spectatorPlayerNames: [String: String] = [:]
 
     @State private var tick = 0
     @State private var timer: AnyCancellable?
 
     var body: some View {
+        let _ = tick // force SwiftUI recomposition on timer tick
         let ids = orderedIds
         HStack(spacing: 8) {
             ForEach(ids, id: \.self) { pid in
@@ -20,6 +22,7 @@ struct GameTimerView: View {
                     pid: pid,
                     myId: myId,
                     opponentName: opponentName,
+                    spectatorName: spectatorPlayerNames[pid],
                     isActive: pid == currentTurn,
                     liveTime: liveTime(for: pid),
                     strings: strings
@@ -66,6 +69,7 @@ private struct PlayerTimerCell: View {
     let pid: String
     let myId: String
     let opponentName: String
+    let spectatorName: String?
     let isActive: Bool
     let liveTime: Double
     let strings: I18nStrings
@@ -73,7 +77,8 @@ private struct PlayerTimerCell: View {
     private var isCritical: Bool { isActive && liveTime <= 10 }
     private var isLow: Bool { isActive && liveTime <= 30 }
     private var label: String {
-        pid == myId ? strings.you : (opponentName.isEmpty ? strings.opponent : opponentName)
+        if let name = spectatorName { return name }
+        return pid == myId ? strings.you : (opponentName.isEmpty ? strings.opponent : opponentName)
     }
     private var timeColor: Color {
         guard isActive else { return .gray }

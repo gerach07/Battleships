@@ -58,6 +58,9 @@ struct LoginScreen: View {
                     .foregroundColor(.gray)
                 Rectangle().fill(Color.gray.opacity(0.4)).frame(width: 60, height: 1)
             }
+            Text("Created by Adrians Bergmanis")
+                .font(.system(size: 10))
+                .foregroundColor(.gray.opacity(0.55))
         }
     }
 

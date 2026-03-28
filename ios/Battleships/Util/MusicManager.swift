@@ -4,6 +4,16 @@ import Foundation
 final class MusicManager: ObservableObject {
     static let shared = MusicManager()
 
+    @Published var currentTrackName: String? = nil
+
+    private static let trackNames: [String: String] = [
+        "bgm_menu":      "The Price of Freedom",
+        "bgm_placement": "Beyond New Horizons",
+        "bgm_battle":    "Honor and Sword",
+        "bgm_victory":   "Victory",
+        "bgm_defeat":    "Waves Crash",
+    ]
+
     @Published var enabled = false {
         didSet {
             if !enabled { stopMusic() }
@@ -52,9 +62,9 @@ final class MusicManager: ObservableObject {
     private func startNewTrack(_ name: String, loop: Bool) {
         currentTrack = name
         currentLoop = loop
+        currentTrackName = Self.trackNames[name]
 
-        guard let url = Bundle.main.url(forResource: name, withExtension: "ogg")
-            ?? Bundle.main.url(forResource: name, withExtension: "m4a")
+        guard let url = Bundle.main.url(forResource: name, withExtension: "m4a")
             ?? Bundle.main.url(forResource: name, withExtension: "mp3")
             ?? Bundle.main.url(forResource: name, withExtension: "caf")
         else { return }
@@ -113,6 +123,7 @@ final class MusicManager: ObservableObject {
     private func stopMusicNow() {
         player?.stop()
         player = nil
+        currentTrackName = nil
     }
 
     // Phase-specific triggers

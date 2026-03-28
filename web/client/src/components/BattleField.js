@@ -9,6 +9,7 @@ const BattleField = memo(({
     handleForfeit,
     dispPlayer,
     dispOpponent,
+    spectatorPlayerNames = [],
     handleShoot,
     explosionCells,
     noop,
@@ -127,10 +128,10 @@ const BattleField = memo(({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div className={`glass-card p-3 sm:p-4 transition-all animate-board-entry ${isSpectator ? '' : isMyTurn ? '' : 'border-yellow-500/15'}`}>
-                    <GameBoard board={dispPlayer} isYourBoard={!isSpectator} onCellClick={noop} isYourTurn={false} label={isSpectator ? `🛡️ ${opponentName || t('battle.player1')}` : t('battle.yourFleet')} explosionCells={playerExplosions} lastShot={playerLastShot} />
+                    <GameBoard board={dispPlayer} isYourBoard={!isSpectator} onCellClick={noop} isYourTurn={false} label={isSpectator ? `🛡️ ${spectatorPlayerNames[0] || t('battle.player1')}` : t('battle.yourFleet')} explosionCells={playerExplosions} lastShot={playerLastShot} />
                 </div>
                 <div className={`glass-card p-3 sm:p-4 transition-all animate-board-entry ${isSpectator ? '' : isMyTurn ? 'border-emerald-500/20 ring-1 ring-emerald-500/10' : ''}`}>
-                    <GameBoard board={dispOpponent} isYourBoard={false} onCellClick={isSpectator ? noop : handleShoot} isYourTurn={!isSpectator && isMyTurn} label={t('battle.enemyWaters', opponentName || t('battle.player2'))} explosionCells={opponentExplosions} lastShot={opponentLastShot} />
+                    <GameBoard board={dispOpponent} isYourBoard={false} onCellClick={isSpectator ? noop : handleShoot} isYourTurn={!isSpectator && isMyTurn} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[1] || t('battle.player2')) : t('battle.enemyWaters', opponentName)} explosionCells={opponentExplosions} lastShot={opponentLastShot} />
                 </div>
             </div>
         </div>

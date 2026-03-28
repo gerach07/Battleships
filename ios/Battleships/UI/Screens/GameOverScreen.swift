@@ -5,6 +5,9 @@ struct GameOverScreen: View {
 
     private var s: I18nStrings { vm.s }
     private var isWinner: Bool { vm.winner == vm.playerIdRef }
+    private var spectatorWinnerName: String {
+        vm.spectatorBoards.first(where: { $0.playerId == vm.winner })?.playerName ?? "?"
+    }
 
     var body: some View {
         ScrollView {
@@ -31,7 +34,7 @@ struct GameOverScreen: View {
 
                     // Subtitle
                     Text(vm.isSpectator
-                        ? s.gameOver
+                        ? s.winsMessage.fmt(spectatorWinnerName)
                         : isWinner
                             ? s.youSunkEnemy
                             : s.destroyedYourFleet.fmt(vm.opponentName))

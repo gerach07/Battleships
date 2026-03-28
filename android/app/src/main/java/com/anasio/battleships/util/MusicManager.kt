@@ -5,11 +5,24 @@ import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 object MusicManager {
     private const val FADE_DURATION_MS = 400L
     private const val FADE_STEPS = 16
     private const val VOLUME = 0.35f
+
+    private val TRACK_NAMES = mapOf(
+        "bgm_menu"      to "The Price of Freedom",
+        "bgm_placement" to "Beyond New Horizons",
+        "bgm_battle"    to "Honor and Sword",
+        "bgm_victory"   to "Victory",
+        "bgm_defeat"    to "Waves Crash",
+    )
+
+    private val _currentTrackName = MutableStateFlow<String?>(null)
+    val currentTrackName: StateFlow<String?> = _currentTrackName
 
     var enabled = true
         set(value) {
@@ -115,10 +128,8 @@ object MusicManager {
                 mediaPlayer = MediaPlayer.create(ctx.applicationContext, resId)?.apply {
                     isLooping = currentLoop
                     setVolume(VOLUME, VOLUME)
-                    setOnPreparedListener { mp ->
-                        if (pausedPosition > 0) mp.seekTo(pausedPosition)
-                        mp.start()
-                    }
+                    if (pausedPosition > 0) seekTo(pausedPosition)
+                    start()
                 }
             } catch (e: Exception) {
                 Log.e("MusicManager", "Error resuming music: ${e.message}")
@@ -139,6 +150,7 @@ object MusicManager {
 
     fun stopMusic() {
         cancelFade()
+        _currentTrackName.value = null
         try {
             mediaPlayer?.apply {
                 try { if (isPlaying) stop() } catch (_: IllegalStateException) {}
@@ -157,9 +169,11 @@ object MusicManager {
     private fun playIfAvailable(context: Context, filename: String, loop: Boolean = true) {
         val resId = context.resources.getIdentifier(filename, "raw", context.packageName)
         if (resId != 0) {
+            _currentTrackName.value = TRACK_NAMES[filename]
             playTrack(context, resId, loop)
         } else {
             Log.d("MusicManager", "Track $filename not found in res/raw. Skipping.")
+            _currentTrackName.value = null
             stopMusic() // Stop current track if the new phase has no music
             currentTrackResId = null
         }

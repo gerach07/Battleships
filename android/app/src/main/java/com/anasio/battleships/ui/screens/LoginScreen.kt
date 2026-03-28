@@ -33,6 +33,7 @@ import com.anasio.battleships.i18n.LocalI18n
 import com.anasio.battleships.ui.theme.*
 import com.anasio.battleships.ui.theme.LocalColorPalette
 import com.anasio.battleships.ui.theme.ThemeId
+import com.anasio.battleships.util.MusicManager
 import com.anasio.battleships.viewmodel.GameViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,6 +46,8 @@ fun LoginScreen(viewModel: GameViewModel) {
     val soundEnabled by viewModel.soundEnabled.collectAsState()
 
     val musicEnabled by viewModel.musicEnabled.collectAsState()
+    val currentTrackName by MusicManager.currentTrackName.collectAsState()
+    var showCredits by remember { mutableStateOf(false) }
     val language by viewModel.language.collectAsState()
     val s = LocalI18n.current
     val c = LocalColorPalette.current
@@ -108,7 +111,10 @@ fun LoginScreen(viewModel: GameViewModel) {
         )
         Spacer(Modifier.height(12.dp))
 
-        Row(horizontalArrangement = Arrangement.Center) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             IconButton(onClick = viewModel::toggleSound) {
                 Text(if (soundEnabled) "🔊" else "🔇", fontSize = 22.sp)
             }
@@ -116,8 +122,24 @@ fun LoginScreen(viewModel: GameViewModel) {
             IconButton(onClick = viewModel::toggleMusic) {
                 Text(if (musicEnabled) "🎵" else "🔕", fontSize = 22.sp)
             }
+            Spacer(Modifier.width(4.dp))
+            IconButton(onClick = { showCredits = true }) {
+                Text("ℹ️", fontSize = 18.sp)
+            }
+        }
+        if (musicEnabled && currentTrackName != null) {
+            Text(
+                "♪ $currentTrackName",
+                fontSize = 10.sp,
+                color = Color(0xFF60A5FA).copy(alpha = 0.8f),
+            )
+            Spacer(Modifier.height(4.dp))
         }
         Spacer(Modifier.height(16.dp))
+
+        if (showCredits) {
+            CreditsDialog(onDismiss = { showCredits = false })
+        }
 
         // Message
         if (message.isNotBlank()) {
@@ -632,6 +654,53 @@ fun MessageBanner(message: String, type: String) {
     ) {
         Text(message, fontSize = 13.sp, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
+}
+
+@Composable
+private fun CreditsDialog(onDismiss: () -> Unit) {
+    val c = LocalColorPalette.current
+    val tracks = listOf(
+        Triple("The Price of Freedom",  "Menu Music",           "Royalty-Free Music"),
+        Triple("Beyond New Horizons",   "Ship Placement Music", "Royalty-Free Music"),
+        Triple("Honor and Sword",       "Battle Music",         "No-Copyright Music"),
+        Triple("Victory",               "Victory Sound",        "Free Sound Effect"),
+        Triple("Waves Crash",           "Defeat Sound",         "Free Sound Effect"),
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E293B),
+        titleContentColor = Color.White,
+        textContentColor = Color.White,
+        title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Text("\u2693 Battleships", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                Text("Created by Adrians Bergmanis", fontSize = 11.sp, color = c.textDim.copy(alpha = 0.7f))
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("\ud83c\udfb5 Music & Sound Credits", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = c.primary)
+                tracks.forEach { (name, role, source) ->
+                    Column {
+                        Text("\u266a \"$name\"", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Text("$role  \u2022  $source", fontSize = 10.sp, color = c.textDim)
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                HorizontalDivider(color = c.border.copy(alpha = 0.3f))
+                Text(
+                    "\u00a9 Adrians Bergmanis. All rights reserved.",
+                    fontSize = 10.sp,
+                    color = c.textDim.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("OK", color = c.primary) }
+        },
+    )
 }
 
 @Composable
