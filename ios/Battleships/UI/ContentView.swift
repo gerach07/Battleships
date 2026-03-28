@@ -30,41 +30,44 @@ struct ContentView: View {
                 // Header bar
                 headerBar
 
-                // Now-playing strip
-                if mm.enabled, let trackName = mm.currentTrackName {
-                    HStack(spacing: 8) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue.opacity(0.18))
-                                .frame(width: 20, height: 20)
-                            Image(systemName: "music.note")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.blue.opacity(0.9))
-                        }
-                        MarqueeText(trackName, font: .system(size: 11, weight: .medium), color: .white.opacity(0.75))
-                        Spacer()
-                        Button { showCredits = true } label: {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 14))
-                                .foregroundColor(.blue.opacity(0.65))
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 5)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.10), Color.indigo.opacity(0.06)],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
-                    .overlay(alignment: .bottom) {
-                        Rectangle().fill(Color.blue.opacity(0.12)).frame(height: 0.5)
-                    }
-                    .transition(.opacity)
-                }
+                ZStack(alignment: .top) {
+                    // Phase content (permanently pushed down so the music bar doesn't cause shifting)
+                    phaseContent
+                        .padding(.top, 32)
 
-                // Phase content
-                phaseContent
+                    // Now-playing strip (absolutely positioned at the top of the ZStack)
+                    if mm.enabled, let trackName = mm.currentTrackName {
+                        HStack(spacing: 8) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.18))
+                                    .frame(width: 20, height: 20)
+                                Image(systemName: "music.note")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(.blue.opacity(0.9))
+                            }
+                            MarqueeText(trackName, font: .system(size: 11, weight: .medium), color: .white.opacity(0.75))
+                            Spacer()
+                            Button { showCredits = true } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.blue.opacity(0.65))
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 5)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.blue.opacity(0.10), Color.indigo.opacity(0.06)],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                        )
+                        .overlay(alignment: .bottom) {
+                            Rectangle().fill(Color.blue.opacity(0.12)).frame(height: 0.5)
+                        }
+                        .transition(.opacity)
+                    }
+                }
             }
 
             // Message toast

@@ -612,6 +612,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             timestamp = m.optLong("timestamp", System.currentTimeMillis()),
                             isMine = m.optString("senderId") == pid,
                             isImportant = m.optBoolean("isImportant", false),
+                                isSystem = m.optBoolean("isSystem", false),
                         )
                     }.takeLast(200)
                 } else {
@@ -955,6 +956,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             timestamp = m.optLong("timestamp", System.currentTimeMillis()),
                             isMine = m.optString("senderId") == pid,
                             isImportant = m.optBoolean("isImportant", false),
+                                isSystem = m.optBoolean("isSystem", false),
                         )
                     }
                     _chatMessages.value = msgs.takeLast(200)
@@ -1030,6 +1032,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     timestamp = data.optLong("timestamp", System.currentTimeMillis()),
                     isMine = isMine,
                     isImportant = isImportant,
+                    isSystem = data.optBoolean("isSystem", false),
                 )
                 _chatMessages.value = (_chatMessages.value + msg).takeLast(200)
                 // Show important messages as banner notification
@@ -1064,6 +1067,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                                 timestamp = m.optLong("timestamp", 0L),
                                 isMine = false,
                                 isImportant = m.optBoolean("isImportant", false),
+                                isSystem = m.optBoolean("isSystem", false),
                             )
                         }
                     }

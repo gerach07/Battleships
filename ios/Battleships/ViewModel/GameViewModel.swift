@@ -827,7 +827,7 @@ final class GameViewModel: ObservableObject {
                         let ts = m["timestamp"] as? Double ?? 0
                         let isImportant = m["isImportant"] as? Bool ?? false
                         return ChatMessage(id: id, senderId: senderId, senderName: senderName,
-                                          text: text, timestamp: ts, isMine: false, isImportant: isImportant)
+                                          text: text, timestamp: ts, isMine: false, isImportant: isImportant, isSystem: m["isSystem"] as? Bool ?? false)
                     }
                 }
                 if let ct = data["currentTurn"] as? String { self.currentTurn = ct }
@@ -928,7 +928,8 @@ final class GameViewModel: ObservableObject {
                             text: m["text"] as? String ?? "",
                             timestamp: m["timestamp"] as? Double ?? Date().timeIntervalSince1970 * 1000,
                             isMine: (m["senderId"] as? String) == self.playerIdRef,
-                            isImportant: m["isImportant"] as? Bool ?? false
+                            isImportant: m["isImportant"] as? Bool ?? false,
+                            isSystem: m["isSystem"] as? Bool ?? false
                         )
                     }
                 }
@@ -1013,7 +1014,8 @@ final class GameViewModel: ObservableObject {
                     text: data["text"] as? String ?? "",
                     timestamp: data["timestamp"] as? Double ?? Date().timeIntervalSince1970 * 1000,
                     isMine: isMine,
-                    isImportant: data["isImportant"] as? Bool ?? false
+                    isImportant: data["isImportant"] as? Bool ?? false,
+                    isSystem: data["isSystem"] as? Bool ?? false
                 )
                 self.chatMessages.append(msg)
                 if self.chatMessages.count > 200 { self.chatMessages.removeFirst(self.chatMessages.count - 200) }

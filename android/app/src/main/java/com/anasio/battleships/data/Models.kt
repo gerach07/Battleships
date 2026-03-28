@@ -20,6 +20,7 @@ data class ChatMessage(
     val timestamp: Long,
     val isMine: Boolean = false,
     val isImportant: Boolean = false,
+    val isSystem: Boolean = false,
 )
 
 data class PlacedShip(

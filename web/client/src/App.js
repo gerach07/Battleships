@@ -701,6 +701,12 @@ function App() {
       if (data.state === 'BATTLE_PHASE') setPhase('battle');
       else if (data.state === 'PLACEMENT_PHASE') setPhase('placement');
       else if (data.state === 'GAME_OVER') setPhase('gameOver');
+      if (data.chatHistory && data.chatHistory.length > 0) {
+        setChatMessages(data.chatHistory.map(msg => ({
+          ...msg,
+          isMine: false, // Spectators can't send messages as themselves in the same way (or if they do, senderId won't match)
+        })));
+      }
       const names = (data.players || []).map(p => p.name).join(' vs ');
       setMessageWithTimeout(tRef.current('msg.spectating', names), 'info', 5000);
     });
