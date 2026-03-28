@@ -94,6 +94,8 @@ final class GameViewModel: ObservableObject {
 
     // MARK: - Spectator boards
     @Published var spectatorBoards: [SpectatorBoard] = []
+    /// Per-player accumulated sunk-cell keys (used to overlay 💀 on the rendered board)
+    private var spectatorSunkDict: [String: Set<String>] = [:]
 
     // MARK: - Connection
     let socketManager = GameSocketManager.shared
@@ -122,7 +124,7 @@ final class GameViewModel: ObservableObject {
         MusicManager.shared.enabled = musicEnabled
         // Delay to allow AVAudioSession to be ready before first playback
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self, self.musicEnabled else { return }
+            guard self != nil else { return }
             MusicManager.shared.playMenuMusic()
         }
 
@@ -135,18 +137,41 @@ final class GameViewModel: ObservableObject {
                 guard let self else { return }
                 if connected && self.hasConnectedOnce && !self.gameId.isEmpty {
                     self.setMessage("🔄 \(self.s.reconnectingToGame)", "info")
-                    self.socketManager.emit("rejoinGame", [
+                    var payload: [String: Any] = [
                         "gameId": self.gameId,
                         "playerName": self.playerName,
                         "password": self.roomPassword,
-                    ])
+                    ]
+                    if self.isSpectator { payload["isSpectator"] = true }
+                    self.socketManager.emit("rejoinGame", payload)
                 }
                 if connected { self.hasConnectedOnce = true }
             }
             .store(in: &cancellables)
     }
 
+    // MARK: - Lifecycle
+    func handleSceneActive() {
+        if musicEnabled { MusicManager.shared.resumeMusic() }
+        socketManager.forceReconnect()
+        // Spectators have no grace period on the server — proactively re-register
+        // so we get fresh board state even when the socket never fully dropped.
+        if isSpectator && !gameId.isEmpty && socketManager.isConnected {
+            socketManager.emit("rejoinGame", [
+                "gameId": gameId,
+                "playerName": playerName,
+                "password": roomPassword,
+                "isSpectator": true,
+            ])
+        }
+    }
+
+    func handleSceneBackground() {
+        MusicManager.shared.pauseMusic()
+    }
+
     deinit {
+        playerLeftJob?.cancel()
         socketManager.disconnect()
     }
 
@@ -311,7 +336,7 @@ final class GameViewModel: ObservableObject {
 
     func sendChat(_ text: String) {
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        let trimmed = String(text.trimmingCharacters(in: .whitespaces).prefix(MAX_CHAT_LENGTH))
         let impRegex = try? NSRegularExpression(pattern: "^/imp\\s+(.+)", options: .caseInsensitive)
         if let match = impRegex?.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)),
            let range = Range(match.range(at: 1), in: trimmed) {
@@ -346,10 +371,17 @@ final class GameViewModel: ObservableObject {
         socketManager.forceReconnect()
     }
 
+    // MARK: - Helpers
+    private func localizeTs(_ data: [String: Any], _ ts: Double) -> Double {
+        guard let sn = data["serverNow"] as? Double, sn > 0 else { return ts }
+        return Date().timeIntervalSince1970 * 1000.0 - (sn - ts)
+    }
+
     // MARK: - Reset
     private func resetBattleState() {
         showSurrenderDialog = false
         showKickDialog = false
+        shootPending = false
         winner = nil
         currentTurn = nil
         playAgainPending = false
@@ -363,7 +395,6 @@ final class GameViewModel: ObservableObject {
         placementKey += 1
         turnStartedAt = nil
         playerTimeLeft = [:]
-        chatMessages = []
         chatOpen = false
         chatUnread = 0
         mySunkCount = 0
@@ -378,8 +409,42 @@ final class GameViewModel: ObservableObject {
 
     private func resetFullState() {
         resetBattleState()
+        chatMessages = []
         opponentName = ""
         spectatorBoards = []
+        spectatorSunkDict = [:]
+    }
+
+    /// Build SpectatorBoard list from server board data, applying any accumulated sunk overlay.
+    private func buildSpectatorBoards(_ boards: [[String: Any]]) -> [SpectatorBoard] {
+        boards.compactMap { b -> SpectatorBoard? in
+            guard let pid = b["playerId"] as? String,
+                  let name = b["playerName"] as? String,
+                  let boardData = b["board"] as? [[Any]] else { return nil }
+            let rawBoard = parseBoardFromJson(boardData)
+            let sunkSet = spectatorSunkDict[pid] ?? []
+            let board = sunkSet.isEmpty ? rawBoard : overlayBoard(rawBoard, sunkSet: sunkSet)
+            return SpectatorBoard(playerId: pid, playerName: name, board: board)
+        }
+    }
+
+    /// Parse sunkShipData (from spectatorJoined) and populate spectatorSunkDict.
+    private func applySpectatorSunkDataFromJoin(_ sunkData: [[String: Any]]) {
+        for pd in sunkData {
+            guard let pid = pd["playerId"] as? String,
+                  let ships = pd["sunkShips"] as? [[String: Any]] else { continue }
+            var sunkSet = Set<String>()
+            for ship in ships {
+                guard let cells = ship["cells"] as? [[String: Any]] else { continue }
+                let tuples = cells.compactMap { c -> (Int, Int)? in
+                    guard let r = c["row"] as? Int, let col = c["col"] as? Int else { return nil }
+                    return (r, col)
+                }
+                tuples.forEach { sunkSet.insert("\($0.0),\($0.1)") }
+                getSurroundingKeys(shipCells: tuples).forEach { sunkSet.insert($0 + "_safe") }
+            }
+            if !sunkSet.isEmpty { spectatorSunkDict[pid] = sunkSet }
+        }
     }
 
     // MARK: - Socket listeners
@@ -471,7 +536,7 @@ final class GameViewModel: ObservableObject {
                 self.phase = "battle"
                 self.currentTurn = data["currentTurn"] as? String
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
-                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = ts }
+                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = self.localizeTs(data, ts) }
                 if self.isMyTurn { SoundManager.shared.playTurn() }
             }
         }
@@ -559,7 +624,7 @@ final class GameViewModel: ObservableObject {
 
                 self.currentTurn = data["currentTurn"] as? String
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
-                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = ts }
+                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = self.localizeTs(data, ts) }
                 if self.isMyTurn { SoundManager.shared.playTurn() }
 
                 if let w = data["winner"] as? String {
@@ -619,6 +684,7 @@ final class GameViewModel: ObservableObject {
         sm.on("leftRoom") { [weak self] _ in
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.chatMessages = []
                 self.phase = "login"
                 self.gameId = ""
                 self.message = ""
@@ -629,14 +695,16 @@ final class GameViewModel: ObservableObject {
         sm.on("gameForfeited") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
-                self.phase = "gameOver"
-                self.winner = data["winner"] as? String
                 let forfeiterId = data["forfeiterId"] as? String ?? ""
                 let iForfeited = forfeiterId == self.playerIdRef
+                self.winner = data["winner"] as? String   // set winner BEFORE phase so didSet plays correct music
+                self.phase = "gameOver"
                 if iForfeited {
+                    SoundManager.shared.playDefeat()
                     self.message = self.s.youSurrendered
                     self.messageType = "info"
                 } else {
+                    SoundManager.shared.playVictory()
                     let name = data["forfeiterName"] as? String ?? self.s.opponent
                     self.message = self.s.opponentSurrendered.fmt(name)
                     self.messageType = "success"
@@ -644,16 +712,27 @@ final class GameViewModel: ObservableObject {
             }
         }
 
-        sm.on("playAgainRequested") { [weak self] _ in
-            DispatchQueue.main.async { self?.opponentWantsPlayAgain = true }
-        }
-
-        sm.on("playAgainDeclined") { [weak self] _ in
+        sm.on("playAgainRequested") { [weak self] args in
             guard let self else { return }
             DispatchQueue.main.async {
-                self.playAgainPending = false
-                self.opponentWantsPlayAgain = false
-                self.setMessage(self.s.opponentDeclinedRematch, "error")
+                if self.isSpectator {
+                    let name = (args.first as? [String: Any])?["requesterName"] as? String ?? self.s.opponent
+                    self.setMessage("🎮 \(name) wants a rematch!", "info")
+                } else { self.opponentWantsPlayAgain = true }
+            }
+        }
+
+        sm.on("playAgainDeclined") { [weak self] args in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                if self.isSpectator {
+                    let name = (args.first as? [String: Any])?["declinerName"] as? String ?? self.s.opponent
+                    self.setMessage("❌ \(name) declined the rematch", "error")
+                } else {
+                    self.playAgainPending = false
+                    self.opponentWantsPlayAgain = false
+                    self.setMessage(self.s.opponentDeclinedRematch, "error")
+                }
             }
         }
 
@@ -715,21 +794,44 @@ final class GameViewModel: ObservableObject {
         sm.on("spectatorJoined") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
+                self.joiningGame = false
                 self.isSpectator = true
-                let state = data["gameState"] as? String ?? ""
-                if state == "BATTLE_PHASE" { self.phase = "battle" }
-                else { self.phase = "placement" }
+                if let rid = data["roomId"] as? String, !rid.isEmpty { self.gameId = rid }
+                let state = data["state"] as? String ?? ""
+                switch state {
+                case "BATTLE_PHASE": self.phase = "battle"
+                case "GAME_OVER": self.phase = "gameOver"
+                default: self.phase = "placement"
+                }
+                // Restore sunk overlay for ships already sunk before spectator joined
+                self.spectatorSunkDict = [:]
+                if let sunkData = data["sunkShipData"] as? [[String: Any]] {
+                    self.applySpectatorSunkDataFromJoin(sunkData)
+                }
                 if let boards = data["boards"] as? [[String: Any]] {
-                    self.spectatorBoards = boards.compactMap { b -> SpectatorBoard? in
-                        guard let pid = b["playerId"] as? String,
-                              let name = b["playerName"] as? String,
-                              let boardData = b["board"] as? [[Any]] else { return nil }
-                        return SpectatorBoard(playerId: pid, playerName: name, board: parseBoardFromJson(boardData))
+                    self.spectatorBoards = self.buildSpectatorBoards(boards)
+                }
+                if let chatHistory = data["chatHistory"] as? [[String: Any]], !chatHistory.isEmpty {
+                    self.chatMessages = chatHistory.compactMap { m -> ChatMessage? in
+                        guard let id = m["id"] as? String,
+                              let senderId = m["senderId"] as? String,
+                              let senderName = m["senderName"] as? String,
+                              let text = m["text"] as? String else { return nil }
+                        let ts = m["timestamp"] as? Double ?? 0
+                        let isImportant = m["isImportant"] as? Bool ?? false
+                        return ChatMessage(id: id, senderId: senderId, senderName: senderName,
+                                          text: text, timestamp: ts, isMine: false, isImportant: isImportant)
                     }
                 }
                 if let ct = data["currentTurn"] as? String { self.currentTurn = ct }
-                if let names = data["playerNames"] as? [String] {
-                    self.setMessage(self.s.spectatingNames.fmt(names.joined(separator: " vs ")), "info", duration: 0)
+                if let tl = data["timeLimit"] as? Int, tl > 0 { self.gameTimeLimit = tl }
+                if let ptl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(ptl) }
+                if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = self.localizeTs(data, ts) }
+                if let players = data["players"] as? [[String: Any]] {
+                    let names = players.compactMap { $0["name"] as? String }
+                    if !names.isEmpty {
+                        self.setMessage(self.s.spectatingNames.fmt(names.joined(separator: " vs ")), "info", duration: 0)
+                    }
                 }
             }
         }
@@ -737,15 +839,28 @@ final class GameViewModel: ObservableObject {
         sm.on("spectatorShotResult") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
-                if let boards = data["boards"] as? [[String: Any]] {
-                    self.spectatorBoards = boards.compactMap { b -> SpectatorBoard? in
-                        guard let pid = b["playerId"] as? String,
-                              let name = b["playerName"] as? String,
-                              let boardData = b["board"] as? [[Any]] else { return nil }
-                        return SpectatorBoard(playerId: pid, playerName: name, board: parseBoardFromJson(boardData))
+                let boards = data["boards"] as? [[String: Any]] ?? []
+                // Track sunk cells so we can render 💀 instead of plain HIT
+                if let shipSunk = data["shipSunk"] as? Bool, shipSunk,
+                   let sunkCells = data["sunkShipCells"] as? [[String: Any]], !sunkCells.isEmpty,
+                   let shooterId = data["shooterId"] as? String {
+                    let targetPid = boards.first { ($0["playerId"] as? String) != shooterId }?["playerId"] as? String
+                    if let targetPid {
+                        let tuples = sunkCells.compactMap { c -> (Int, Int)? in
+                            guard let r = c["row"] as? Int, let col = c["col"] as? Int else { return nil }
+                            return (r, col)
+                        }
+                        if self.spectatorSunkDict[targetPid] == nil { self.spectatorSunkDict[targetPid] = [] }
+                        tuples.forEach { self.spectatorSunkDict[targetPid]?.insert("\($0.0),\($0.1)") }
+                        getSurroundingKeys(shipCells: tuples).forEach { self.spectatorSunkDict[targetPid]?.insert($0 + "_safe") }
                     }
                 }
+                if !boards.isEmpty {
+                    self.spectatorBoards = self.buildSpectatorBoards(boards)
+                }
                 if let ct = data["currentTurn"] as? String { self.currentTurn = ct }
+                if let ptl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(ptl) }
+                if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = self.localizeTs(data, ts) }
                 if let w = data["winner"] as? String {
                     self.winner = w
                     self.phase = "gameOver"
@@ -756,8 +871,15 @@ final class GameViewModel: ObservableObject {
         sm.on("spectatorBattleStarted") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
+                self.spectatorSunkDict = [:]   // new game, reset sunk overlay
                 self.phase = "battle"
                 if let ct = data["currentTurn"] as? String { self.currentTurn = ct }
+                if let tl = data["timeLimit"] as? Int, tl > 0 { self.gameTimeLimit = tl }
+                if let ptl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(ptl) }
+                if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = self.localizeTs(data, ts) }
+                if let boards = data["boards"] as? [[String: Any]] {
+                    self.spectatorBoards = self.buildSpectatorBoards(boards)
+                }
             }
         }
 
@@ -773,6 +895,7 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 self.joiningGame = false
+                self.shootPending = false
                 if let pid = data["playerId"] as? String, !pid.isEmpty {
                     self.playerId = pid; self.playerIdRef = pid
                 }
@@ -782,7 +905,7 @@ final class GameViewModel: ObservableObject {
                 if let b = data["opponentBoard"] as? [[Any]] { self.opponentBoard = parseBoardFromJson(b) }
                 if let ct = data["currentTurn"] as? String, !ct.isEmpty { self.currentTurn = ct }
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
-                if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = ts }
+                if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = self.localizeTs(data, ts) }
                 if let tl = data["timeLimit"] as? Int, tl > 0 { self.gameTimeLimit = tl }
                 self.winner = data["winner"] as? String
                 self.opponentName = (data["opponentName"] as? String) ?? ""
@@ -827,6 +950,7 @@ final class GameViewModel: ObservableObject {
                 self.phase = "login"
                 self.gameId = ""
                 self.roomPassword = ""
+                self.isSpectator = false
             }
         }
 
@@ -885,6 +1009,7 @@ final class GameViewModel: ObservableObject {
                     isImportant: data["isImportant"] as? Bool ?? false
                 )
                 self.chatMessages.append(msg)
+                if self.chatMessages.count > 200 { self.chatMessages.removeFirst(self.chatMessages.count - 200) }
                 if !isMine {
                     if !self.chatOpen { self.chatUnread += 1 }
                     SoundManager.shared.playChat()

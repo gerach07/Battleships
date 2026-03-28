@@ -11,7 +11,7 @@ import {
   getSurroundingKeys
 } from './utils/gameHelpers';
 import { playSound, setSoundEnabled as setSfxEnabled, disposeSounds } from './utils/sounds';
-import { playPhaseMusic, stopAllMusic, setMusicEnabled, pauseMusic, resumeMusic } from './utils/music';
+import { playPhaseMusic, stopAllMusic, setMusicEnabled, pauseMusic, resumeMusic, onTrackChange, getCurrentTrackName } from './utils/music';
 
 // i18n
 import { useI18n } from './i18n/I18nContext';
@@ -198,6 +198,7 @@ function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
   const [isSpectator, setIsSpectator] = useState(false);
+  const [currentTrackName, setCurrentTrackName] = useState(() => getCurrentTrackName());
 
   // Auto-clear messages after a timeout
   const messageTimerRef = useRef(null);
@@ -242,6 +243,7 @@ function App() {
   const gameIdRef = useRef('');
   const roomPasswordRef = useRef('');
   const playerNameRef = useRef('');
+  const isSpectatorRef = useRef(false);
   const [isJoining, setIsJoining] = useState(false);
 
   // Keep tRef always pointing to current translation function
@@ -257,7 +259,8 @@ function App() {
     gameIdRef.current = gameId;
     roomPasswordRef.current = roomPassword;
     playerNameRef.current = playerName;
-  }, [playerId, soundEnabled, chatOpen, phase, winner, gameId, roomPassword, playerName]);
+    isSpectatorRef.current = isSpectator;
+  }, [playerId, soundEnabled, chatOpen, phase, winner, gameId, roomPassword, playerName, isSpectator]);
 
   // Persistence
   useEffect(() => {
@@ -279,6 +282,11 @@ function App() {
     localStorage.setItem('battleships-music', musicEnabled ? 'on' : 'off');
     setMusicEnabled(musicEnabled);
   }, [musicEnabled]);
+
+  // Subscribe to track name changes
+  useEffect(() => {
+    onTrackChange(setCurrentTrackName);
+  }, []);
 
   // Initialize sound & music modules on mount to match stored preferences
   useEffect(() => {
@@ -319,6 +327,15 @@ function App() {
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
+
+  // Warn before closing tab during active game
+  useEffect(() => {
+    const active = phase === 'placement' || phase === 'battle';
+    if (!active) return;
+    const handler = (e) => { e.preventDefault(); };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [phase]);
 
   // Load saved name on mount
   useEffect(() => {
@@ -475,7 +492,7 @@ function App() {
       setOpponentBoard(createEmptyBoard());
       resetSunk();
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
       if (data.timeLimit) setGameTimeLimit(data.timeLimit);
       // Play turn notification if it's our turn first
       if (soundRef.current && data.currentTurn === playerIdRef.current) playSound('turn');
@@ -485,7 +502,7 @@ function App() {
       shootPendingRef.current = false; // allow next shot
       setCurrentTurn(data.currentTurn);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
       const iShot = data.shooterId === playerIdRef.current;
 
       // Last shot animation — cancel previous timer to prevent early clear on rapid shots
@@ -621,6 +638,7 @@ function App() {
     socket.on('gameForfeited', (data) => {
       setPhase('gameOver');
       setWinner(data.winner);
+      if (soundRef.current) playSound(data.winner === playerIdRef.current ? 'victory' : 'defeat');
       const iForfeited = data.forfeiterId === playerIdRef.current;
       setMessageWithTimeout(
         iForfeited ? tRef.current('msg.youSurrendered') : tRef.current('msg.opSurrendered', data.forfeiterName),
@@ -628,12 +646,22 @@ function App() {
       );
     });
 
-    socket.on('playAgainRequested', () => setOpponentWantsPlayAgain(true));
+    socket.on('playAgainRequested', (data) => {
+      if (isSpectatorRef.current) {
+        setMessageWithTimeout(`🎮 ${data?.requesterName || tRef.current('app.opponent')} wants a rematch!`, 'info', 6000);
+      } else {
+        setOpponentWantsPlayAgain(true);
+      }
+    });
 
-    socket.on('playAgainDeclined', () => {
-      setPlayAgainPending(false);
-      setOpponentWantsPlayAgain(false);
-      setMessageWithTimeout(tRef.current('msg.declinedRematch'), 'error', 5000);
+    socket.on('playAgainDeclined', (data) => {
+      if (isSpectatorRef.current) {
+        setMessageWithTimeout(`❌ ${data?.declinerName || tRef.current('app.opponent')} declined the rematch`, 'info', 5000);
+      } else {
+        setPlayAgainPending(false);
+        setOpponentWantsPlayAgain(false);
+        setMessageWithTimeout(tRef.current('msg.declinedRematch'), 'error', 5000);
+      }
     });
 
     socket.on('chatMessage', (msg) => {
@@ -653,7 +681,7 @@ function App() {
       setSpectatorBoards(data.boards || []);
       setGameTimeLimit(data.timeLimit || 300);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
       setCurrentTurn(data.currentTurn);
       // Populate sunk overlay for ships already sunk before spectator joined
       spectatorSunkMap.current.clear();
@@ -679,7 +707,7 @@ function App() {
       setSpectatorBoards(data.boards || []);
       setCurrentTurn(data.currentTurn);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
 
       // Last shot animation for spectators
       const boards = data.boards || [];
@@ -723,7 +751,7 @@ function App() {
       setSpectatorBoards(data.boards || []);
       setCurrentTurn(data.currentTurn);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
       if (data.timeLimit) setGameTimeLimit(data.timeLimit);
     });
 
@@ -790,6 +818,7 @@ function App() {
     socket.on('rejoinSuccess', (data) => {
       joiningGameRef.current = false;
       setIsJoining(false);
+      shootPendingRef.current = false;
       setPlayerId(data.playerId);
       playerIdRef.current = data.playerId;
       setIsHost(data.isHost || false);
@@ -798,7 +827,7 @@ function App() {
       if (data.opponentBoard) setOpponentBoard(data.opponentBoard);
       if (data.currentTurn) setCurrentTurn(data.currentTurn);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
-      if (data.turnStartedAt) setTurnStartedAt(data.turnStartedAt);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
       if (data.timeLimit) setGameTimeLimit(data.timeLimit);
       setWinner(data.winner || null);
       setOpponentName(data.opponentName || '');
@@ -1176,6 +1205,11 @@ function App() {
               <button onClick={toggleMusic} className="p-1.5 hover:bg-white/10 active:scale-95 transition text-base" title={musicEnabled ? t('app.muteMusic') : t('app.unmuteMusic')} aria-label={musicEnabled ? t('app.muteMusic') : t('app.unmuteMusic')}>
                 {musicEnabled ? '🎵' : '🔕'}
               </button>
+              {musicEnabled && currentTrackName && (
+                <span className="hidden sm:flex items-center gap-1 px-2 text-[0.6rem] text-blue-300/70 max-w-[9rem] truncate" title={currentTrackName}>
+                  ♪ {currentTrackName}
+                </span>
+              )}
               <button onClick={toggleTheme} className="p-1.5 hover:bg-white/10 rounded-r-lg active:scale-95 transition text-base" title={t('app.toggleTheme')} aria-label={t('app.toggleTheme')}>
                 {theme === 'dark' ? '☀️' : '🌙'}
               </button>
@@ -1312,6 +1346,7 @@ function App() {
             isMyTurn={isMyTurn} opponentName={opponentName} handleForfeit={isSpectator ? noop : handleForfeit}
             dispPlayer={isSpectator ? (dispSpectatorBoards[0]?.board || dispPlayer) : dispPlayer}
             dispOpponent={isSpectator ? (dispSpectatorBoards[1]?.board || dispOpponent) : dispOpponent}
+            spectatorPlayerNames={isSpectator ? [dispSpectatorBoards[0]?.playerName, dispSpectatorBoards[1]?.playerName] : []}
             handleShoot={isSpectator ? noop : handleShoot}
             explosionCells={explosionCells} noop={noop}
             playerTimeLeft={playerTimeLeft} turnStartedAt={turnStartedAt}
@@ -1348,8 +1383,22 @@ function App() {
         </Suspense>
       )}
 
-      <footer className="max-w-5xl mx-auto px-3 sm:px-6 py-2.5 text-center mt-auto relative z-10" role="contentinfo">
-        <p className="text-[0.55rem] text-slate-600">Created by Adrians Bergmanis</p>
+      <footer className="max-w-5xl mx-auto px-3 sm:px-6 py-4 text-center mt-auto relative z-10" role="contentinfo">
+        <p className="text-[0.6rem] text-slate-500 font-semibold mb-2">⚓ Battleships &mdash; Created by Adrians Bergmanis</p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-2">
+          {[
+            ['The Price of Freedom',  'Menu Music',           'Royalty-Free Music'],
+            ['Beyond New Horizons',   'Ship Placement Music', 'Royalty-Free Music'],
+            ['Honor and Sword',       'Battle Music',         'No-Copyright Music'],
+            ['Victory',               'Victory Sound',        'Free Sound Effect'],
+            ['Waves Crash',           'Defeat Sound',         'Free Sound Effect'],
+          ].map(([name, role, source]) => (
+            <span key={name} className="text-[0.5rem] text-slate-600" title={`${role} — ${source}`}>
+              ♪ &quot;{name}&quot;
+            </span>
+          ))}
+        </div>
+        <p className="text-[0.5rem] text-slate-700">&copy; Adrians Bergmanis. All rights reserved. Music &amp; sounds are royalty-free / no-copyright.</p>
       </footer>
     </div>
   );

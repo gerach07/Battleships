@@ -1,7 +1,7 @@
 import SwiftUI
 
 private struct ShipData: Identifiable {
-    let id = UUID()
+    let id: Int
     let emoji: String
     let startX: CGFloat
     let startY: CGFloat
@@ -11,11 +11,12 @@ private struct ShipData: Identifiable {
 }
 
 struct BackgroundShipsView: View {
-    private let ships: [ShipData] = {
+    private static let ships: [ShipData] = {
         let emojis = ["🚢","⛵","🛥️","🚤","⛴️","🛳️","🚢","⛵"]
         return emojis.enumerated().map { i, emoji in
-            let goRight = Bool.random()
+            let goRight = i % 2 == 0
             return ShipData(
+                id: i,
                 emoji: emoji,
                 startX: goRight ? -0.15 : 1.15,
                 startY: CGFloat.random(in: 0.05...0.95),
@@ -28,7 +29,7 @@ struct BackgroundShipsView: View {
 
     var body: some View {
         GeometryReader { geo in
-            ForEach(ships) { ship in
+            ForEach(Self.ships) { ship in
                 AnimatedShip(ship: ship, size: geo.size)
             }
         }

@@ -18,7 +18,9 @@ export function disposeSounds() {
 }
 
 function getCtx() {
-    if (!ctx) ctx = new AudioCtx();
+    if (!ctx) {
+        try { ctx = new AudioCtx(); } catch { return null; }
+    }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
 }
@@ -26,6 +28,7 @@ function getCtx() {
 function tone(freq, duration, type = 'sine', vol = 0.3) {
     try {
         const c = getCtx();
+        if (!c) return;
         const osc = c.createOscillator();
         const gain = c.createGain();
         osc.type = type;

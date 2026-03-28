@@ -15,6 +15,33 @@ let _volume = 0.35;
 let _paused = false;       // true when paused due to tab hidden
 let _fadeInterval = null;  // track active fade to prevent leaks
 let _fadingAudio = null;   // audio element currently being faded out
+let _currentTrackName = null;  // display name of the playing track
+let _onTrackChange = null;     // optional callback(name|null)
+
+/** Map phase → display name */
+const TRACK_NAMES = {
+    menu:      'The Price of Freedom',
+    waiting:   'The Price of Freedom',
+    placement: 'Beyond New Horizons',
+    battle:    'Honor and Sword',
+    victory:   'Victory',
+    defeat:    'Waves Crash',
+};
+
+/** Register a callback invoked whenever the track name changes */
+export function onTrackChange(cb) {
+    _onTrackChange = cb;
+}
+
+/** Returns the current display name, or null if nothing is playing */
+export function getCurrentTrackName() {
+    return _currentTrackName;
+}
+
+function setTrackName(name) {
+    _currentTrackName = name;
+    _onTrackChange?.(name);
+}
 
 /** Map phase → { src, loop } — mirrors Android res/raw */
 const TRACKS = {
@@ -62,6 +89,15 @@ function fadeOut(audio, durationMs = 400) {
             disposeAudio(audio);
         }
     }, stepMs);
+    // Safety: force cleanup if interval somehow survives past expected duration
+    setTimeout(() => {
+        if (_fadeInterval && _fadingAudio === audio) {
+            clearInterval(_fadeInterval);
+            _fadeInterval = null;
+            _fadingAudio = null;
+            disposeAudio(audio);
+        }
+    }, durationMs + 200);
 }
 
 /** Stop whatever is currently playing */
@@ -74,6 +110,7 @@ function stopMusic(fade = true) {
         }
         _audio = null;
     }
+    setTrackName(null);
 }
 
 /**
@@ -95,6 +132,7 @@ export function playPhaseMusic(phase) {
 
     stopMusic(true);
     _currentPhase = phase;
+    setTrackName(TRACK_NAMES[phase] || null);
 
     const track = TRACKS[phase];
     if (!track) {
@@ -121,6 +159,11 @@ export function playPhaseMusic(phase) {
             setTimeout(() => {
                 audio.muted = false;
             }, 100);
+        });
+        
+        audio.addEventListener('error', () => {
+            console.warn('[Music] Failed to load audio:', track.src);
+            setTrackName(null);
         });
         
         // Load the audio - autoplay will handle starting it

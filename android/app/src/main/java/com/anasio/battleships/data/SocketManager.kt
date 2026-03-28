@@ -59,10 +59,12 @@ object SocketManager {
 
     /** Register a listener and track it for safe per-event removal */
     fun on(event: String, listener: Emitter.Listener) {
-        // Remove any previously registered listener for this event first
-        registeredListeners[event]?.let { socket?.off(event, it) }
-        registeredListeners[event] = listener
-        socket?.on(event, listener)
+        synchronized(this) {
+            // Remove any previously registered listener for this event first
+            registeredListeners[event]?.let { socket?.off(event, it) }
+            registeredListeners[event] = listener
+            socket?.on(event, listener)
+        }
     }
 
     /** Remove only the tracked listener for this event (not ALL listeners) */

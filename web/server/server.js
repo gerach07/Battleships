@@ -304,6 +304,8 @@ io.on('connection', (socket) => {
           currentTurn: room.currentTurn,
           boards: room.getSpectatorBoards(),
           sunkShipData: room.getSunkShipData(),
+          chatHistory: room.chatMessages || [],
+          serverNow: Date.now(),
         });
         io.to(roomId).emit('spectatorUpdate', { count: room.spectators.size });
         room.touch();
@@ -371,6 +373,29 @@ io.on('connection', (socket) => {
     const pending = pendingDisconnects.get(key);
 
     if (!pending) {
+      // Check if this is a spectator trying to re-spectate (no grace period needed)
+      if (payload.isSpectator && room.state !== GameState.WAITING_FOR_PLAYERS) {
+        if (!room.checkPassword(pwd)) return socket.emit('rejoinFailed', { reason: 'Incorrect password' });
+        if (!room.addSpectator(socket.id)) return socket.emit('rejoinFailed', { reason: 'Spectator slots full' });
+        playerToRoom[socket.id] = roomId;
+        socket.join(roomId);
+        socket.emit('spectatorJoined', {
+          roomId: room.roomId,
+          players: room.getPlayerList(),
+          state: room.getState(),
+          timeLimit: room.timeLimit,
+          playerTimeLeft: room.playerTimeLeft,
+          turnStartedAt: room.turnStartedAt,
+          currentTurn: room.currentTurn,
+          boards: room.getSpectatorBoards(),
+          sunkShipData: room.getSunkShipData(),
+          chatHistory: room.chatMessages || [],
+          serverNow: Date.now(),
+        });
+        io.to(roomId).emit('spectatorUpdate', { count: room.spectators.size });
+        room.touch();
+        return;
+      }
       return socket.emit('rejoinFailed', { reason: 'Session expired' });
     }
 
@@ -445,6 +470,7 @@ io.on('connection', (socket) => {
         chatHistory: freshRoom.chatMessages || [],
         opponentName: opponent?.name || null,
         shipsPlaced: freshRoom.players[socket.id]?.shipsPlaced || false,
+        serverNow: Date.now(),
       });
 
       // Notify opponent the player is back
@@ -507,7 +533,8 @@ io.on('connection', (socket) => {
         room.players[socket.id].board = room._createEmptyBoard();
         return socket.emit('error', { error: 'Coordinates must be integers' });
       }
-      const placed = room.placeShip(socket.id, ship.row, ship.col, ship.length, ship.direction, typeof ship.name === 'string' ? ship.name : undefined);
+      const shipName = typeof ship.name === 'string' ? sanitizeInput(ship.name, 50) : undefined;
+      const placed = room.placeShip(socket.id, ship.row, ship.col, ship.length, ship.direction, shipName);
       if (!placed) {
         // Atomic: if any ship fails, reset all — prevents partial fleet exploits
         room.players[socket.id].ships = [];
@@ -521,7 +548,7 @@ io.on('connection', (socket) => {
     if (room.markPlayerReady(socket.id)) {
       const p1 = room.getPlayerIds()[0];
       const p2 = room.getPlayerIds()[1];
-      const battleData = { currentTurn: room.currentTurn, playerTimeLeft: room.playerTimeLeft, turnStartedAt: room.turnStartedAt, timeLimit: room.timeLimit };
+      const battleData = { currentTurn: room.currentTurn, playerTimeLeft: room.playerTimeLeft, turnStartedAt: room.turnStartedAt, timeLimit: room.timeLimit, serverNow: Date.now() };
       io.to(p1).emit('battleStarted', { ...battleData, playerBoard: room.getPlayerBoard(p1) });
       io.to(p2).emit('battleStarted', { ...battleData, playerBoard: room.getPlayerBoard(p2) });
       // Notify spectators
@@ -564,20 +591,21 @@ io.on('connection', (socket) => {
     if (row < 0 || row >= 10 || col < 0 || col >= 10) return;
 
     const roomId = playerToRoom[socket.id];
-    const room = rooms[roomId];
-    if (!room) return;
+    if (!roomId || !rooms[roomId]) return;
 
     // Serialise shots per room to prevent race conditions
     const release = await acquireRoomLock(roomId);
     try {
-      // Re-check state after acquiring lock (may have changed)
-      if (room.state !== GameState.BATTLE_PHASE) return;
+      // Fresh read after acquiring lock — room may have been deleted or state changed
+      const room = rooms[roomId];
+      if (!room || room.state !== GameState.BATTLE_PHASE) return;
 
       const shot = room.processShot(socket.id, row, col);
       if (!shot.success) return socket.emit('error', { error: shot.error });
 
       const opponentId = room.getOpponentId(socket.id);
       const result = shot.result;
+      const serverNow = Date.now();
 
       io.to(socket.id).emit('shotResult', {
         ...result,
@@ -586,6 +614,7 @@ io.on('connection', (socket) => {
         shooterId: socket.id,
         playerBoard: room.getPlayerBoard(socket.id),
         opponentBoard: room.getOpponentViewBoard(socket.id),
+        serverNow,
       });
 
       if (opponentId) {
@@ -596,6 +625,7 @@ io.on('connection', (socket) => {
           shooterId: socket.id,
           playerBoard: room.getPlayerBoard(opponentId),
           opponentBoard: room.getOpponentViewBoard(opponentId),
+          serverNow,
         });
       }
       // Notify spectators
@@ -606,6 +636,7 @@ io.on('connection', (socket) => {
           winner: result.gameWon ? room.winner : undefined,
           shooterId: socket.id,
           boards: room.getSpectatorBoards(),
+          serverNow,
         });
       });
       room.touch();
@@ -634,7 +665,7 @@ io.on('connection', (socket) => {
     }
 
     room.playAgainVotes.add(socket.id);
-    socket.to(roomId).emit('playAgainRequested');
+    socket.to(roomId).emit('playAgainRequested', { requesterName: room.players[socket.id]?.name || '?' });
 
     if (room.playAgainVotes.size === 2 && room.getPlayerIds().length === 2) {
       room._transitionState(GameState.PLACEMENT_PHASE);
@@ -670,7 +701,7 @@ io.on('connection', (socket) => {
       const room = rooms[roomId];
       if (!room || room.state !== GameState.GAME_OVER) return;
       if (!room.players[socket.id]) return; // spectators can't decline
-      socket.to(roomId).emit('playAgainDeclined');
+      socket.to(roomId).emit('playAgainDeclined', { declinerName: room.players[socket.id]?.name || '?' });
       room.playAgainVotes.delete(socket.id);
       room.touch();
     } finally {

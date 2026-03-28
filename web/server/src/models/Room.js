@@ -67,6 +67,7 @@ class Room {
     }
 
     addSpectator(socketId) {
+        if (this.spectators.has(socketId)) return true;  // idempotent — already registered
         if (this.spectators.size >= MAX_SPECTATORS) return false;
         this.spectators.add(socketId);
         return true;
@@ -79,9 +80,9 @@ class Room {
     checkPassword(password) {
         if (!this.hasPassword()) return true;
         if (typeof password !== 'string') return false;
-        const a = Buffer.from(this.password);
-        const b = Buffer.from(password);
-        if (a.length !== b.length) return false;
+        // Constant-time comparison: hash both to fixed length to avoid leaking password length
+        const a = crypto.createHash('sha256').update(this.password).digest();
+        const b = crypto.createHash('sha256').update(password).digest();
         return crypto.timingSafeEqual(a, b);
     }
 
@@ -475,7 +476,7 @@ class Room {
     }
 
     isCurrentPlayerTimeUp() {
-        if (!this.timeLimit || !this.turnStartedAt || this.state !== GameState.BATTLE_PHASE) return false;
+        if (!this.timeLimit || !this.turnStartedAt || this.state !== GameState.BATTLE_PHASE || !this.currentTurn) return false;
         return this.getEffectiveTimeLeft(this.currentTurn) <= 0;
     }
 

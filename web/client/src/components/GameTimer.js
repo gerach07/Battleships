@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 
 const fmt = (secs) => {
-    const s = Math.max(0, Math.ceil(secs));
+    const s = Math.max(0, Math.ceil(secs ?? 0));
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 };
 
