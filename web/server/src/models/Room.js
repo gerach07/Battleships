@@ -517,7 +517,6 @@ class Room {
             ...(isImportant && { isImportant: true }),
         };
         this.chatMessages.push(msg);
-        if (this.chatMessages.length > 100) this.chatMessages = this.chatMessages.slice(-50);
         return msg;
     }
 }

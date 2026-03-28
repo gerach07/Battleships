@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,8 +82,10 @@ fun ChatOverlay(
                         modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        items(messages, key = { it.id }) { msg ->
-                            ChatBubble(msg)
+                        itemsIndexed(messages, key = { _, msg -> msg.id }) { index, msg ->
+                            val prev = messages.getOrNull(index - 1)
+                            val showName = prev == null || prev.senderName != msg.senderName
+                            ChatBubble(msg, showName)
                         }
                         if (messages.isEmpty()) {
                             item {
@@ -160,7 +162,8 @@ fun ChatOverlay(
 }
 
 @Composable
-private fun ChatBubble(msg: ChatMessage) {
+private fun ChatBubble(msg: ChatMessage, showName: Boolean) {
+    val s = LocalI18n.current
     val c = LocalColorPalette.current
     val align = if (msg.isMine) Alignment.End else Alignment.Start
     val impTeal = Color(0xFF00BCD4)
@@ -175,7 +178,7 @@ private fun ChatBubble(msg: ChatMessage) {
         else -> c.border.copy(alpha = .3f)
     }
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = if (showName) 2.dp else 0.dp),
         horizontalAlignment = align,
     ) {
         Column(
@@ -186,11 +189,12 @@ private fun ChatBubble(msg: ChatMessage) {
                 .border(0.5.dp, borderColor, RoundedCornerShape(8.dp))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
-            if (!msg.isMine) {
+            if (showName) {
                 val namePrefix = if (msg.isImportant) "📢 " else ""
+                val displayName = if (msg.isMine) s.youSlot else msg.senderName
                 Text(
-                    namePrefix + msg.senderName, fontSize = 10.sp,
-                    color = if (msg.isImportant) impTeal else c.accent,
+                    namePrefix + displayName, fontSize = 10.sp,
+                    color = if (msg.isImportant) impTeal else if (msg.isMine) c.primary else c.accent,
                     fontWeight = FontWeight.Bold,
                 )
             }

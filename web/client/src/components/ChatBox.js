@@ -49,8 +49,11 @@ const ChatBox = memo(({ messages, onSend, isOpen, onToggle, unread }) => {
                                 <p className="text-slate-500 text-xs">{t('chat.noMessages')}</p>
                             </div>
                         )}
-                        {messages.map((m, i) => (
-                            <div key={m.id || i} className={m.isSystem ? 'text-center' : `flex ${m.isMine ? 'justify-end' : 'justify-start'}`}>
+                        {messages.map((m, i) => {
+                            const showName = !m.isSystem && (i === 0 || messages[i-1].isSystem || messages[i-1].senderName !== m.senderName);
+                            const displayName = m.isMine ? t('waiting.you') : m.senderName;
+                            return (
+                            <div key={m.id || i} className={m.isSystem ? 'text-center mt-2' : `flex ${m.isMine ? 'justify-end' : 'justify-start'} ${!showName ? 'mt-0.5' : 'mt-2'}`}>
                                 {m.isSystem ? (
                                     <p className="text-slate-500 text-[0.65rem] italic bg-slate-800/40 rounded-full px-3 py-1 inline-block">{m.text}</p>
                                 ) : (
@@ -61,12 +64,14 @@ const ChatBox = memo(({ messages, onSend, isOpen, onToggle, unread }) => {
                                                 ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md' 
                                                 : 'bg-slate-700/70 text-slate-200 border border-slate-600/30 rounded-bl-md'
                                     }`}>
-                                        <span className={`text-[0.6rem] font-bold block mb-0.5 ${m.isImportant ? 'text-cyan-200/80' : m.isMine ? 'text-blue-200/70' : 'text-yellow-300/90'}`}>{m.isImportant && '📢 '}{m.senderName}</span>
+                                        {showName && (
+                                            <span className={`text-[0.6rem] font-bold block mb-0.5 ${m.isImportant ? 'text-cyan-200/80' : m.isMine ? 'text-blue-200/70' : 'text-yellow-300/90'}`}>{m.isImportant && '📢 '}{displayName}</span>
+                                        )}
                                         {m.text}
                                     </div>
                                 )}
                             </div>
-                        ))}
+                        )})}
                     </div>
 
                     {/* Input */}

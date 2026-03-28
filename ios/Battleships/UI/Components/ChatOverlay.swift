@@ -35,9 +35,10 @@ struct ChatOverlay: View {
             // Messages
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(vm.chatMessages) { msg in
-                            chatBubble(msg)
+                    LazyVStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(vm.chatMessages.enumerated()), id: \.element.id) { index, msg in
+                            let showName = (index == 0) || (vm.chatMessages[index - 1].senderName != msg.senderName) || vm.chatMessages[index - 1].isSystem || msg.isSystem
+                            chatBubble(msg, showName: showName)
                                 .id(msg.id)
                         }
                     }
@@ -86,27 +87,40 @@ struct ChatOverlay: View {
     }
 
     @ViewBuilder
-    private func chatBubble(_ msg: ChatMessage) -> some View {
+    private func chatBubble(_ msg: ChatMessage, showName: Bool) -> some View {
         let isMe = msg.isMine
-        HStack {
-            if isMe { Spacer(minLength: 40) }
-            VStack(alignment: isMe ? .trailing : .leading, spacing: 2) {
-                if !isMe {
-                    Text(msg.senderName)
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.5))
-                }
+        if msg.isSystem {
+            HStack {
+                Spacer()
                 Text(msg.text)
-                    .font(.subheadline)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(isMe ? Color.blue.opacity(0.4) : Color.white.opacity(0.1))
-                    )
-                    .foregroundColor(.white)
+                    .font(.caption)
+                    .italic()
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.vertical, 4)
+                Spacer()
             }
-            if !isMe { Spacer(minLength: 40) }
+        } else {
+            HStack {
+                if isMe { Spacer(minLength: 40) }
+                VStack(alignment: isMe ? .trailing : .leading, spacing: 2) {
+                    if showName {
+                        Text(isMe ? vm.s.youSlot : msg.senderName)
+                            .font(.caption2)
+                            .foregroundColor((isMe ? Color.blue : Color.white).opacity(0.6))
+                    }
+                    Text(msg.text)
+                        .font(.subheadline)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(isMe ? Color.blue.opacity(0.6) : Color.white.opacity(0.15))
+                        )
+                        .foregroundColor(.white)
+                }
+                if !isMe { Spacer(minLength: 40) }
+            }
+            .padding(.top, showName ? 4 : 0)
         }
     }
 }

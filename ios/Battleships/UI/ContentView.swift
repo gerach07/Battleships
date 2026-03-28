@@ -73,7 +73,7 @@ struct ContentView: View {
             }
 
             // Chat overlay
-            if vm.chatOpen && (vm.phase == "battle" || vm.phase == "placement" || vm.phase == "gameOver") {
+            if vm.chatOpen && (vm.phase == "battle" || vm.phase == "placement" || vm.phase == "gameOver" || vm.phase == "waiting") {
                 ChatOverlay(vm: vm)
                     .frame(maxHeight: 400)
                     .padding(16)
@@ -144,6 +144,7 @@ struct ContentView: View {
                 vm.soundEnabled.toggle()
             } label: {
                 Image(systemName: vm.soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                    .frame(width: 20, height: 20)
                     .foregroundColor(vm.soundEnabled ? .blue : .gray)
                     .padding(6)
                     .background(Color.white.opacity(0.08))
@@ -155,6 +156,7 @@ struct ContentView: View {
                 vm.musicEnabled.toggle()
             } label: {
                 Image(systemName: vm.musicEnabled ? "music.note" : "music.note.list")
+                    .frame(width: 20, height: 20)
                     .foregroundColor(vm.musicEnabled ? .blue : .gray)
                     .padding(6)
                     .background(Color.white.opacity(0.08))
@@ -162,7 +164,7 @@ struct ContentView: View {
             }
 
             // Chat button (when in game)
-            if vm.phase == "battle" || vm.phase == "placement" || vm.phase == "gameOver" {
+            if vm.phase == "battle" || vm.phase == "placement" || vm.phase == "gameOver" || vm.phase == "waiting" {
                 Button {
                     vm.toggleChat()
                 } label: {
