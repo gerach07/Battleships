@@ -99,13 +99,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _theirSunkCount = MutableStateFlow(0)
     val theirSunkCount: StateFlow<Int> = _theirSunkCount
 
-    // ── Shot / Explosion Animations ──
-    /** "row,col" key of the most recent shot for pop animation, auto-clears after 500ms */
-    private val _lastShotKey = MutableStateFlow<String?>(null)
-    val lastShotKey: StateFlow<String?> = _lastShotKey
-    /** Set of "row,col" keys currently showing explosion overlay, auto-clears after 1.5s */
-    private val _explosionKeys = MutableStateFlow<Set<String>>(emptySet())
-    val explosionKeys: StateFlow<Set<String>> = _explosionKeys
+    // ── Shot / Explosion Animations (per-board) ──
+    /** "row,col" key of the most recent shot on opponent's board, auto-clears after 500ms */
+    private val _opponentLastShotKey = MutableStateFlow<String?>(null)
+    val opponentLastShotKey: StateFlow<String?> = _opponentLastShotKey
+    /** "row,col" key of the most recent shot on player's board, auto-clears after 500ms */
+    private val _playerLastShotKey = MutableStateFlow<String?>(null)
+    val playerLastShotKey: StateFlow<String?> = _playerLastShotKey
+    /** Set of "row,col" keys currently showing explosion overlay on opponent's board */
+    private val _opponentExplosionKeys = MutableStateFlow<Set<String>>(emptySet())
+    val opponentExplosionKeys: StateFlow<Set<String>> = _opponentExplosionKeys
+    /** Set of "row,col" keys currently showing explosion overlay on player's board */
+    private val _playerExplosionKeys = MutableStateFlow<Set<String>>(emptySet())
+    val playerExplosionKeys: StateFlow<Set<String>> = _playerExplosionKeys
 
     // ── Surrender Confirmation ──
     private val _showSurrenderDialog = MutableStateFlow(false)
@@ -744,15 +750,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 if (isHit && !iShot) vibrate(200)
                 if (shipSunk && !iShot) vibratePattern(longArrayOf(0, 100, 50, 200))
 
-                // Last-shot pop animation (auto-clears after 500ms)
+                // Last-shot pop animation (auto-clears after 500ms) — route to correct board
                 val shotRow = data.optInt("row", -1)
                 val shotCol = data.optInt("col", -1)
                 if (shotRow >= 0 && shotCol >= 0) {
                     lastShotClearJob?.cancel()
-                    _lastShotKey.value = "$shotRow,$shotCol"
+                    val shotState = if (iShot) _opponentLastShotKey else _playerLastShotKey
+                    shotState.value = "$shotRow,$shotCol"
                     lastShotClearJob = viewModelScope.launch {
                         kotlinx.coroutines.delay(500)
-                        _lastShotKey.value = null
+                        shotState.value = null
                     }
                 }
 
@@ -771,12 +778,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         cells.forEach { ref.add("${it.first},${it.second}") }
                         getSurroundingKeys(cells).forEach { ref.add("${it}_safe") }
 
-                        // Explosion overlay animation (auto-clears after 1.5s)
+                        // Explosion overlay animation (auto-clears after 1.5s) — route to correct board
                         val expKeys = cells.map { "${it.first},${it.second}" }.toSet()
-                        _explosionKeys.value = _explosionKeys.value + expKeys
+                        val expState = if (iShot) _opponentExplosionKeys else _playerExplosionKeys
+                        expState.value = expState.value + expKeys
                         viewModelScope.launch {
                             kotlinx.coroutines.delay(1500)
-                            _explosionKeys.value = _explosionKeys.value - expKeys
+                            expState.value = expState.value - expKeys
                         }
                     }
                 }
