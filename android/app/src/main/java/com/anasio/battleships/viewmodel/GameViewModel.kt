@@ -183,6 +183,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var playerLeftJob: Job? = null
     private var messageAutoClearJob: Job? = null
     private var lastShotClearJob: Job? = null
+    private var shootTimeoutJob: Job? = null
     private val shootPending = java.util.concurrent.atomic.AtomicBoolean(false)
     private var joiningGame = false
     private val playerSunk = java.util.Collections.synchronizedSet(mutableSetOf<String>())
@@ -432,6 +433,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!shootPending.compareAndSet(false, true)) return // atomic prevent double-fire
         if (_currentTurn.value == playerIdRef) {
             emitIfConnected("shoot", JSONObject().put("row", row).put("col", col))
+            // Auto-reset if server never responds (e.g. connection lost mid-shot)
+            shootTimeoutJob?.cancel()
+            shootTimeoutJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(10_000)
+                shootPending.set(false)
+            }
         } else {
             shootPending.set(false)
         }
@@ -722,6 +729,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         reg("shotResult") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             shootPending.set(false) // allow next shot
+            shootTimeoutJob?.cancel()
             try {
                 val shooterId = data.optString("shooterId", "")
                 val iShot = shooterId == playerIdRef

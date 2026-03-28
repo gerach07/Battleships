@@ -105,6 +105,7 @@ final class GameViewModel: ObservableObject {
     private(set) var playerIdRef = ""
     private var joiningGame = false
     private var shootPending = false
+    private var shootTimeoutWork: DispatchWorkItem?
     private var hasConnectedOnce = false
     private var playerLeftJob: DispatchWorkItem?
     private var messageTimer: DispatchWorkItem?
@@ -292,6 +293,11 @@ final class GameViewModel: ObservableObject {
         guard cell == CellState.WATER || cell == CellState.SAFE else { return }
         shootPending = true
         socketManager.emit("shoot", ["row": row, "col": col])
+        // Auto-reset if server never responds (e.g. connection lost mid-shot)
+        shootTimeoutWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.shootPending = false }
+        shootTimeoutWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
     }
 
     // MARK: - Play Again
@@ -545,6 +551,7 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 self.shootPending = false
+                self.shootTimeoutWork?.cancel()
                 let row = data["row"] as? Int ?? 0
                 let col = data["col"] as? Int ?? 0
                 let isHit = data["isHit"] as? Bool ?? false

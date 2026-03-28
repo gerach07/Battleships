@@ -841,10 +841,25 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', async () => {
     const roomId = playerToRoom[socket.id];
-    const room = roomId && rooms[roomId];
+    if (!roomId || !rooms[roomId]) {
+      // No room or room gone — leave immediately
+      await handlePlayerLeave(socket.id, io);
+      console.log(`Disconnected: ${socket.id}`);
+      return;
+    }
 
-    // If the player is in a game (not a spectator), use grace period
-    if (room && room.players[socket.id] && !room.spectators.has(socket.id)) {
+    // Acquire lock to safely read room state and set up grace period
+    const release = await acquireRoomLock(roomId);
+    try {
+      const room = rooms[roomId];
+      if (!room || !room.players[socket.id] || room.spectators.has(socket.id)) {
+        // Spectator or already removed — leave immediately (inside lock for consistency)
+        release();
+        await handlePlayerLeave(socket.id, io);
+        console.log(`Disconnected: ${socket.id}`);
+        return;
+      }
+
       const playerName = room.players[socket.id].name;
       const key = `${roomId}:${playerName}`;
       console.log(`Disconnect (grace period ${DISCONNECT_GRACE_MS}ms): ${socket.id} from room ${roomId}`);
@@ -876,9 +891,8 @@ io.on('connection', (socket) => {
       }, DISCONNECT_GRACE_MS);
 
       pendingDisconnects.set(key, { timer, oldSocketId, roomId });
-    } else {
-      // Spectators and players not in a room leave immediately
-      await handlePlayerLeave(socket.id, io);
+    } finally {
+      release();
     }
     console.log(`Disconnected: ${socket.id}`);
   });
