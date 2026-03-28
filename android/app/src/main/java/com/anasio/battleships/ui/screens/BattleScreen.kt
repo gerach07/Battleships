@@ -162,17 +162,27 @@ fun BattleScreen(viewModel: GameViewModel) {
         }
 
         if (isSpectator) {
-            // Spectator: show both boards
+            // Spectator: show both boards (ships hidden — server strips them)
             spectatorBoards.forEach { sb ->
                 GameBoard(
                     board = sb.board,
                     label = sb.playerName,
-                    showShips = true,
+                    showShips = false,
                     interactive = false,
                 )
                 Spacer(Modifier.height(8.dp))
             }
         } else {
+            // Your fleet (read only)
+            GameBoard(
+                board = playerBoard,
+                label = "🚥 ${s.yourFleet}",
+                showShips = true,
+                interactive = false,
+                lastShotKey = playerLastShotKey,
+                explosionKeys = playerExplosionKeys,
+            )
+            Spacer(Modifier.height(8.dp))
             // Enemy waters (interactive)
             GameBoard(
                 board = opponentBoard,
@@ -185,16 +195,6 @@ fun BattleScreen(viewModel: GameViewModel) {
                     val cell = opponentBoard[r][col]
                     if (cell == CellState.WATER) viewModel.handleShoot(r, col)
                 },
-            )
-            Spacer(Modifier.height(8.dp))
-            // Your fleet (read only)
-            GameBoard(
-                board = playerBoard,
-                label = "🚥 ${s.yourFleet}",
-                showShips = true,
-                interactive = false,
-                lastShotKey = playerLastShotKey,
-                explosionKeys = playerExplosionKeys,
             )
         }
 

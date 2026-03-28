@@ -31,8 +31,8 @@ final class SoundManager {
             let dur = Float(durationMs) / 1000.0
             let numSamples = Int(sampleRate * Double(dur))
 
-            let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(numSamples)) else { return }
+            guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
+                  let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(numSamples)) else { return }
             buffer.frameLength = AVAudioFrameCount(numSamples)
             if let channelData = buffer.floatChannelData?[0] {
                 for i in 0..<numSamples {

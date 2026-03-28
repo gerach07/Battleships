@@ -591,10 +591,10 @@ final class GameViewModel: ObservableObject {
                         let key = "\(r),\(c)"
                         if isMine {
                             self.explosionKeys.insert(key)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.explosionKeys.remove(key) }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.explosionKeys.remove(key) }
                         } else {
                             self.playerExplosionKeys.insert(key)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.playerExplosionKeys.remove(key) }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.playerExplosionKeys.remove(key) }
                         }
                     }
                 } else if isHit {
@@ -616,10 +616,10 @@ final class GameViewModel: ObservableObject {
 
                 if isMine {
                     self.shotKeys.insert(cellKey)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.shotKeys.remove(cellKey) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.shotKeys.remove(cellKey) }
                 } else {
                     self.playerShotKeys.insert(cellKey)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.playerShotKeys.remove(cellKey) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.playerShotKeys.remove(cellKey) }
                 }
 
                 self.currentTurn = data["currentTurn"] as? String

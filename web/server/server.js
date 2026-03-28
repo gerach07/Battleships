@@ -248,7 +248,7 @@ io.on('connection', (socket) => {
   // ── IP-based connection rate limiting ──
   const now = Date.now();
   // Prevent unbounded growth of tracker Maps under heavy traffic
-  if (ipConnectionTracker.size > 1000) {
+  if (ipConnectionTracker.size > 500) {
     for (const [ip, entry] of ipConnectionTracker) {
       entry.timestamps = entry.timestamps.filter(t => now - t < IP_RATE_LIMIT_WINDOW_MS);
       if (entry.timestamps.length === 0) ipConnectionTracker.delete(ip);
@@ -909,7 +909,7 @@ app.get('/rooms', (req, res) => {
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
   const now = Date.now();
   // Prevent unbounded growth under heavy traffic
-  if (roomsListTracker.size > 1000) {
+  if (roomsListTracker.size > 500) {
     for (const [ip, e] of roomsListTracker) {
       e.timestamps = e.timestamps.filter(t => now - t < ROOMS_LIST_RATE_LIMIT_WINDOW_MS);
       if (e.timestamps.length === 0) roomsListTracker.delete(ip);
@@ -964,7 +964,7 @@ app.post('/rooms/:id/check-password', (req, res) => {
   const rateLimitKey = `${clientIp}:${req.params.id.toUpperCase()}`;
   const now = Date.now();
   // Prevent unbounded growth under attack
-  if (pinAttemptTracker.size > 1000) {
+  if (pinAttemptTracker.size > 500) {
     for (const [key, e] of pinAttemptTracker) {
       e.timestamps = e.timestamps.filter(t => now - t < PIN_RATE_LIMIT_WINDOW_MS);
       if (e.timestamps.length === 0) pinAttemptTracker.delete(key);
@@ -1035,7 +1035,7 @@ cleanupIntervalId = setInterval(() => {
         } finally {
           release();
         }
-      })();
+      })().catch(err => console.error(`Cleanup lock error for room ${id}:`, err));
     }
   });
   // Cleanup expired IP rate limit entries

@@ -155,7 +155,7 @@ struct BattleScreen: View {
     private var normalBoards: some View {
         VStack(spacing: 14) {
             // Your fleet
-            boardCard(label: s.yourFleet, isHighlighted: false) {
+            boardCard(label: s.yourFleet, isHighlighted: false, showShipLegend: true) {
                 GameBoardView(
                     board: vm.playerBoard,
                     isOpponentBoard: false,
@@ -166,7 +166,7 @@ struct BattleScreen: View {
             }
 
             // Enemy waters
-            boardCard(label: s.enemyWaters.fmt(vm.opponentName), isHighlighted: vm.isMyTurn) {
+            boardCard(label: s.enemyWaters.fmt(vm.opponentName), isHighlighted: vm.isMyTurn, showShipLegend: false) {
                 GameBoardView(
                     board: vm.opponentBoard,
                     isOpponentBoard: true,
@@ -184,10 +184,10 @@ struct BattleScreen: View {
     private var spectatorBoards: some View {
         VStack(spacing: 14) {
             ForEach(vm.spectatorBoards, id: \.playerId) { sb in
-                boardCard(label: "🛡️ \(sb.playerName)", isHighlighted: false) {
+                boardCard(label: "🛡️ \(sb.playerName)", isHighlighted: false, showShipLegend: false) {
                     GameBoardView(
                         board: sb.board,
-                        isOpponentBoard: false,
+                        isOpponentBoard: true,
                         isInteractive: false,
                         shotKeys: [],
                         explosionKeys: []
@@ -198,7 +198,7 @@ struct BattleScreen: View {
     }
 
     @ViewBuilder
-    private func boardCard<Content: View>(label: String, isHighlighted: Bool, @ViewBuilder content: () -> Content) -> some View {
+    private func boardCard<Content: View>(label: String, isHighlighted: Bool, showShipLegend: Bool = true, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.subheadline.bold())
@@ -206,12 +206,14 @@ struct BattleScreen: View {
 
             content()
 
-            // Legend
+            // Legend — colors match actual cell colors from GameBoardView
             HStack(spacing: 10) {
-                legendItem(.blue.opacity(0.7), "Water")
-                legendItem(.green.opacity(0.6), "Ship")
-                legendItem(.red.opacity(0.8), "Hit")
-                legendItem(.gray.opacity(0.5), "Miss")
+                legendItem(Color(red: 0.1, green: 0.3, blue: 0.6), "Water")
+                if showShipLegend {
+                    legendItem(Color(red: 0.4, green: 0.5, blue: 0.65), "Ship")
+                }
+                legendItem(Color(red: 0.85, green: 0.2, blue: 0.2), "Hit")
+                legendItem(Color(red: 0.2, green: 0.25, blue: 0.4), "Miss")
                 legendItem(Color(red: 0.6, green: 0.1, blue: 0.1), "Sunk")
             }
             .font(.system(size: 9))

@@ -236,6 +236,7 @@ function App() {
   const playerLeftTimerRef = useRef(null);
   const explosionTimersRef = useRef([]);
   const shootPendingRef = useRef(false);
+  const shootTimeoutRef = useRef(null);
   const lastShotTimerRef = useRef(null);
   /** Per-player sunk-cell sets for spectator overlay (💀 + red bg) */
   const spectatorSunkMap = useRef(new Map());
@@ -500,6 +501,7 @@ function App() {
 
     socket.on('shotResult', (data) => {
       shootPendingRef.current = false; // allow next shot
+      if (shootTimeoutRef.current) { clearTimeout(shootTimeoutRef.current); shootTimeoutRef.current = null; }
       setCurrentTurn(data.currentTurn);
       if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
       if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
@@ -1010,6 +1012,9 @@ function App() {
     if (socket && currentTurn === playerId) {
       shootPendingRef.current = true;
       socket.emit('shoot', { row: r, col: c });
+      // Auto-reset if server never responds (e.g. connection lost mid-shot)
+      if (shootTimeoutRef.current) clearTimeout(shootTimeoutRef.current);
+      shootTimeoutRef.current = setTimeout(() => { shootPendingRef.current = false; }, 10000);
     }
   }, [socket, currentTurn, playerId]);
 
