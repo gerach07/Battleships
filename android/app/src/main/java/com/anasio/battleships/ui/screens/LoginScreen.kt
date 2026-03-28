@@ -16,6 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -63,89 +66,39 @@ fun LoginScreen(viewModel: GameViewModel) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Language selector
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            listOf("🇬🇧" to Language.EN, "🇱🇻" to Language.LV, "🇷🇺" to Language.RU).forEach { (flag, lang) ->
-                Text(
-                    flag,
-                    fontSize = 28.sp,
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp)
-                        .then(
-                            if (language == lang)
-                                Modifier
-                                    .border(2.dp, c.primary, RoundedCornerShape(6.dp))
-                                    .padding(4.dp)
-                            else Modifier.padding(4.dp)
-                        )
-                        .clickable { viewModel.setLanguage(lang) },
+        // Hero
+        Spacer(Modifier.height(16.dp))
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
+            Text("🚢", fontSize = 36.sp, modifier = Modifier.alpha(0.2f).graphicsLayer(scaleX = -1f))
+            Spacer(Modifier.width(8.dp))
+            Text("⚓", fontSize = 72.sp, modifier = Modifier.shadow(16.dp, spotColor=Color.Blue.copy(alpha=0.5f), shape=CircleShape))
+            Spacer(Modifier.width(8.dp))
+            Text("🚢", fontSize = 36.sp, modifier = Modifier.alpha(0.2f))
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            s.battleships,
+            fontSize = 36.sp,
+            fontWeight = FontWeight.Black,
+            style = androidx.compose.ui.text.TextStyle(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF06B6D4), Color(0xFF3B82F6), Color(0xFFA855F7))
                 )
-            }
-        }
-        Spacer(Modifier.height(24.dp))
-        Text("⚓", fontSize = 48.sp)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            s.battleships.uppercase(), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
-            color = Color.White, letterSpacing = 3.sp, maxLines = 1,
-        )
-        Spacer(Modifier.height(4.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Box(modifier = Modifier.width(32.dp).height(1.dp).background(c.border.copy(alpha = .4f)))
-            Spacer(Modifier.width(8.dp))
-            Text(s.multiplayerNavalCombat, fontSize = 13.sp, color = c.textDim)
-            Spacer(Modifier.width(8.dp))
-            Box(modifier = Modifier.width(32.dp).height(1.dp).background(c.border.copy(alpha = .4f)))
-        }
-        Text(
-            "Created by Adrians Bergmanis",
-            fontSize = 10.sp,
-            color = c.textDim.copy(alpha = 0.6f),
-            textAlign = TextAlign.Center
+            ),
+            maxLines = 1,
         )
         Spacer(Modifier.height(12.dp))
-
         Row(
-            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
-            IconButton(onClick = viewModel::toggleSound) {
-                Text(if (soundEnabled) "🔊" else "🔇", fontSize = 22.sp)
-            }
-            Spacer(Modifier.width(4.dp))
-            IconButton(onClick = viewModel::toggleMusic) {
-                Text(if (musicEnabled) "🎵" else "🔕", fontSize = 22.sp)
-            }
-            Spacer(Modifier.width(4.dp))
-            IconButton(onClick = { showCredits = true }) {
-                Text("ℹ️", fontSize = 18.sp)
-            }
+            Box(modifier = Modifier.width(60.dp).height(1.dp).background(Color.Gray.copy(alpha = 0.4f)))
+            Spacer(Modifier.width(8.dp))
+            Text(s.multiplayerNavalCombat, fontSize = 12.sp, color = Color.Gray)
+            Spacer(Modifier.width(8.dp))
+            Box(modifier = Modifier.width(60.dp).height(1.dp).background(Color.Gray.copy(alpha = 0.4f)))
         }
-        if (musicEnabled && currentTrackName != null) {
-            Text(
-                "♪ $currentTrackName",
-                fontSize = 10.sp,
-                color = Color(0xFF60A5FA).copy(alpha = 0.8f),
-            )
-            Spacer(Modifier.height(4.dp))
-        }
-        Spacer(Modifier.height(16.dp))
-
-        if (showCredits) {
-            CreditsDialog(onDismiss = { showCredits = false })
-        }
-
-        // Message
-        if (message.isNotBlank()) {
-            MessageBanner(message, messageType)
-            Spacer(Modifier.height(8.dp))
-        }
+        Spacer(Modifier.height(30.dp))
 
         when (loginView) {
             "menu" -> MenuView(viewModel)
