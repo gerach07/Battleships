@@ -20,7 +20,9 @@ final class SoundManager {
         do {
             try engine.start()
             engineRunning = true
-        } catch {}
+        } catch {
+            print("[SoundManager] Failed to start audio engine: \(error.localizedDescription)")
+        }
     }
 
     private func playTone(freq: Float, durationMs: Int, volume: Float = 0.3) {

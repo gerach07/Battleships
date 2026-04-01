@@ -3,6 +3,7 @@ package com.anasio.battleships.data
 import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONObject
@@ -43,7 +44,7 @@ object SocketManager {
             socket?.on(Socket.EVENT_DISCONNECT) { _isConnected.value = false }
             socket?.connect()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("SocketManager", "Connection failed", e)
         }
     }
 

@@ -68,9 +68,14 @@ fun GameBoard(
             val cellSize = ((maxWidth - headerSize - totalGap) / GRID_SIZE).coerceAtLeast(28.dp)
 
             val density = LocalDensity.current
-            val cellPx = with(density) { cellSize.toPx() }
-            val headerPx = with(density) { headerSize.toPx() }
-            val gapPx = with(density) { gap.toPx() }
+            // Memoize pixel conversions to avoid recalculating on every recomposition
+            val (cellPx, headerPx, gapPx) = remember(cellSize, density) {
+                Triple(
+                    with(density) { cellSize.toPx() },
+                    with(density) { headerSize.toPx() },
+                    with(density) { gap.toPx() },
+                )
+            }
 
             Column(verticalArrangement = Arrangement.spacedBy(gap)) {
                 // Column headers (A-J)

@@ -20,10 +20,12 @@ android {
         applicationId = "com.anasio.battleships"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "2.2.0"
+        versionCode = 4
+        versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SERVER_URL", "\"https://battleships-server-jtit.onrender.com\"")
     }
 
     signingConfigs {
@@ -50,6 +52,9 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
         }
+        debug {
+            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:3001\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -60,6 +65,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

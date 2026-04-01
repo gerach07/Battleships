@@ -436,7 +436,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Auto-reset if server never responds (e.g. connection lost mid-shot)
             shootTimeoutJob?.cancel()
             shootTimeoutJob = viewModelScope.launch {
-                kotlinx.coroutines.delay(10_000)
+                kotlinx.coroutines.delay(5_000)
                 shootPending.set(false)
             }
         } else {

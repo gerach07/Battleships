@@ -183,6 +183,15 @@ export function playPhaseMusic(phase) {
 /** Stop music entirely (e.g. when leaving the game) */
 export function stopAllMusic() {
     _currentPhase = null;
+    // Cancel any in-progress fade before stopping
+    if (_fadeInterval) {
+        clearInterval(_fadeInterval);
+        _fadeInterval = null;
+        if (_fadingAudio) {
+            disposeAudio(_fadingAudio);
+            _fadingAudio = null;
+        }
+    }
     stopMusic(false);
 }
 

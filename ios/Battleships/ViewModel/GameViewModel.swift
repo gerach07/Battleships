@@ -172,6 +172,8 @@ final class GameViewModel: ObservableObject {
     }
 
     deinit {
+        shootTimeoutWork?.cancel()
+        messageTimer?.cancel()
         playerLeftJob?.cancel()
         socketManager.disconnect()
     }
@@ -297,7 +299,7 @@ final class GameViewModel: ObservableObject {
         shootTimeoutWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.shootPending = false }
         shootTimeoutWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: work)
     }
 
     // MARK: - Play Again

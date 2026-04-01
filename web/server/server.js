@@ -245,6 +245,11 @@ io.on('connection', (socket) => {
   const clientIp = socket.handshake.headers['x-forwarded-for']?.split(',')[0]?.trim() || socket.handshake.address;
   console.log(`New connection: ${socket.id} (IP: ${clientIp})`);
 
+  // Handle unexpected socket-level errors
+  socket.on('error', (err) => {
+    console.error(`Socket error [${socket.id}]:`, err.message || err);
+  });
+
   // ── IP-based connection rate limiting ──
   const now = Date.now();
   // Prevent unbounded growth of tracker Maps under heavy traffic
@@ -533,7 +538,9 @@ io.on('connection', (socket) => {
         room.players[socket.id].board = room._createEmptyBoard();
         return socket.emit('error', { error: 'Coordinates must be integers' });
       }
-      const shipName = typeof ship.name === 'string' ? sanitizeInput(ship.name, 50) : undefined;
+      // Use predefined ship name from constants — don't accept user-supplied names
+      const shipIndex = room.players[socket.id].ships.length;
+      const shipName = SHIP_NAMES[shipIndex] || 'Ship';
       const placed = room.placeShip(socket.id, ship.row, ship.col, ship.length, ship.direction, shipName);
       if (!placed) {
         // Atomic: if any ship fails, reset all — prevents partial fleet exploits
@@ -891,6 +898,13 @@ io.on('connection', (socket) => {
       }, DISCONNECT_GRACE_MS);
 
       pendingDisconnects.set(key, { timer, oldSocketId, roomId });
+
+      // Cap pendingDisconnects to prevent unbounded growth
+      if (pendingDisconnects.size > 1000) {
+        const oldest = pendingDisconnects.keys().next().value;
+        const entry = pendingDisconnects.get(oldest);
+        if (entry) { clearTimeout(entry.timer); pendingDisconnects.delete(oldest); }
+      }
     } finally {
       release();
     }

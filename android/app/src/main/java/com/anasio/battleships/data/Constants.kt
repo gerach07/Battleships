@@ -2,8 +2,7 @@ package com.anasio.battleships.data
 
 const val GRID_SIZE = 10
 
-// Change to "http://10.0.2.2:3001" for local dev with Android emulator
-const val SERVER_URL = "https://battleships-server-jtit.onrender.com"
+val SERVER_URL: String = com.anasio.battleships.BuildConfig.SERVER_URL
 
 data class ShipDef(val id: Int, val length: Int, val name: String, val emoji: String)
 

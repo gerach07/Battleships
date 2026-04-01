@@ -1,7 +1,10 @@
 package com.anasio.battleships.data
 
+import androidx.compose.runtime.Stable
+
 typealias Board = List<List<String>>
 
+@Stable
 data class RoomInfo(
     val roomId: String,
     val hostName: String,
@@ -12,6 +15,7 @@ data class RoomInfo(
     val timeLimit: Int,
 )
 
+@Stable
 data class ChatMessage(
     val id: String,
     val senderId: String,
@@ -23,6 +27,7 @@ data class ChatMessage(
     val isSystem: Boolean = false,
 )
 
+@Stable
 data class PlacedShip(
     val shipId: Int,
     val row: Int,

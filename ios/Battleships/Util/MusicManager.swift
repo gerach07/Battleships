@@ -36,7 +36,9 @@ final class MusicManager: ObservableObject {
         do {
             try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
-        } catch {}
+        } catch {
+            print("[MusicManager] Failed to configure audio session: \(error.localizedDescription)")
+        }
     }
 
     private func playTrack(_ name: String, loop: Bool = true) {
@@ -74,7 +76,9 @@ final class MusicManager: ObservableObject {
             player?.numberOfLoops = loop ? -1 : 0
             player?.volume = Self.VOLUME
             player?.play()
-        } catch {}
+        } catch {
+            print("[MusicManager] Failed to play track \(name): \(error.localizedDescription)")
+        }
     }
 
     private func fadeOutAndRelease(_ p: AVAudioPlayer, onDone: @escaping () -> Void) {

@@ -2,8 +2,11 @@ import Foundation
 
 let GRID_SIZE = 10
 
-// Change to "http://localhost:3001" for local dev
+#if DEBUG
+let SERVER_URL = "http://localhost:3001"
+#else
 let SERVER_URL = "https://battleships-server-jtit.onrender.com"
+#endif
 
 struct ShipDef: Identifiable {
     let id: Int

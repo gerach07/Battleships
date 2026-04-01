@@ -1,6 +1,6 @@
 {
   "name": "battleships-server",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Battleships game server with Socket.io",
   "main": "server.js",
   "engines": {
