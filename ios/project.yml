@@ -42,6 +42,9 @@ targets:
       path: Battleships/Info.plist
       properties:
         NSAppTransportSecurity:
-          NSAllowsArbitraryLoads: true
+          NSExceptionDomains:
+            battleships-server-jtit.onrender.com:
+              NSExceptionAllowsInsecureHTTPLoads: false
+              NSIncludesSubdomains: true
         UIBackgroundModes:
           - audio
