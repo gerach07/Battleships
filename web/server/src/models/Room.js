@@ -168,6 +168,9 @@ class Room {
             p.ships = [];
             p.shipsPlaced = false;
             p.totalHitsReceived = 0;
+            this.shotLimiter.removePlayer(remainingPlayerId);
+            this.placementLimiter.removePlayer(remainingPlayerId);
+            this.chatLimiter.removePlayer(remainingPlayerId);
         }
     }
 

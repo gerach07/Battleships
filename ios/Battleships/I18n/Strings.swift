@@ -183,6 +183,12 @@ struct I18nStrings {
     let shipDestroyer: String
     let shipSubmarine: String
     let shipPatrol: String
+    // Board legend
+    let boardWater: String
+    let boardShip: String
+    let boardHit: String
+    let boardMiss: String
+    let boardSunk: String
 }
 
 extension String {
@@ -209,7 +215,7 @@ let stringsEN = I18nStrings(
     threedigitPin: "3-digit PIN",
     timePerPlayer: "Time Per Player",
     createRoom: "Create Room",
-    back: "← Back",
+    back: "Back",
     joinGameTitle: "Join Game",
     roomCode: "Room Code",
     roomCodePlaceholder: "e.g. ABC123",
@@ -241,7 +247,7 @@ let stringsEN = I18nStrings(
     joinMyGame: "Join my Battleships game!",
     shareRoom: "Share room",
     share: "🔗 Share",
-    leaveRoom: "← Leave Room",
+    leaveRoom: "Leave Room",
     hostBadge: "👑 HOST",
     hostControls: "Host Controls",
     startGame: "🎮 Start Game",
@@ -262,14 +268,14 @@ let stringsEN = I18nStrings(
     placementHint: "Ships need 1-cell gap including corners",
     cantPlaceThere: "❌ Can't place there!",
     shipMoved: "Ship moved!",
-    opponentIsReady: "✅ Opponent is ready!",
+    opponentIsReady: "✅ {0} is ready!",
     opponentPlacing: "⏳ Waiting for {0} to place ships…",
-    lockedHint: "✅ Fleet locked in — tap ↩ Unready to make changes",
+    lockedHint: "Fleet locked in — tap Unready to make changes",
     shipsCount: "Ships",
-    notReady: "↩ Not Ready",
-    ready: "✅ Ready!",
+    notReady: "Not Ready",
+    ready: "Ready",
     placeAllFirst: "Place all ships first",
-    leave: "← Leave",
+    leave: "Leave",
     namesTurn: "{0}'s turn",
     yourTurnFire: "🎯 Your Turn — Fire!",
     extraShotHint: "Hit a ship for an extra shot!",
@@ -325,9 +331,9 @@ let stringsEN = I18nStrings(
     opponentJoined: "🎮 Opponent joined! Place your ships.",
     unknownError: "Unknown error",
     waitingOpponentPlace: "⏳ Waiting for opponent to finish placing…",
-    sunkTheirShip: "💥 You sunk their {0}! 🎯 Shoot again!",
+    sunkTheirShip: "💥 You sunk their {0}!",
     yourShipSunk: "💀 Your {0} was sunk! Opponent shoots again.",
-    hitShootAgain: "🔥 Hit! 🎯 Shoot again!",
+    hitShootAgain: "🔥 Hit!",
     theyHitYourShip: "🔥 They hit your ship! They shoot again.",
     missOpponentTurn: "💧 Miss — opponent's turn.",
     theyMissedYourTurn: "🛡️ They missed! Your turn.",
@@ -348,7 +354,12 @@ let stringsEN = I18nStrings(
     shipBattleship: "Battleship",
     shipDestroyer: "Destroyer",
     shipSubmarine: "Submarine",
-    shipPatrol: "Patrol"
+    shipPatrol: "Patrol",
+    boardWater: "Water",
+    boardShip: "Ship",
+    boardHit: "Hit",
+    boardMiss: "Miss",
+    boardSunk: "Sunk"
 )
 
 // MARK: - Latvian
@@ -365,7 +376,7 @@ let stringsLV = I18nStrings(
     threedigitPin: "3 ciparu PIN",
     timePerPlayer: "Laiks spēlētājam",
     createRoom: "Izveidot istabu",
-    back: "← Atpakaļ",
+    back: "Atpakaļ",
     joinGameTitle: "Pievienoties spēlei",
     roomCode: "Istabas kods",
     roomCodePlaceholder: "piem. ABC123",
@@ -397,7 +408,7 @@ let stringsLV = I18nStrings(
     joinMyGame: "Pievienojies manai Kuģu Kauju spēlei!",
     shareRoom: "Dalīties ar istabu",
     share: "🔗 Dalīties",
-    leaveRoom: "← Pamest istabu",
+    leaveRoom: "Pamest istabu",
     hostBadge: "👑 SAIMNIEKS",
     hostControls: "Saimnieka vadība",
     startGame: "🎮 Sākt spēli",
@@ -418,14 +429,14 @@ let stringsLV = I18nStrings(
     placementHint: "Starp kuģiem jābūt 1 šūnas atstarpei, ieskaitot stūrus",
     cantPlaceThere: "❌ Nevar novietot tur!",
     shipMoved: "Kuģis pārvietots!",
-    opponentIsReady: "✅ Pretinieks gatavs!",
+    opponentIsReady: "✅ {0} ir gatavs!",
     opponentPlacing: "⏳ Gaida, kamēr {0} izvieto kuģus…",
-    lockedHint: "✅ Flote apstiprināta — nospiediet ↩ Atsaukt, lai mainītu",
+    lockedHint: "Flote apstiprināta — nospiediet Atsaukt, lai mainītu",
     shipsCount: "Kuģi",
-    notReady: "↩ Nav gatavs",
-    ready: "✅ Gatavs!",
+    notReady: "Nav gatavs",
+    ready: "Gatavs",
     placeAllFirst: "Vispirms izvietojiet visus kuģus",
-    leave: "← Iziet",
+    leave: "Iziet",
     namesTurn: "{0} gājiens",
     yourTurnFire: "🎯 Jūsu gājiens — šaujiet!",
     extraShotHint: "Trāpiet kuģim, lai šautu vēlreiz!",
@@ -481,9 +492,9 @@ let stringsLV = I18nStrings(
     opponentJoined: "🎮 Pretinieks pievienojās! Izvietojiet savus kuģus.",
     unknownError: "Nezināma kļūda",
     waitingOpponentPlace: "⏳ Gaida, kamēr pretinieks izvietosies…",
-    sunkTheirShip: "💥 Jūs nogremdējāt viņu {0}! 🎯 Šaujiet vēlreiz!",
+    sunkTheirShip: "💥 Jūs nogremdējāt viņu {0}!",
     yourShipSunk: "💀 Jūsu {0} tika nogremdēts! Pretinieks šauj vēlreiz.",
-    hitShootAgain: "🔥 Trāpīts! 🎯 Šaujiet vēlreiz!",
+    hitShootAgain: "🔥 Trāpīts!",
     theyHitYourShip: "🔥 Viņi trāpīja jūsu kuģim! Viņi šauj vēlreiz.",
     missOpponentTurn: "💧 Garām — pretinieka gājiens.",
     theyMissedYourTurn: "🛡️ Viņi netrāpīja! Jūsu gājiens.",
@@ -504,7 +515,12 @@ let stringsLV = I18nStrings(
     shipBattleship: "Karakuģis",
     shipDestroyer: "Iznīcinātājs",
     shipSubmarine: "Zemūdene",
-    shipPatrol: "Patrulkuģis"
+    shipPatrol: "Patrulkuģis",
+    boardWater: "Ūdens",
+    boardShip: "Kuģis",
+    boardHit: "Trāpījums",
+    boardMiss: "Garām",
+    boardSunk: "Nogremdēts"
 )
 
 // MARK: - Russian
@@ -521,7 +537,7 @@ let stringsRU = I18nStrings(
     threedigitPin: "3-значный PIN",
     timePerPlayer: "Время на игрока",
     createRoom: "Создать комнату",
-    back: "← Назад",
+    back: "Назад",
     joinGameTitle: "Присоединиться к игре",
     roomCode: "Код комнаты",
     roomCodePlaceholder: "напр. ABC123",
@@ -553,7 +569,7 @@ let stringsRU = I18nStrings(
     joinMyGame: "Присоединяйся к моей игре Морской бой!",
     shareRoom: "Поделиться комнатой",
     share: "🔗 Поделиться",
-    leaveRoom: "← Покинуть комнату",
+    leaveRoom: "Покинуть комнату",
     hostBadge: "👑 ХОСТ",
     hostControls: "Управление хоста",
     startGame: "🎮 Начать игру",
@@ -574,14 +590,14 @@ let stringsRU = I18nStrings(
     placementHint: "Между кораблями должен быть зазор в 1 клетку, включая углы",
     cantPlaceThere: "❌ Нельзя поставить сюда!",
     shipMoved: "Корабль перемещён!",
-    opponentIsReady: "✅ Противник готов!",
+    opponentIsReady: "✅ {0} готов!",
     opponentPlacing: "⏳ Ожидание, пока {0} расставит корабли…",
-    lockedHint: "✅ Флот подтверждён — нажмите ↩ Отменить, чтобы изменить",
+    lockedHint: "Флот подтверждён — нажмите Отменить, чтобы изменить",
     shipsCount: "Корабли",
-    notReady: "↩ Не готов",
-    ready: "✅ Готов!",
+    notReady: "Не готов",
+    ready: "Готов",
     placeAllFirst: "Сначала расставьте все корабли",
-    leave: "← Выйти",
+    leave: "Выйти",
     namesTurn: "Ход {0}",
     yourTurnFire: "🎯 Ваш ход — стреляйте!",
     extraShotHint: "Попадите в корабль для доп. выстрела!",
@@ -637,9 +653,9 @@ let stringsRU = I18nStrings(
     opponentJoined: "🎮 Противник присоединился! Расставьте корабли.",
     unknownError: "Неизвестная ошибка",
     waitingOpponentPlace: "⏳ Ожидание расстановки противника…",
-    sunkTheirShip: "💥 Вы потопили их {0}! 🎯 Стреляйте ещё!",
+    sunkTheirShip: "💥 Вы потопили их {0}!",
     yourShipSunk: "💀 Ваш {0} потоплен! Противник стреляет ещё.",
-    hitShootAgain: "🔥 Попадание! 🎯 Стреляйте ещё!",
+    hitShootAgain: "🔥 Попадание!",
     theyHitYourShip: "🔥 Они попали в ваш корабль! Они стреляют ещё.",
     missOpponentTurn: "💧 Мимо — ход противника.",
     theyMissedYourTurn: "🛡️ Они промахнулись! Ваш ход.",
@@ -660,7 +676,12 @@ let stringsRU = I18nStrings(
     shipBattleship: "Линкор",
     shipDestroyer: "Эсминец",
     shipSubmarine: "Подлодка",
-    shipPatrol: "Катер"
+    shipPatrol: "Катер",
+    boardWater: "Вода",
+    boardShip: "Корабль",
+    boardHit: "Попадание",
+    boardMiss: "Мимо",
+    boardSunk: "Потоплен"
 )
 
 func stringsFor(_ lang: Language) -> I18nStrings {

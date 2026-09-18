@@ -3,7 +3,16 @@ import Foundation
 
 final class SoundManager {
     static let shared = SoundManager()
-    var enabled = true
+    var enabled = true {
+        didSet {
+            if enabled {
+                activateAudioSession()
+                ensureEngine()
+            } else {
+                deactivateAudioSession()
+            }
+        }
+    }
 
     private let sampleRate: Double = 44100
     private let engine = AVAudioEngine()
@@ -13,6 +22,25 @@ final class SoundManager {
 
     private init() {
         mixerNode = engine.mainMixerNode
+        activateAudioSession()
+        ensureEngine()
+    }
+
+    private func activateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("[SoundManager] Failed to configure audio session: \(error.localizedDescription)")
+        }
+    }
+
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("[SoundManager] Failed to deactivate audio session: \(error.localizedDescription)")
+        }
     }
 
     private func ensureEngine() {

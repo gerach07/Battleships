@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battleships Sound Audition</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111b2f;
+        --panel-2: #172645;
+        --card: rgba(255,255,255,0.04);
+        --text: #edf3ff;
+        --muted: #b9c8eb;
+        --accent: #7ad7ff;
+        --accent-2: #9af0c4;
+        --gold: #ffd27a;
+      }
+
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; min-height: 100%;
+        background: radial-gradient(circle at top, #1a2b4f, #0b1020 55%);
+        color: var(--text);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        padding: 28px;
+      }
+
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 4vw, 3.25rem);
+      }
+
+      .subtitle {
+        color: var(--muted);
+        margin-bottom: 24px;
+        font-size: 1.02rem;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+        border: 1px solid rgba(122, 215, 255, 0.15);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 14px 36px rgba(0,0,0,0.22);
+      }
+
+      .card h2 {
+        margin: 0 0 6px;
+        font-size: 1.2rem;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+      }
+
+      .preview {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .pill {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, var(--accent), #8ed8ff);
+        color: #07141b;
+      }
+
+      .secondary {
+        background: rgba(255,255,255,0.05);
+        color: var(--text);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .footer {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Battleships Sound Audition</h1>
+      <div class="subtitle">
+        Listen to these beep families and tell me which one feels right for the game. I’ll narrow it down to one shared sound kit.
+      </div>
+
+      <div id="cards" class="row"></div>
+
+      <div class="footer">
+        Design goal: same family of synthesized tones across all platforms, with enough personality to feel arcade, crisp, and readable.
+      </div>
+    </div>
+
+    <script>
+      const samples = [
+        {
+          name: 'Classic Arcade',
+          vibe: 'clean, punchy, retro',
+          tags: ['sharp', 'short', 'snappy'],
+          params: { freq: 180, duration: 0.11, sweep: 0.9, attack: 0.006, decay: 0.06, sustain: 0.55, release: 0.12, harmonic: 0.32, wave: 'triangle', gain: 0.18 }
+        },
+        {
+          name: 'Soft Missile',
+          vibe: 'light, smooth, satisfying',
+          tags: ['mellow', 'gentle', 'fast'],
+          params: { freq: 260, duration: 0.09, sweep: -0.35, attack: 0.005, decay: 0.05, sustain: 0.35, release: 0.1, harmonic: 0.18, wave: 'sine', gain: 0.16 }
+        },
+        {
+          name: 'Power Place',
+          vibe: 'strong placement confirmation',
+          tags: ['upbeat', 'clear', 'confident'],
+          params: { freq: 440, duration: 0.12, sweep: 0.7, attack: 0.008, decay: 0.08, sustain: 0.62, release: 0.12, harmonic: 0.3, wave: 'square', gain: 0.2 }
+        },
+        {
+          name: 'Turn Ready',
+          vibe: 'bright and decisive',
+          tags: ['alert', 'sharp', 'high'],
+          params: { freq: 560, duration: 0.18, sweep: 0.85, attack: 0.01, decay: 0.1, sustain: 0.58, release: 0.16, harmonic: 0.42, wave: 'triangle', gain: 0.18 }
+        },
+        {
+          name: 'Victory Arc',
+          vibe: 'celebratory, fuller',
+          tags: ['long', 'happy', 'rich'],
+          params: { freq: 392, duration: 0.45, sweep: 0.35, attack: 0.02, decay: 0.15, sustain: 0.9, release: 0.28, harmonic: 0.55, wave: 'sine', gain: 0.18 }
+        },
+        {
+          name: 'Defeat Drop',
+          vibe: 'descending and heavy',
+          tags: ['low', 'sad', 'dropping'],
+          params: { freq: 180, duration: 0.5, sweep: -0.55, attack: 0.025, decay: 0.14, sustain: 0.45, release: 0.26, harmonic: 0.52, wave: 'sawtooth', gain: 0.17 }
+        },
+        {
+          name: 'UI Ping',
+          vibe: 'tiny notification chirp',
+          tags: ['tiny', 'bright', 'mobile'],
+          params: { freq: 760, duration: 0.07, sweep: 0.55, attack: 0.003, decay: 0.03, sustain: 0.5, release: 0.09, harmonic: 0.24, wave: 'triangle', gain: 0.14 }
+        },
+        {
+          name: 'Menu Tap',
+          vibe: 'neutral, subtle',
+          tags: ['quiet', 'soft', 'button'],
+          params: { freq: 660, duration: 0.08, sweep: 0.2, attack: 0.004, decay: 0.04, sustain: 0.6, release: 0.1, harmonic: 0.22, wave: 'sine', gain: 0.12 }
+        }
+      ];
+
+      function getAudioContext() {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!window.__battleshipsAudioCtx) {
+          window.__battleshipsAudioCtx = new AudioCtx();
+        }
+        return window.__battleshipsAudioCtx;
+      }
+
+      function synthBeep(opts = {}) {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        const {
+          freq = 440,
+          duration = 0.12,
+          sweep = 0.6,
+          attack = 0.006,
+          decay = 0.08,
+          sustain = 0.55,
+          release = 0.12,
+          harmonic = 0.35,
+          wave = 'sine',
+          gain = 0.18,
+          detuneRatio = 2,
+          filterCutoff = 2600,
+          noise = 0,
+          accent = 0,
+          phase = 0
+        } = opts;
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = wave;
+        osc2.type = wave === 'sine' ? 'triangle' : 'sine';
+
+        const startFreq = freq;
+        const endFreq = Math.max(20, startFreq * (1 + sweep * (duration * 1.5)));
+
+        osc1.frequency.setValueAtTime(startFreq, now);
+        osc1.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+
+        osc2.frequency.setValueAtTime(startFreq * detuneRatio, now);
+        osc2.frequency.exponentialRampToValueAtTime(endFreq * detuneRatio, now + duration);
+
+        osc2.detune.value = accent * 8;
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(filterCutoff, now);
+        filter.Q.value = 0.4;
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.linearRampToValueAtTime(gain, now + attack);
+        gainNode.gain.linearRampToValueAtTime(gain * sustain, now + attack + decay);
+        gainNode.gain.setValueAtTime(gain * sustain, now + duration - release);
+        gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
+
+        if (noise > 0) {
+          const buffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1) * noise;
+          }
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          const highpass = ctx.createBiquadFilter();
+          highpass.type = 'highpass';
+          highpass.frequency.value = 900;
+          const noGain = ctx.createGain();
+          noGain.gain.value = 0.12;
+          source.connect(highpass);
+          highpass.connect(noGain);
+          noGain.connect(filter);
+          source.start(now);
+          source.stop(now + duration + 0.02);
+        }
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration + 0.03);
+        osc2.stop(now + duration + 0.03);
+      }
+
+      function playSample(sample) {
+        synthBeep({
+          ...sample.params,
+          fade: sample.params.sweep,
+          accent: sample.name.includes('Victory') ? 1 : 0,
+          noise: sample.name === 'Defeat Drop' ? 0.08 : 0,
+          gain: sample.params.gain
+        });
+      }
+
+      const cardsRoot = document.getElementById('cards');
+
+      samples.forEach(sample => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h2>${sample.name}</h2>
+          <div class="meta">${sample.vibe}</div>
+          <div class="preview">
+            ${sample.tags.map(tag => `<span class="pill">${tag}</span>`).join('')}
+          </div>
+          <div class="actions">
+            <button class="primary" data-name="${sample.name}">Play</button>
+            <button class="secondary" data-name="${sample.name}" data-kind="listen">Listen again</button>
+          </div>
+        `;
+
+        card.querySelector('.primary').addEventListener('click', () => playSample(sample));
+        card.querySelector('.secondary').addEventListener('click', () => playSample(sample));
+
+        cardsRoot.appendChild(card);
+      });
+    </script>
+  </body>
+</html>

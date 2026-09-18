@@ -92,6 +92,18 @@ final class GameViewModel: ObservableObject {
         didSet {
             MusicManager.shared.enabled = musicEnabled
             UserDefaults.standard.set(musicEnabled, forKey: "battleships-music")
+
+            if musicEnabled {
+                switch phase {
+                case "login", "waiting": MusicManager.shared.playMenuMusic()
+                case "placement":        MusicManager.shared.playPlacementMusic()
+                case "battle":           MusicManager.shared.playBattleMusic()
+                case "gameOver":
+                    if winner == playerIdRef { MusicManager.shared.playVictoryMusic() }
+                    else { MusicManager.shared.playDefeatMusic() }
+                default: break
+                }
+            }
         }
     }
 
@@ -126,10 +138,8 @@ final class GameViewModel: ObservableObject {
         SoundManager.shared.enabled = soundEnabled
         musicEnabled = UserDefaults.standard.object(forKey: "battleships-music") as? Bool ?? false
         MusicManager.shared.enabled = musicEnabled
-        // Delay to allow AVAudioSession to be ready before first playback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard self != nil else { return }
-            if MusicManager.shared.enabled { MusicManager.shared.playMenuMusic() }
+        if musicEnabled {
+            MusicManager.shared.ensureReadyForPlayback()
         }
 
         socketManager.connect()
@@ -156,7 +166,7 @@ final class GameViewModel: ObservableObject {
 
     // MARK: - Lifecycle
     func handleSceneActive() {
-        if musicEnabled { MusicManager.shared.resumeMusic() }
+        if musicEnabled { MusicManager.shared.ensureReadyForPlayback() }
         socketManager.forceReconnect()
         // Spectators have no grace period on the server — proactively re-register
         // so we get fresh board state even when the socket never fully dropped.
@@ -269,6 +279,16 @@ final class GameViewModel: ObservableObject {
         SoundManager.shared.playPlace()
     }
 
+    func unplaceShip(shipId: Int) {
+        guard let existing = clientPlacements.first(where: { $0.shipId == shipId }) else { return }
+        var board = playerBoard
+        for (r, c) in existing.cells { board[r][c] = CellState.WATER }
+        playerBoard = board
+        clientPlacements.removeAll { $0.shipId == shipId }
+        shipsPlaced = clientPlacements.count
+        SoundManager.shared.playPlace()
+    }
+
     func randomPlacement() {
         guard let (board, placements) = generateRandomPlacement() else { return }
         playerBoard = board
@@ -309,6 +329,11 @@ final class GameViewModel: ObservableObject {
     }
 
     // MARK: - Play Again
+    func handleReturnToWaiting() {
+        resetGameStateForNewGame()
+        phase = "waiting"
+    }
+
     func handlePlayAgain() {
         playAgainPending = true
         socketManager.emit("requestPlayAgain")
@@ -481,6 +506,10 @@ final class GameViewModel: ObservableObject {
     }
 
     // MARK: - Reset
+    private func resetGameStateForNewGame() {
+        resetBattleState()
+    }
+
     private func resetBattleState() {
         showSurrenderDialog = false
         showKickDialog = false
@@ -623,7 +652,7 @@ final class GameViewModel: ObservableObject {
             guard let self else { return }
             DispatchQueue.main.async {
                 self.opponentReady = true
-                self.setMessage(self.s.opponentIsReady, "success")
+                self.setMessage(self.s.opponentIsReady.fmt(self.opponentName.isEmpty ? self.s.opponent : self.opponentName), "success")
             }
         }
 

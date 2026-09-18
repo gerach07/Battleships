@@ -10,6 +10,7 @@ const GameOver = memo(({
     handlePlayAgain,
     handleBackToMenu,
     handleDeclinePlayAgain,
+    handleReturnToWaiting,
     isSpectator
 }) => {
     const { t } = useI18n();
@@ -109,9 +110,15 @@ const GameOver = memo(({
                     {/* Neither side is in play-again flow yet */}
                     {!playAgainPending && !opponentWantsPlayAgain && (
                         <div className="space-y-2">
-                            <button onClick={handlePlayAgain} className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-2xl transition hover:scale-[1.02] shadow-lg shadow-purple-900/20">
-                                {t('gameover.playAgain')}
-                            </button>
+                            {opponentName ? (
+                                <button onClick={handlePlayAgain} className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-2xl transition hover:scale-[1.02] shadow-lg shadow-purple-900/20">
+                                    {t('gameover.playAgain')}
+                                </button>
+                            ) : (
+                                <button onClick={handleReturnToWaiting} className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl transition hover:scale-[1.02] shadow-lg shadow-teal-900/20">
+                                    Return to Waiting Room
+                                </button>
+                            )}
                             <button onClick={handleBackToMenu} className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-2xl transition text-sm">
                                 {t('gameover.backToMenu')}
                             </button>

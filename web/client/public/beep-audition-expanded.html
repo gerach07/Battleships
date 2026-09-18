@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battleships Sound Audition Expanded</title>
+    <style>
+      :root {
+        --bg: #08111d;
+        --panel: #0f1a2d;
+        --panel-2: #162942;
+        --text: #ecf3ff;
+        --muted: #b7c8eb;
+        --accent: #78d7ff;
+        --accent-2: #9ef0c7;
+        --gold: #ffd98d;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; min-height: 100%;
+        background: radial-gradient(circle at top, #1b2e4b, var(--bg) 52%);
+        color: var(--text);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body { padding: 28px; }
+      .wrap { max-width: 1300px; margin: 0 auto; }
+      h1 { margin: 0 0 8px; font-size: clamp(2.2rem, 4vw, 3.2rem); }
+      .subtitle { color: var(--muted); margin-bottom: 20px; }
+      .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+        border: 1px solid rgba(120,215,255,0.15);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 14px 34px rgba(0,0,0,0.2);
+      }
+      .card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+      .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
+      .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+      .pill {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 0.76rem; color: var(--muted);
+      }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      button {
+        border: 0; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-weight: 700;
+      }
+      .primary { background: linear-gradient(135deg, var(--accent), #8fe2ff); color: #07161f; }
+      .secondary { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid rgba(255,255,255,0.08); }
+      .footer { margin-top: 26px; color: var(--muted); font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Battleships Sound Audition Expanded</h1>
+      <div class="subtitle">More samples. More directions. Pick the set that feels best for the game.</div>
+      <div id="cards" class="row"></div>
+      <div class="footer">Goal: same synthesis family, different flavor profiles, easy to pick a winner and align all platforms.</div>
+    </div>
+
+    <script>
+      const samples = [
+        { name: 'Neon Hit', vibe: 'bright and modern', tags: ['clean','sharp','digital'], params: { freq: 230, duration: 0.10, sweep: 1.1, attack: 0.004, decay: 0.05, sustain: 0.6, release: 0.10, harmonic: 0.48, wave: 'triangle', gain: 0.16 } },
+        { name: 'Classic Arcade', vibe: 'solid retro punch', tags: ['arcade','short','punchy'], params: { freq: 180, duration: 0.11, sweep: 0.9, attack: 0.006, decay: 0.06, sustain: 0.55, release: 0.12, harmonic: 0.32, wave: 'triangle', gain: 0.18 } },
+        { name: 'Soft Missile', vibe: 'smooth and friendly', tags: ['mellow','gentle','airy'], params: { freq: 280, duration: 0.09, sweep: -0.2, attack: 0.006, decay: 0.05, sustain: 0.4, release: 0.09, harmonic: 0.14, wave: 'sine', gain: 0.14 } },
+        { name: 'Power Place', vibe: 'strong placement confirmation', tags: ['bold','clear','confident'], params: { freq: 440, duration: 0.12, sweep: 0.75, attack: 0.008, decay: 0.08, sustain: 0.62, release: 0.12, harmonic: 0.28, wave: 'square', gain: 0.2 } },
+        { name: 'Turn Ready', vibe: 'alert and crisp', tags: ['urgent','bright','decisive'], params: { freq: 560, duration: 0.18, sweep: 0.85, attack: 0.009, decay: 0.08, sustain: 0.58, release: 0.15, harmonic: 0.4, wave: 'triangle', gain: 0.18 } },
+        { name: 'Your Turn', vibe: 'a little more premium', tags: ['warm','upbeat','assertive'], params: { freq: 520, duration: 0.2, sweep: 0.5, attack: 0.012, decay: 0.09, sustain: 0.7, release: 0.18, harmonic: 0.46, wave: 'sine', gain: 0.17 } },
+        { name: 'Victory Ribbon', vibe: 'joyful and triumphant', tags: ['victory','happy','full'], params: { freq: 392, duration: 0.42, sweep: 0.38, attack: 0.02, decay: 0.13, sustain: 0.82, release: 0.28, harmonic: 0.6, wave: 'sine', gain: 0.18 } },
+        { name: 'Victory Chime', vibe: 'new-year style win sound', tags: ['bright','ascending','lush'], params: { freq: 660, duration: 0.48, sweep: 0.72, attack: 0.015, decay: 0.12, sustain: 0.78, release: 0.25, harmonic: 0.68, wave: 'triangle', gain: 0.17 } },
+        { name: 'Defeat Drop', vibe: 'low and gloomy', tags: ['downward','heavy','sad'], params: { freq: 170, duration: 0.54, sweep: -0.58, attack: 0.025, decay: 0.16, sustain: 0.45, release: 0.28, harmonic: 0.52, wave: 'sawtooth', gain: 0.17 } },
+        { name: 'Crash Fade', vibe: 'harder lose-state tone', tags: ['dark','low','drop'], params: { freq: 140, duration: 0.58, sweep: -0.72, attack: 0.03, decay: 0.22, sustain: 0.4, release: 0.26, harmonic: 0.58, wave: 'triangle', gain: 0.18 } },
+        { name: 'UI Ping', vibe: 'tiny notification tone', tags: ['quick','small','mobile'], params: { freq: 760, duration: 0.07, sweep: 0.55, attack: 0.003, decay: 0.03, sustain: 0.5, release: 0.09, harmonic: 0.24, wave: 'triangle', gain: 0.13 } },
+        { name: 'Menu Tap', vibe: 'very light button sound', tags: ['subtle','quiet','soft'], params: { freq: 660, duration: 0.08, sweep: 0.20, attack: 0.004, decay: 0.05, sustain: 0.62, release: 0.10, harmonic: 0.21, wave: 'sine', gain: 0.12 } },
+        { name: 'Sunk Bell', vibe: 'crisp ship hit', tags: ['bell','tight','precise'], params: { freq: 320, duration: 0.12, sweep: 0.4, attack: 0.005, decay: 0.06, sustain: 0.48, release: 0.13, harmonic: 0.35, wave: 'triangle', gain: 0.15 } },
+        { name: 'Laser Tick', vibe: 'fast and tactical', tags: ['laser','futuristic','quick'], params: { freq: 820, duration: 0.06, sweep: 0.8, attack: 0.002, decay: 0.03, sustain: 0.42, release: 0.08, harmonic: 0.3, wave: 'square', gain: 0.12 } },
+        { name: 'Marine Pulse', vibe: 'deep but modern', tags: ['deep','warm','steady'], params: { freq: 210, duration: 0.18, sweep: 0.28, attack: 0.01, decay: 0.09, sustain: 0.66, release: 0.18, harmonic: 0.5, wave: 'sine', gain: 0.18 } }
+      ];
+
+      const cardsRoot = document.getElementById('cards');
+
+      function getAudioContext() {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!window.__battleshipsAudioCtx) window.__battleshipsAudioCtx = new AudioCtx();
+        return window.__battleshipsAudioCtx;
+      }
+
+      function synthBeep(opts = {}) {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const {
+          freq = 440,
+          duration = 0.12,
+          sweep = 0.6,
+          attack = 0.006,
+          decay = 0.08,
+          sustain = 0.55,
+          release = 0.12,
+          harmonic = 0.35,
+          wave = 'sine',
+          gain = 0.18,
+          noise = 0,
+          detuneRatio = 2,
+          filterCutoff = 2600
+        } = opts;
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = wave;
+        osc2.type = wave === 'sine' ? 'triangle' : 'sine';
+
+        const startFreq = freq;
+        const endFreq = Math.max(20, startFreq * (1 + sweep * (duration * 1.5)));
+
+        osc1.frequency.setValueAtTime(startFreq, now);
+        osc1.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+
+        osc2.frequency.setValueAtTime(startFreq * detuneRatio, now);
+        osc2.frequency.exponentialRampToValueAtTime(endFreq * detuneRatio, now + duration);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(filterCutoff, now);
+        filter.Q.value = 0.6;
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.linearRampToValueAtTime(gain, now + attack);
+        gainNode.gain.linearRampToValueAtTime(gain * sustain, now + attack + decay);
+        gainNode.gain.setValueAtTime(gain * sustain, now + duration - release);
+        gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
+
+        if (noise > 0) {
+          const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1) * noise;
+          }
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          const hp = ctx.createBiquadFilter();
+          hp.type = 'highpass';
+          hp.frequency.value = 800;
+          const ng = ctx.createGain();
+          ng.gain.value = 0.1;
+          source.connect(hp);
+          hp.connect(ng);
+          ng.connect(filter);
+          source.start(now);
+          source.stop(now + duration + 0.02);
+        }
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration + 0.03);
+        osc2.stop(now + duration + 0.03);
+      }
+
+      function playSample(sample) {
+        synthBeep({
+          ...sample.params,
+          noise: sample.name.includes('Defeat') || sample.name.includes('Crash') ? 0.08 : 0,
+          gain: sample.params.gain
+        });
+      }
+
+      samples.forEach(sample => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h2>${sample.name}</h2>
+          <div class="meta">${sample.vibe}</div>
+          <div class="tags">
+            ${sample.tags.map(tag => `<span class="pill">${tag}</span>`).join('')}
+          </div>
+          <div class="actions">
+            <button class="primary">Play</button>
+            <button class="secondary">Again</button>
+          </div>
+        `;
+
+        const [playBtn, againBtn] = card.querySelectorAll('button');
+        playBtn.addEventListener('click', () => playSample(sample));
+        againBtn.addEventListener('click', () => playSample(sample));
+
+        cardsRoot.appendChild(card);
+      });
+    </script>
+  </body>
+</html>

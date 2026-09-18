@@ -4,9 +4,18 @@ struct PlacementScreen: View {
     @ObservedObject var vm: GameViewModel
     @State private var selectedShip: Int = 0
     @State private var hoverCell: (Int, Int)?
+    @State private var draggingPlacement: PlacedShip? = nil
+    @State private var dragTargetCell: (Int, Int)? = nil
 
     private var s: I18nStrings { vm.s }
     private let colHeaders = (0..<GRID_SIZE).map { String(UnicodeScalar(65 + $0)!) }
+
+    private var dragPreviewInfo: (valid: Bool, cells: Set<String>)? {
+        guard let ship = draggingPlacement, let target = dragTargetCell else { return nil }
+        let (valid, cells) = canPlaceShipOnBoard(board: vm.playerBoard, row: target.0, col: target.1, length: ship.length, dir: ship.direction)
+        let cellKeys = Set(cells.map { "\($0.0),\($0.1)" })
+        return (valid, cellKeys)
+    }
 
     var body: some View {
         if vm.isSpectator {
@@ -224,35 +233,98 @@ struct PlacementScreen: View {
             }
 
             // 10x10 grid with headers
-            VStack(spacing: 1) {
+            VStack(spacing: 2) {
                 // Column headers
                 HStack(spacing: 1) {
-                    Color.clear.frame(width: 20, height: 20)
+                    Spacer().frame(width: 18)
                     ForEach(0..<GRID_SIZE, id: \.self) { c in
                         Text(colHeaders[c])
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.blue.opacity(0.7))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 20)
                     }
                 }
 
-                ForEach(0..<GRID_SIZE, id: \.self) { row in
-                    HStack(spacing: 1) {
-                        // Row header
-                        Text("\(row + 1)")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.blue.opacity(0.7))
-                            .frame(width: 20)
-
-                        ForEach(0..<GRID_SIZE, id: \.self) { col in
-                            let cell = vm.playerBoard[row][col]
-                            placementCell(cell: cell, row: row, col: col)
+                // Grid body with row headers & interactive cells
+                HStack(spacing: 2) {
+                    // Row headers
+                    VStack(spacing: 1) {
+                        ForEach(0..<GRID_SIZE, id: \.self) { row in
+                            Text("\(row + 1)")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.blue.opacity(0.7))
+                                .frame(width: 18)
+                                .frame(maxHeight: .infinity)
                         }
                     }
+
+                    // 10x10 Interactive Cells Grid (isolated GeometryReader)
+                    GeometryReader { geo in
+                        let cellSize = max(geo.size.width / 10.0, 1.0)
+
+                        VStack(spacing: 1) {
+                            ForEach(0..<GRID_SIZE, id: \.self) { row in
+                                HStack(spacing: 1) {
+                                    ForEach(0..<GRID_SIZE, id: \.self) { col in
+                                        let cell = vm.playerBoard[row][col]
+                                        placementCell(cell: cell, row: row, col: col)
+                                    }
+                                }
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                                .onChanged { gesture in
+                                    guard !vm.isReady && !vm.isSpectator else { return }
+                                    guard geo.size.width > 0 && geo.size.height > 0 else { return }
+
+                                    let touchX = gesture.location.x
+                                    let touchY = gesture.location.y
+                                    guard touchX >= 0, touchY >= 0 else { return }
+
+                                    let col = min(max(Int(touchX / cellSize), 0), GRID_SIZE - 1)
+                                    let row = min(max(Int(touchY / cellSize), 0), GRID_SIZE - 1)
+
+                                    if draggingPlacement == nil {
+                                        let startX = gesture.startLocation.x
+                                        let startY = gesture.startLocation.y
+                                        let startCol = min(max(Int(startX / cellSize), 0), GRID_SIZE - 1)
+                                        let startRow = min(max(Int(startY / cellSize), 0), GRID_SIZE - 1)
+
+                                        if let existing = vm.clientPlacements.first(where: { p in p.cells.contains { $0.0 == startRow && $0.1 == startCol } }) {
+                                            draggingPlacement = existing
+                                            vm.unplaceShip(shipId: existing.shipId)
+                                            selectedShip = existing.shipId
+                                        }
+                                    }
+
+                                    if draggingPlacement != nil {
+                                        dragTargetCell = (row, col)
+                                    }
+                                }
+                                .onEnded { gesture in
+                                    guard let ship = draggingPlacement else { return }
+                                    let targetRow = dragTargetCell?.0 ?? ship.row
+                                    let targetCol = dragTargetCell?.1 ?? ship.col
+
+                                    let (valid, _) = canPlaceShipOnBoard(board: vm.playerBoard, row: targetRow, col: targetCol, length: ship.length, dir: ship.direction)
+                                    if valid {
+                                        vm.placeShip(shipId: ship.shipId, row: targetRow, col: targetCol)
+                                        vm.setMessage(s.shipMoved, "success", duration: 1)
+                                    } else {
+                                        vm.placeShip(shipId: ship.shipId, row: ship.row, col: ship.col)
+                                        vm.setMessage(s.cantPlaceThere, "error", duration: 1)
+                                    }
+
+                                    draggingPlacement = nil
+                                    dragTargetCell = nil
+                                }
+                        )
+                    }
+                    .aspectRatio(1, contentMode: .fit)
                 }
             }
-            .aspectRatio(1.05, contentMode: .fit)
             .padding(8)
             .background(
                 RoundedRectangle(cornerRadius: 12)
@@ -263,8 +335,8 @@ struct PlacementScreen: View {
 
             // Legend
             HStack(spacing: 12) {
-                legendItem(color: Color(red: 0.1, green: 0.3, blue: 0.6), label: "Water")
-                legendItem(color: Color(red: 0.2, green: 0.7, blue: 0.4), label: "Ship")
+                legendItem(color: Color(red: 0.1, green: 0.3, blue: 0.6), label: s.boardWater)
+                legendItem(color: Color(red: 0.2, green: 0.7, blue: 0.4), label: s.boardShip)
             }
             .font(.caption2)
             .foregroundColor(.gray)
@@ -273,16 +345,30 @@ struct PlacementScreen: View {
 
     private func placementCell(cell: String, row: Int, col: Int) -> some View {
         let isShip = cell == CellState.SHIP
+        let key = "\(row),\(col)"
+
+        var bg = isShip
+            ? Color(red: 0.2, green: 0.7, blue: 0.4)
+            : Color(red: 0.1, green: 0.3, blue: 0.6)
+
+        if let preview = dragPreviewInfo, preview.cells.contains(key) {
+            bg = preview.valid
+                ? Color.green.opacity(0.85)
+                : Color.red.opacity(0.85)
+        }
 
         return Rectangle()
-            .fill(isShip
-                ? Color(red: 0.2, green: 0.7, blue: 0.4)
-                : Color(red: 0.1, green: 0.3, blue: 0.6))
+            .fill(bg)
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
             .border(Color.black.opacity(0.15), width: 0.5)
             .onTapGesture {
-                guard !vm.isReady && !vm.isSpectator else { return }
+                guard !vm.isReady && !vm.isSpectator && draggingPlacement == nil else { return }
+                if isShip, let existing = vm.clientPlacements.first(where: { p in p.cells.contains { $0.0 == row && $0.1 == col } }) {
+                    vm.unplaceShip(shipId: existing.shipId)
+                    selectedShip = existing.shipId
+                    return
+                }
                 let shipId = selectedShip
                 vm.placeShip(shipId: shipId, row: row, col: col)
                 // Auto-advance to next unplaced ship
@@ -309,7 +395,7 @@ struct PlacementScreen: View {
                 Circle()
                     .fill(vm.opponentReady ? Color.green : Color.orange)
                     .frame(width: 8, height: 8)
-                Text(vm.opponentReady ? s.opponentIsReady : s.opponentPlacing.fmt(vm.opponentName))
+                Text(vm.opponentReady ? s.opponentIsReady.fmt(vm.opponentName.isEmpty ? s.opponent : vm.opponentName) : s.opponentPlacing.fmt(vm.opponentName))
                     .font(.caption)
                     .foregroundColor(vm.opponentReady ? .green : .orange)
             }

@@ -10,15 +10,19 @@ struct ConnectionOverlay: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
+                Text("📡").font(.system(size: 40))
+                Text(strings.connectionLost)
+                    .font(.headline.bold())
+                    .foregroundColor(.white)
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .scaleEffect(1.5)
                 Text(strings.reconnecting)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Text(strings.tapToRetry)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.6))
+                Text(strings.tapToRetry)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.4))
             }
             .padding(32)
             .background(

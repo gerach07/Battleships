@@ -461,6 +461,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun confirmForfeit() { handleForfeit(); _showSurrenderDialog.value = false }
     fun cancelForfeit() { _showSurrenderDialog.value = false }
 
+    fun handleReturnToWaiting() {
+        resetGameStateForNewGame()
+        _phase.value = "waiting"
+    }
+
     fun handleBackToMenu() {
         playerLeftJob?.cancel()
         playerLeftJob = null

@@ -148,6 +148,12 @@ fun GameOverScreen(viewModel: GameViewModel) {
                     }
                 }
                 Spacer(Modifier.height(12.dp))
+            } else if (opponentName.isBlank()) {
+                GradientButton(
+                    "🏠 ${s.roomCodeLabel} (Return)",
+                    c.primaryDark, c.primary,
+                ) { viewModel.handleReturnToWaiting() }
+                Spacer(Modifier.height(12.dp))
             } else {
                 GradientButton(
                     "🔄 ${s.playAgain}",

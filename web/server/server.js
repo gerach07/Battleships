@@ -847,7 +847,6 @@ io.on('connection', (socket) => {
       const room = rooms[roomId];
       if (!room || !room.players[socket.id] || room.spectators.has(socket.id)) {
         // Spectator or already removed — leave immediately (inside lock for consistency)
-        release();
         await handlePlayerLeave(socket.id, io);
         console.log(`Disconnected: ${socket.id}`);
         return;

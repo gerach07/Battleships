@@ -16,9 +16,15 @@ final class MusicManager: ObservableObject {
 
     @Published var enabled = false {
         didSet {
-            if !enabled { stopMusic() }
-            else { resumeMusic() }
+            guard oldValue != enabled else { return }
             UserDefaults.standard.set(enabled, forKey: "battleships-music")
+            if !enabled {
+                stopMusic()
+                deactivateAudioSession()
+            } else {
+                activateAudioSession()
+                resumeMusic()
+            }
         }
     }
 
@@ -32,22 +38,36 @@ final class MusicManager: ObservableObject {
     private var fadeTimer: Timer?
 
     private init() {
-        enabled = UserDefaults.standard.bool(forKey: "battleships-music")
+        let initialEnabled = UserDefaults.standard.bool(forKey: "battleships-music")
+        self._enabled = Published(initialValue: initialEnabled)
+        if initialEnabled {
+            activateAudioSession()
+        }
+    }
+
+    private func activateAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("[MusicManager] Failed to configure audio session: \(error.localizedDescription)")
         }
     }
 
-    private func playTrack(_ name: String, loop: Bool = true) {
-        if !enabled {
-            currentTrack = name
-            currentLoop = loop
-            return
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("[MusicManager] Failed to deactivate audio session: \(error.localizedDescription)")
         }
+    }
+
+    private func playTrack(_ name: String, loop: Bool = true) {
         if currentTrack == name, player?.isPlaying == true { return }
+        currentTrack = name
+        currentLoop = loop
+        currentTrackName = Self.trackNames[name]
+        if !enabled { return }
 
         // Fade out old track then start new
         if let oldPlayer = player, oldPlayer.isPlaying {
@@ -65,6 +85,9 @@ final class MusicManager: ObservableObject {
         currentTrack = name
         currentLoop = loop
         currentTrackName = Self.trackNames[name]
+
+        guard enabled else { return }
+        activateAudioSession()
 
         guard let url = Bundle.main.url(forResource: name, withExtension: "m4a")
             ?? Bundle.main.url(forResource: name, withExtension: "mp3")
@@ -103,6 +126,14 @@ final class MusicManager: ObservableObject {
         fadeTimer = nil
     }
 
+    func ensureReadyForPlayback() {
+        guard enabled else { return }
+        activateAudioSession()
+        if let p = player, p.isPlaying { return }
+        let track = currentTrack ?? "bgm_menu"
+        startNewTrack(track, loop: currentLoop)
+    }
+
     func resumeMusic() {
         guard enabled else { return }
         if player?.isPlaying == true { return }
@@ -110,9 +141,8 @@ final class MusicManager: ObservableObject {
             p.play()
             return
         }
-        if let track = currentTrack {
-            startNewTrack(track, loop: currentLoop)
-        }
+        let track = currentTrack ?? "bgm_menu"
+        startNewTrack(track, loop: currentLoop)
     }
 
     func pauseMusic() {

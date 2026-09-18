@@ -208,13 +208,13 @@ struct BattleScreen: View {
 
             // Legend — colors match actual cell colors from GameBoardView
             HStack(spacing: 10) {
-                legendItem(Color(red: 0.1, green: 0.3, blue: 0.6), "Water")
+                legendItem(Color(red: 0.1, green: 0.3, blue: 0.6), s.boardWater)
                 if showShipLegend {
-                    legendItem(Color(red: 0.4, green: 0.5, blue: 0.65), "Ship")
+                    legendItem(Color(red: 0.13, green: 0.77, blue: 0.37), s.boardShip)
                 }
-                legendItem(Color(red: 0.85, green: 0.2, blue: 0.2), "Hit")
-                legendItem(Color(red: 0.2, green: 0.25, blue: 0.4), "Miss")
-                legendItem(Color(red: 0.6, green: 0.1, blue: 0.1), "Sunk")
+                legendItem(Color(red: 0.85, green: 0.2, blue: 0.2), s.boardHit)
+                legendItem(Color(red: 0.2, green: 0.25, blue: 0.4), s.boardMiss)
+                legendItem(Color(red: 0.6, green: 0.1, blue: 0.1), s.boardSunk)
             }
             .font(.system(size: 9))
             .foregroundColor(.gray)

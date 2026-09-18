@@ -184,6 +184,32 @@ struct GameOverScreen: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.1)))
             )
+        } else if vm.opponentName.isEmpty {
+            VStack(spacing: 10) {
+                Button {
+                    vm.handleReturnToWaiting()
+                } label: {
+                    Text("🏠 \(s.roomCodeLabel)")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing))
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                }
+
+                Button {
+                    vm.handleBackToMenu()
+                } label: {
+                    Text(s.mainMenu)
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.white.opacity(0.08))
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                }
+            }
         } else {
             // Default — no play again flow yet
             VStack(spacing: 10) {

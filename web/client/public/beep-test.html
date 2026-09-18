@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battleships Beep Test</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #131d32;
+        --panel-2: #1a2748;
+        --text: #ebf1ff;
+        --muted: #aac0ea;
+        --accent: #67d2ff;
+        --accent-2: #8ef0c5;
+        --warn: #ffb266;
+        --danger: #ff7b7b;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #1d2a4d, var(--bg) 55%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 28px;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+
+      .sub {
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+      }
+
+      .panel {
+        background: rgba(19, 29, 50, 0.9);
+        border: 1px solid rgba(103, 210, 255, 0.15);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+      }
+
+      .preset-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+      }
+
+      .preset {
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.04));
+        color: var(--text);
+        border-radius: 12px;
+        padding: 12px 14px;
+        text-align: left;
+        cursor: pointer;
+        transition: 0.15s ease;
+      }
+
+      .preset:hover {
+        transform: translateY(-1px);
+        border-color: rgba(103, 210, 255, 0.4);
+      }
+
+      .preset strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .preset small {
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+
+      .value {
+        min-width: 55px;
+        text-align: right;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .bottom-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      button.primary,
+      button.secondary {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--accent), #77c5ff);
+        color: #061319;
+      }
+
+      button.secondary {
+        background: rgba(255,255,255,0.06);
+        color: var(--text);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .mini-grid {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .stat {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 10px;
+        padding: 12px;
+      }
+
+      .stat-title {
+        color: var(--muted);
+        font-size: 0.82rem;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .stat strong {
+        font-size: 1.1rem;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.88rem;
+        color: var(--accent-2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Battleships Beep Lab</h1>
+      <div class="sub">
+        Shared synthesis formula for all platforms: one oscillator stack + attack/decay/sustain envelope + optional sweep.
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="preset-list" id="presetList"></div>
+
+          <div class="controls">
+            <div class="row">
+              <label for="freq">Base frequency</label>
+              <div class="value" id="freqValue">440 Hz</div>
+            </div>
+            <input id="freq" type="range" min="80" max="1800" step="5" value="440" />
+
+            <div class="row">
+              <label for="duration">Duration</label>
+              <div class="value" id="durationValue">0.12 s</div>
+            </div>
+            <input id="duration" type="range" min="0.04" max="1.2" step="0.01" value="0.12" />
+
+            <div class="row">
+              <label for="sweep">Sweep</label>
+              <div class="value" id="sweepValue">0.60x</div>
+            </div>
+            <input id="sweep" type="range" min="0" max="2.5" step="0.05" value="0.6" />
+
+            <div class="row">
+              <label for="attack">Attack</label>
+              <div class="value" id="attackValue">0.006 s</div>
+            </div>
+            <input id="attack" type="range" min="0.003" max="0.2" step="0.001" value="0.006" />
+
+            <div class="row">
+              <label for="decay">Decay</label>
+              <div class="value" id="decayValue">0.08 s</div>
+            </div>
+            <input id="decay" type="range" min="0.02" max="0.5" step="0.01" value="0.08" />
+
+            <div class="row">
+              <label for="sustain">Sustain</label>
+              <div class="value" id="sustainValue">0.55</div>
+            </div>
+            <input id="sustain" type="range" min="0.1" max="1" step="0.01" value="0.55" />
+
+            <div class="row">
+              <label for="release">Release</label>
+              <div class="value" id="releaseValue">0.12 s</div>
+            </div>
+            <input id="release" type="range" min="0.02" max="0.5" step="0.01" value="0.12" />
+
+            <div class="row">
+              <label for="harmonic">Harmonic mix</label>
+              <div class="value" id="harmonicValue">0.35</div>
+            </div>
+            <input id="harmonic" type="range" min="0" max="1" step="0.02" value="0.35" />
+          </div>
+
+          <div class="bottom-row">
+            <button class="primary" id="playCustom">Play custom beep</button>
+            <button class="secondary" id="playChord">Play chord layer</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="mini-grid">
+            <div class="stat">
+              <span class="stat-title">Shared formula</span>
+              <code>y(t) = A(t) × [sin(2πf(t)t) + h sin(2π(2f(t))t + φ) + 0.2 sin(2π(3f(t))t)]</code>
+            </div>
+
+            <div class="stat">
+              <span class="stat-title">Envelope</span>
+              <code>A(t) = attack → decay → sustain → release</code>
+            </div>
+
+            <div class="stat">
+              <span class="stat-title">Sweep</span>
+              <code>f(t) = f₀ × (1 + sweep × t / duration)</code>
+            </div>
+
+            <div class="stat">
+              <span class="stat-title">Recommended preset</span>
+              <strong id="currentPreset">Hit</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const presets = {
+        hit: { label: 'Hit', freq: 180, duration: 0.11, sweep: 0.9, attack: 0.006, decay: 0.06, sustain: 0.55, release: 0.12, harmonic: 0.32, wave: 'triangle' },
+        miss: { label: 'Miss', freq: 260, duration: 0.09, sweep: -0.4, attack: 0.005, decay: 0.05, sustain: 0.35, release: 0.1, harmonic: 0.18, wave: 'sine' },
+        place: { label: 'Place ship', freq: 440, duration: 0.12, sweep: 0.7, attack: 0.008, decay: 0.08, sustain: 0.62, release: 0.12, harmonic: 0.3, wave: 'square' },
+        turn: { label: 'Your turn', freq: 560, duration: 0.18, sweep: 0.85, attack: 0.01, decay: 0.1, sustain: 0.58, release: 0.16, harmonic: 0.42, wave: 'triangle' },
+        win: { label: 'Victory', freq: 392, duration: 0.45, sweep: 0.35, attack: 0.02, decay: 0.15, sustain: 0.9, release: 0.28, harmonic: 0.55, wave: 'sine' },
+        lose: { label: 'Defeat', freq: 180, duration: 0.5, sweep: -0.55, attack: 0.025, decay: 0.14, sustain: 0.45, release: 0.26, harmonic: 0.52, wave: 'sawtooth' },
+        chat: { label: 'Chat ping', freq: 760, duration: 0.07, sweep: 0.55, attack: 0.003, decay: 0.03, sustain: 0.5, release: 0.09, harmonic: 0.24, wave: 'triangle' },
+        menu: { label: 'Menu tap', freq: 660, duration: 0.08, sweep: 0.2, attack: 0.004, decay: 0.04, sustain: 0.6, release: 0.1, harmonic: 0.22, wave: 'sine' }
+      };
+
+      const controls = {
+        freq: document.getElementById('freq'),
+        duration: document.getElementById('duration'),
+        sweep: document.getElementById('sweep'),
+        attack: document.getElementById('attack'),
+        decay: document.getElementById('decay'),
+        sustain: document.getElementById('sustain'),
+        release: document.getElementById('release'),
+        harmonic: document.getElementById('harmonic')
+      };
+
+      const labels = {
+        freq: document.getElementById('freqValue'),
+        duration: document.getElementById('durationValue'),
+        sweep: document.getElementById('sweepValue'),
+        attack: document.getElementById('attackValue'),
+        decay: document.getElementById('decayValue'),
+        sustain: document.getElementById('sustainValue'),
+        release: document.getElementById('releaseValue'),
+        harmonic: document.getElementById('harmonicValue')
+      };
+
+      const currentPresetEl = document.getElementById('currentPreset');
+      const presetListEl = document.getElementById('presetList');
+
+      function setLabels() {
+        labels.freq.textContent = `${Number(controls.freq.value).toFixed(0)} Hz`;
+        labels.duration.textContent = `${Number(controls.duration.value).toFixed(2)} s`;
+        labels.sweep.textContent = `${Number(controls.sweep.value).toFixed(2)}x`;
+        labels.attack.textContent = `${Number(controls.attack.value).toFixed(3)} s`;
+        labels.decay.textContent = `${Number(controls.decay.value).toFixed(2)} s`;
+        labels.sustain.textContent = Number(controls.sustain.value).toFixed(2);
+        labels.release.textContent = `${Number(controls.release.value).toFixed(2)} s`;
+        labels.harmonic.textContent = Number(controls.harmonic.value).toFixed(2);
+      }
+
+      Object.entries(controls).forEach(([key, input]) => {
+        input.addEventListener('input', setLabels);
+      });
+
+      function applyPreset(name) {
+        const p = presets[name];
+        if (!p) return;
+        currentPresetEl.textContent = p.label;
+        controls.freq.value = p.freq;
+        controls.duration.value = p.duration;
+        controls.sweep.value = p.sweep;
+        controls.attack.value = p.attack;
+        controls.decay.value = p.decay;
+        controls.sustain.value = p.sustain;
+        controls.release.value = p.release;
+        controls.harmonic.value = p.harmonic;
+        setLabels();
+      }
+
+      Object.entries(presets).forEach(([key, preset]) => {
+        const btn = document.createElement('button');
+        btn.className = 'preset';
+        btn.innerHTML = `<strong>${preset.label}</strong><small>${preset.freq}Hz · ${preset.duration.toFixed(2)}s</small>`;
+        btn.addEventListener('click', () => {
+          applyPreset(key);
+          playPreset(preset);
+        });
+        presetListEl.appendChild(btn);
+      });
+
+      function getAudioContext() {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!window.__battleshipsAudioCtx) {
+          window.__battleshipsAudioCtx = new AudioCtx();
+        }
+        return window.__battleshipsAudioCtx;
+      }
+
+      function beep(opts = {}) {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+        const {
+          freq = 440,
+          duration = 0.12,
+          sweep = 0.6,
+          attack = 0.006,
+          decay = 0.08,
+          sustain = 0.55,
+          release = 0.12,
+          harmonic = 0.35,
+          wave = 'sine',
+          gain = 0.18,
+          detuneRatio = 2,
+          filterCutoff = 2600,
+          noise = 0
+        } = opts;
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        const noiseGain = ctx.createGain();
+
+        osc1.type = wave;
+        osc2.type = wave === 'sine' ? 'triangle' : 'sine';
+
+        const startFreq = freq;
+        const endFreq = Math.max(20, startFreq * (1 + sweep * (duration * 1.5)));
+
+        osc1.frequency.setValueAtTime(startFreq, now);
+        osc1.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+
+        osc2.frequency.setValueAtTime(startFreq * detuneRatio, now);
+        osc2.frequency.exponentialRampToValueAtTime(endFreq * detuneRatio, now + duration);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(filterCutoff, now);
+        filter.Q.value = 0.5;
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.linearRampToValueAtTime(gain, now + attack);
+        gainNode.gain.linearRampToValueAtTime(gain * sustain, now + attack + decay);
+        gainNode.gain.setValueAtTime(gain * sustain, now + duration - release);
+        gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
+
+        if (noise > 0) {
+          const buffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < data.length; i++) {
+            data[i] = (Math.random() * 2 - 1) * noise;
+          }
+          const noiseSource = ctx.createBufferSource();
+          noiseSource.buffer = buffer;
+          const noiseFilter = ctx.createBiquadFilter();
+          noiseFilter.type = 'highpass';
+          noiseFilter.frequency.value = 900;
+          noiseGain.gain.value = 0.12;
+          noiseSource.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(filter);
+          noiseSource.start(now);
+          noiseSource.stop(now + duration + 0.02);
+        }
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + duration + 0.03);
+        osc2.stop(now + duration + 0.03);
+      }
+
+      function playCustom() {
+        beep({
+          freq: Number(controls.freq.value),
+          duration: Number(controls.duration.value),
+          sweep: Number(controls.sweep.value),
+          attack: Number(controls.attack.value),
+          decay: Number(controls.decay.value),
+          sustain: Number(controls.sustain.value),
+          release: Number(controls.release.value),
+          harmonic: Number(controls.harmonic.value),
+          wave: 'triangle',
+          gain: 0.18,
+          detuneRatio: 2,
+          filterCutoff: 2600,
+          noise: 0
+        });
+      }
+
+      function playPreset(preset) {
+        beep({
+          freq: preset.freq,
+          duration: preset.duration,
+          sweep: preset.sweep,
+          attack: preset.attack,
+          decay: preset.decay,
+          sustain: preset.sustain,
+          release: preset.release,
+          harmonic: preset.harmonic,
+          wave: preset.wave,
+          gain: 0.18,
+          detuneRatio: 2,
+          filterCutoff: 2600,
+          noise: preset.label === 'Defeat' ? 0.08 : 0
+        });
+      }
+
+      function playChord() {
+        const notes = [392, 494, 587];
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        notes.forEach((n, idx) => {
+          setTimeout(() => beep({
+            freq: n,
+            duration: 0.24,
+            sweep: 0.25,
+            attack: 0.015,
+            decay: 0.12,
+            sustain: 0.75,
+            release: 0.22,
+            harmonic: 0.5,
+            wave: 'sine',
+            gain: 0.11,
+            detuneRatio: 2,
+            filterCutoff: 2400,
+            noise: 0
+          }), idx * 90);
+        });
+      }
+
+      document.getElementById('playCustom').addEventListener('click', playCustom);
+      document.getElementById('playChord').addEventListener('click', playChord);
+      applyPreset('hit');
+      setLabels();
+    </script>
+  </body>
+</html>

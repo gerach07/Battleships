@@ -334,7 +334,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
         // Status (always rendered to prevent layout shift)
         Text(
             when {
-                opponentReady -> "✅ ${s.opponentIsReady}"
+                opponentReady -> s.opponentIsReady.replace("{0}", opponentName.ifEmpty { s.opponent })
                 opponentName.isNotEmpty() -> s.opponentPlacing.replace("{0}", opponentName)
                 else -> "\u00A0"
             },

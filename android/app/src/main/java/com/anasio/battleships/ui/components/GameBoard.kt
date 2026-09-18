@@ -204,10 +204,11 @@ private fun BoardCell(
         state == CellState.SUNK -> c.red.copy(alpha = .6f)
         else -> c.border.copy(alpha = .3f)
     }
-    val emoji = when (state) {
-        CellState.HIT -> "🔥"
-        CellState.MISS -> "·"
-        CellState.SUNK -> "💀"
+    val emoji = when {
+        state == CellState.HIT -> "🔥"
+        state == CellState.MISS -> "·"
+        state == CellState.SUNK -> "💀"
+        state == CellState.SHIP && showShip -> "⚓"
         else -> ""
     }
 

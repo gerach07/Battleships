@@ -39,10 +39,8 @@ fun BattleScreen(viewModel: GameViewModel) {
     val spectatorCount by viewModel.spectatorCount.collectAsState()
     val spectatorBoards by viewModel.spectatorBoards.collectAsState()
     val playerTimeLeft by viewModel.playerTimeLeft.collectAsState()
-    val turnStartedAt by viewModel.turnStartedAt.collectAsState()
-    val soundEnabled by viewModel.soundEnabled.collectAsState()
-    val musicEnabled by viewModel.musicEnabled.collectAsState()
     val showSurrenderDialog by viewModel.showSurrenderDialog.collectAsState()
+
     val s = LocalI18n.current
     val c = LocalColorPalette.current
 
@@ -62,25 +60,6 @@ fun BattleScreen(viewModel: GameViewModel) {
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Audio toggles
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = viewModel::toggleSound,
-                modifier = Modifier.size(44.dp).semantics { contentDescription = s.toggleSound },
-            ) {
-                Text(if (soundEnabled) "🔊" else "🔇", fontSize = 18.sp)
-            }
-            IconButton(
-                onClick = viewModel::toggleMusic,
-                modifier = Modifier.size(44.dp).semantics { contentDescription = s.toggleMusic },
-            ) {
-                Text(if (musicEnabled) "🎵" else "🔕", fontSize = 18.sp)
-            }
-        }
 
         // Timer
         val spectatorNameMap = remember(spectatorBoards) {
@@ -106,7 +85,7 @@ fun BattleScreen(viewModel: GameViewModel) {
                 s.namesTurn.fmt(name)
             }
             isMyTurn -> "🎯 ${s.yourTurnFire}"
-            else -> "⏳ ${s.opponentsTurn}"
+            else -> "⏳ ${s.namesTurn.fmt(opponentName)}"
         }
         val turnColor = when {
             isSpectator -> c.primary

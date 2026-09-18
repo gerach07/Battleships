@@ -610,7 +610,6 @@ function App() {
       }, 2000);
     });
 
-    // Opponent left during placement or game-over — room reset to waiting
     socket.on('opponentLeft', (data) => {
       setPlayAgainPending(false);
       setOpponentWantsPlayAgain(false);
@@ -620,16 +619,21 @@ function App() {
       setShipsPlaced(0);
       setPlacementKey(k => k + 1);
       setOpponentName('');
-      setOpponentBoard(createEmptyBoard());
-      setPlayerBoard(createEmptyBoard());
-      resetSunk();
-      setWinner(null);
-      setTurnStartedAt(null);
-      setPlayerTimeLeft({});
-      setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
       setOpponentSocketId(null);
       if (data.isHost !== undefined) setIsHost(data.isHost);
-      setPhase('waiting');
+
+      if (phaseRef.current === 'gameOver') {
+        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
+      } else {
+        setOpponentBoard(createEmptyBoard());
+        setPlayerBoard(createEmptyBoard());
+        resetSunk();
+        setWinner(null);
+        setTurnStartedAt(null);
+        setPlayerTimeLeft({});
+        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
+        setPhase('waiting');
+      }
     });
 
     socket.on('leftRoom', () => {
@@ -1048,6 +1052,16 @@ function App() {
     }
   }, [socket, isHost, opponentSocketId, t]);
 
+  const handleReturnToWaiting = useCallback(() => {
+    setOpponentBoard(createEmptyBoard());
+    setPlayerBoard(createEmptyBoard());
+    resetSunk();
+    setWinner(null);
+    setTurnStartedAt(null);
+    setPlayerTimeLeft({});
+    setPhase('waiting');
+  }, [resetSunk]);
+
   const handleBackToMenu = useCallback(() => {
     if (playerLeftTimerRef.current) { clearTimeout(playerLeftTimerRef.current); playerLeftTimerRef.current = null; }
     joiningGameRef.current = false;
@@ -1336,7 +1350,9 @@ function App() {
                         : 'bg-slate-700 text-slate-500 cursor-not-allowed'
                     }`}
                 >
-                  {isReady ? (opponentReady ? t('placement.lockedIn') : t('placement.unready')) : t('placement.ready', shipsPlaced)}
+                  {isReady
+                    ? (opponentReady ? t('placement.lockedIn') : `↩️ ${t('placement.unready')}`)
+                    : `✅ ${t('placement.ready', shipsPlaced)}`}
                 </button>
                 <button onClick={handleBackToMenu} className="px-2.5 py-2 text-red-400/70 hover:text-red-300 text-xs font-semibold transition" title={t('waiting.leaveRoom')}>🚪</button>
               </div>
@@ -1377,6 +1393,7 @@ function App() {
             opponentWantsPlayAgain={opponentWantsPlayAgain} playAgainPending={playAgainPending}
             handlePlayAgain={handlePlayAgain} handleBackToMenu={handleBackToMenu}
             handleDeclinePlayAgain={handleDeclinePlayAgain}
+            handleReturnToWaiting={handleReturnToWaiting}
             isSpectator={isSpectator}
           />
           </Suspense>
