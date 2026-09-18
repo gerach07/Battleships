@@ -106,10 +106,7 @@ fun GameOverScreen(viewModel: GameViewModel) {
         }
         Spacer(Modifier.height(16.dp))
 
-        if (message.isNotBlank()) {
-            MessageBanner(message, messageType)
-            Spacer(Modifier.height(12.dp))
-        }
+
 
         // Play Again flow
         if (!isSpectator) {

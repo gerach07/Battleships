@@ -154,17 +154,6 @@ struct BattleScreen: View {
     // MARK: - Normal Boards
     private var normalBoards: some View {
         VStack(spacing: 14) {
-            // Your fleet
-            boardCard(label: s.yourFleet, isHighlighted: false, showShipLegend: true) {
-                GameBoardView(
-                    board: vm.playerBoard,
-                    isOpponentBoard: false,
-                    isInteractive: false,
-                    shotKeys: vm.playerShotKeys,
-                    explosionKeys: vm.playerExplosionKeys
-                )
-            }
-
             // Enemy waters
             boardCard(label: s.enemyWaters.fmt(vm.opponentName), isHighlighted: vm.isMyTurn, showShipLegend: false) {
                 GameBoardView(
@@ -176,6 +165,17 @@ struct BattleScreen: View {
                 ) { row, col in
                     vm.shoot(row: row, col: col)
                 }
+            }
+
+            // Your fleet
+            boardCard(label: s.yourFleet, isHighlighted: false, showShipLegend: true) {
+                GameBoardView(
+                    board: vm.playerBoard,
+                    isOpponentBoard: false,
+                    isInteractive: false,
+                    shotKeys: vm.playerShotKeys,
+                    explosionKeys: vm.playerExplosionKeys
+                )
             }
         }
     }

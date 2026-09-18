@@ -585,31 +585,6 @@ private fun EnterNameView(viewModel: GameViewModel) {
 // ── Helpers ──
 
 @Composable
-fun MessageBanner(message: String, type: String) {
-    val c = LocalColorPalette.current
-    val bg = when (type) {
-        "success" -> c.green.copy(alpha = .15f)
-        "error" -> c.red.copy(alpha = .15f)
-        else -> c.primary.copy(alpha = .15f)
-    }
-    val border = when (type) {
-        "success" -> c.green.copy(alpha = .4f)
-        "error" -> c.red.copy(alpha = .4f)
-        else -> c.primary.copy(alpha = .4f)
-    }
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(bg)
-            .border(1.dp, border, RoundedCornerShape(8.dp))
-            .padding(12.dp),
-    ) {
-        Text(message, fontSize = 13.sp, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
 private fun CreditsDialog(onDismiss: () -> Unit) {
     val c = LocalColorPalette.current
     val tracks = listOf(

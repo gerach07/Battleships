@@ -53,7 +53,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:3001\"")
+            buildConfigField("String", "SERVER_URL", "\"https://battleships-server-jtit.onrender.com\"")
         }
     }
     compileOptions {

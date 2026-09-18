@@ -23,6 +23,7 @@ import com.anasio.battleships.i18n.LocalI18n
 import com.anasio.battleships.ui.components.GameBoard
 import com.anasio.battleships.ui.theme.*
 import com.anasio.battleships.ui.theme.LocalColorPalette
+import com.anasio.battleships.ui.components.bounceClick
 import com.anasio.battleships.util.canPlaceShipOnBoard
 import com.anasio.battleships.util.SoundManager
 import com.anasio.battleships.util.createEmptyBoard
@@ -111,30 +112,12 @@ fun PlacementScreen(viewModel: GameViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("⚓ ${s.placeYourShips}", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
-            Row {
-                IconButton(onClick = viewModel::toggleSound, modifier = Modifier.size(36.dp)) {
-                    Text(if (soundEnabled) "🔊" else "🔇", fontSize = 18.sp)
-                }
-                IconButton(onClick = viewModel::toggleMusic, modifier = Modifier.size(36.dp)) {
-                    Text(if (musicEnabled) "🎵" else "🔕", fontSize = 18.sp)
-                }
-            }
-        }
         Spacer(Modifier.height(4.dp))
 
-        if (message.isNotBlank()) {
-            MessageBanner(message, messageType)
-            Spacer(Modifier.height(4.dp))
-        }
+
 
         // Ship selector
         Row(
@@ -154,13 +137,15 @@ fun PlacementScreen(viewModel: GameViewModel) {
                     selected -> c.primary
                     else -> c.border.copy(alpha = .3f)
                 }
+                val shape = RoundedCornerShape(16.dp)
+                val clickModifier = if (!isReady && !placed) Modifier.bounceClick { selectedShip = ship.id } else Modifier
                 Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(shape)
                         .background(bg)
-                        .border(1.dp, border, RoundedCornerShape(8.dp))
-                        .clickable(enabled = !isReady && !placed) { selectedShip = ship.id }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .border(if (selected) 2.dp else 1.dp, border, shape)
+                        .then(clickModifier)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     val shipName = when (ship.name) {
@@ -392,14 +377,16 @@ private fun SmallBtn(text: String, active: Boolean, enabled: Boolean, onClick: (
     val c = LocalColorPalette.current
     val bg = if (active) c.primary.copy(alpha = .25f) else c.card
     val border = if (active) c.primary else c.border.copy(alpha = .3f)
+    val shape = RoundedCornerShape(16.dp)
+    val clickModifier = if (enabled) Modifier.bounceClick(onClick) else Modifier
     Box(
         modifier = Modifier
             .sizeIn(minWidth = 48.dp, minHeight = 44.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .clip(shape)
             .background(bg)
-            .border(1.dp, border, RoundedCornerShape(6.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .border(1.dp, border, shape)
+            .then(clickModifier)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

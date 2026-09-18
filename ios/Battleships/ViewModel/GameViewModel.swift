@@ -392,7 +392,10 @@ final class GameViewModel: ObservableObject {
         playerLeftJob = nil
         joiningGame = false
         shootPending = false
-        socketManager.emit("leaveRoom")
+        if phase != "login" {
+            chatMessages = []
+            socketManager.emit("leaveRoom")
+        }
         resetFullState()
         phase = "login"
         gameId = ""
@@ -541,7 +544,6 @@ final class GameViewModel: ObservableObject {
 
     private func resetFullState() {
         resetBattleState()
-        chatMessages = []
         opponentName = ""
         spectatorBoards = []
         spectatorSunkDict = [:]
@@ -898,6 +900,7 @@ final class GameViewModel: ObservableObject {
                 let data = args.first as? [String: Any]
                 let msg = (data?["error"] as? String ?? data?["message"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? self.s.youWereKicked
                 self.resetFullState()
+                self.chatMessages = []
                 self.endLiveActivity()
                 self.setMessage("❌ \(msg)", "error")
                 self.phase = "login"
@@ -960,7 +963,7 @@ final class GameViewModel: ObservableObject {
                     self.spectatorBoards = self.buildSpectatorBoards(boards)
                 }
                 if let chatHistory = data["chatHistory"] as? [[String: Any]], !chatHistory.isEmpty {
-                    self.chatMessages = chatHistory.compactMap { m -> ChatMessage? in
+                    self.chatMessages = Array(chatHistory.compactMap { m -> ChatMessage? in
                         guard let id = m["id"] as? String,
                               let senderId = m["senderId"] as? String,
                               let senderName = m["senderName"] as? String,
@@ -969,7 +972,7 @@ final class GameViewModel: ObservableObject {
                         let isImportant = m["isImportant"] as? Bool ?? false
                         return ChatMessage(id: id, senderId: senderId, senderName: senderName,
                                           text: text, timestamp: ts, isMine: false, isImportant: isImportant, isSystem: m["isSystem"] as? Bool ?? false)
-                    }
+                    }.suffix(100))
                 }
                 if let ct = data["currentTurn"] as? String { self.currentTurn = ct }
                 if let tl = data["timeLimit"] as? Int, tl > 0 { self.gameTimeLimit = tl }
@@ -1061,7 +1064,7 @@ final class GameViewModel: ObservableObject {
 
                 // Restore chat
                 if let chatHistory = data["chatHistory"] as? [[String: Any]] {
-                    self.chatMessages = chatHistory.compactMap { m -> ChatMessage? in
+                    self.chatMessages = Array(chatHistory.compactMap { m -> ChatMessage? in
                         ChatMessage(
                             id: (m["id"] as? String) ?? UUID().uuidString,
                             senderId: m["senderId"] as? String ?? "",
@@ -1072,7 +1075,7 @@ final class GameViewModel: ObservableObject {
                             isImportant: m["isImportant"] as? Bool ?? false,
                             isSystem: m["isSystem"] as? Bool ?? false
                         )
-                    }
+                    }.suffix(100))
                 }
 
                 // Clear play-again state

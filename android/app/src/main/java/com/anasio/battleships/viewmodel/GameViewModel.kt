@@ -466,12 +466,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _phase.value = "waiting"
     }
 
+    private fun resetGameStateForNewGame() {
+        resetBattleState()
+        _message.value = ""
+        _messageType.value = "info"
+    }
+
     fun handleBackToMenu() {
         playerLeftJob?.cancel()
         playerLeftJob = null
         joiningGame = false
         shootPending.set(false)
-        emitIfConnected("leaveRoom")
+        if (_phase.value != "login") {
+            _chatMessages.value = emptyList()
+            emitIfConnected("leaveRoom")
+        }
         resetFullGameState()
         _phase.value = "login"; _gameId.value = ""
         _loginView.value = "menu"; _roomPassword.value = ""; _createPassword.value = ""
@@ -531,7 +540,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun resetFullGameState() {
         resetBattleState()
-        _chatMessages.value = emptyList()
         _opponentName.value = ""
         _opponentSocketId.value = null
         _isHost.value = false
@@ -619,7 +627,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             isImportant = m.optBoolean("isImportant", false),
                                 isSystem = m.optBoolean("isSystem", false),
                         )
-                    }.takeLast(200)
+                    }.takeLast(100)
                 } else {
                     _chatMessages.value = emptyList()
                 }
@@ -913,6 +921,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val data = args.getOrNull(0) as? JSONObject
             val msg = data?.optString("message", "")?.takeIf { it.isNotEmpty() } ?: s.youWereKicked
             resetFullGameState()
+            _chatMessages.value = emptyList()
             setMessage("❌ $msg", "error")
             _phase.value = "login"
             _loginView.value = "menu"
@@ -964,7 +973,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                                 isSystem = m.optBoolean("isSystem", false),
                         )
                     }
-                    _chatMessages.value = msgs.takeLast(200)
+                    _chatMessages.value = msgs.takeLast(100)
                 }
 
                 // Restore phase from server state
@@ -1039,7 +1048,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     isImportant = isImportant,
                     isSystem = data.optBoolean("isSystem", false),
                 )
-                _chatMessages.value = (_chatMessages.value + msg).takeLast(200)
+                _chatMessages.value = (_chatMessages.value + msg).takeLast(100)
                 // Show important messages as banner notification
                 if (isImportant) {
                     setMessage("📢 ${msg.senderName}: ${msg.text}", "info")

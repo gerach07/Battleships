@@ -522,8 +522,8 @@ class Room {
         };
         this.chatMessages.push(msg);
         // Cap chat history to prevent unbounded memory growth
-        if (this.chatMessages.length > 200) {
-            this.chatMessages = this.chatMessages.slice(-200);
+        if (this.chatMessages.length > 100) {
+            this.chatMessages = this.chatMessages.slice(-100);
         }
         return msg;
     }

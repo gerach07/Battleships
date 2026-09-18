@@ -24,9 +24,10 @@ const { TimestampTracker } = require('./src/utils/RateLimiter');
 // ============================================================================
 
 const ALLOWED_ORIGINS = [...new Set([
-  ...(process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:5000').split(',').map(o => o.trim()).filter(Boolean),
+  ...(process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001').split(',').map(o => o.trim()).filter(Boolean),
   'https://abbattleships.web.app',
   'https://abbattleships.firebaseapp.com',
+  'https://battleships-server-jtit.onrender.com',
 ])];
 
 /**

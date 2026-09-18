@@ -24,6 +24,7 @@ import com.anasio.battleships.ui.components.GameBoard
 import com.anasio.battleships.ui.components.GameTimer
 import com.anasio.battleships.ui.theme.*
 import com.anasio.battleships.ui.theme.LocalColorPalette
+import com.anasio.battleships.ui.components.bounceClick
 import com.anasio.battleships.viewmodel.GameViewModel
 
 @Composable
@@ -39,6 +40,7 @@ fun BattleScreen(viewModel: GameViewModel) {
     val spectatorCount by viewModel.spectatorCount.collectAsState()
     val spectatorBoards by viewModel.spectatorBoards.collectAsState()
     val playerTimeLeft by viewModel.playerTimeLeft.collectAsState()
+    val turnStartedAt by viewModel.turnStartedAt.collectAsState()
     val showSurrenderDialog by viewModel.showSurrenderDialog.collectAsState()
 
     val s = LocalI18n.current
@@ -57,7 +59,7 @@ fun BattleScreen(viewModel: GameViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
@@ -108,9 +110,9 @@ fun BattleScreen(viewModel: GameViewModel) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color.copy(alpha = .1f), RoundedCornerShape(8.dp))
-                    .border(1.dp, color.copy(alpha = .3f), RoundedCornerShape(8.dp))
-                    .padding(vertical = 6.dp),
+                    .background(color.copy(alpha = .1f), RoundedCornerShape(16.dp))
+                    .border(1.dp, color.copy(alpha = .3f), RoundedCornerShape(16.dp))
+                    .padding(vertical = 8.dp),
             )
         }
         // Extra shot hint (always rendered to prevent layout shift)
@@ -134,11 +136,7 @@ fun BattleScreen(viewModel: GameViewModel) {
             Spacer(Modifier.height(4.dp))
         }
 
-        // Message
-        if (message.isNotBlank()) {
-            MessageBanner(message, messageType)
-            Spacer(Modifier.height(2.dp))
-        }
+
 
         if (isSpectator) {
             // Spectator: show both boards (ships hidden — server strips them)
@@ -152,16 +150,6 @@ fun BattleScreen(viewModel: GameViewModel) {
                 Spacer(Modifier.height(8.dp))
             }
         } else {
-            // Your fleet (read only)
-            GameBoard(
-                board = playerBoard,
-                label = "🚥 ${s.yourFleet}",
-                showShips = true,
-                interactive = false,
-                lastShotKey = playerLastShotKey,
-                explosionKeys = playerExplosionKeys,
-            )
-            Spacer(Modifier.height(8.dp))
             // Enemy waters (interactive)
             GameBoard(
                 board = opponentBoard,
@@ -174,6 +162,16 @@ fun BattleScreen(viewModel: GameViewModel) {
                     val cell = opponentBoard[r][col]
                     if (cell == CellState.WATER) viewModel.handleShoot(r, col)
                 },
+            )
+            Spacer(Modifier.height(8.dp))
+            // Your fleet (read only)
+            GameBoard(
+                board = playerBoard,
+                label = "🚥 ${s.yourFleet}",
+                showShips = true,
+                interactive = false,
+                lastShotKey = playerLastShotKey,
+                explosionKeys = playerExplosionKeys,
             )
         }
 

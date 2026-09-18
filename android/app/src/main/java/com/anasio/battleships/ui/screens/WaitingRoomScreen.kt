@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.anasio.battleships.i18n.LocalI18n
 import com.anasio.battleships.ui.theme.*
 import com.anasio.battleships.ui.theme.LocalColorPalette
+import com.anasio.battleships.ui.components.bounceClick
 import com.anasio.battleships.viewmodel.GameViewModel
 
 @Composable
@@ -60,7 +61,7 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
     ) {
         // Room code card
         Card(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = c.surface),
             border = BorderStroke(1.dp, c.yellow.copy(alpha = .4f)),
         ) {
@@ -84,20 +85,20 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
                             "🔒 ${s.pinLabel}: $roomPassword",
                             fontSize = 12.sp, color = c.orange,
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(c.orange.copy(alpha = .1f))
-                                .border(1.dp, c.orange.copy(alpha = .3f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                .border(1.dp, c.orange.copy(alpha = .3f), RoundedCornerShape(16.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         )
                     }
                     Text(
                         "⏱️ ${gameTimeLimit / 60} ${s.min}",
                         fontSize = 12.sp, color = c.primary,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(c.primary.copy(alpha = .1f))
-                            .border(1.dp, c.primary.copy(alpha = .3f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .border(1.dp, c.primary.copy(alpha = .3f), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     )
                 }
             }
@@ -201,11 +202,7 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Message
-        if (message.isNotBlank()) {
-            MessageBanner(message, messageType)
-            Spacer(Modifier.height(12.dp))
-        }
+
 
         // Host controls — show when host and opponent has joined
         AnimatedVisibility(visible = isHost && hasOpponent) {

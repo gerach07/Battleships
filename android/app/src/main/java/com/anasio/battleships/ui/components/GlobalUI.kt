@@ -21,6 +21,40 @@ import com.anasio.battleships.i18n.LocalI18n
 import com.anasio.battleships.ui.theme.LocalColorPalette
 import com.anasio.battleships.util.MusicManager
 import com.anasio.battleships.viewmodel.GameViewModel
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.composed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+
+fun Modifier.bounceClick(onClick: () -> Unit) = composed {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(targetValue = if (isPressed) 0.95f else 1f, label = "bounceScale")
+    
+    this
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
+        .pointerInput(isPressed) {
+            awaitPointerEventScope {
+                isPressed = if (isPressed) {
+                    waitForUpOrCancellation()
+                    false
+                } else {
+                    awaitFirstDown(requireUnconsumed = false)
+                    true
+                }
+            }
+        }
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = onClick
+        )
+}
 
 @Composable
 fun GlobalHeader(viewModel: GameViewModel) {
@@ -103,59 +137,39 @@ fun GlobalHeader(viewModel: GameViewModel) {
         ) {
             Text(if (musicEnabled) "🎵" else "🔕", fontSize = 16.sp)
         }
-
-        if (phase != "login") {
-            Spacer(Modifier.width(8.dp))
-            Box(contentAlignment = Alignment.TopEnd) {
-                IconButton(
-                    onClick = viewModel::toggleChat,
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-                        .size(36.dp)
-                ) {
-                    Text("💬", fontSize = 16.sp)
-                }
-                if (chatUnread > 0) {
-                    Box(
-                        modifier = Modifier
-                            .offset(x = 4.dp, y = (-4).dp)
-                            .size(16.dp)
-                            .background(Color.Red, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(chatUnread.toString(), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
     }
 }
 
 @Composable
-fun MusicBanner() {
+fun MusicBanner(viewModel: GameViewModel) {
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
     val currentTrackName by MusicManager.currentTrackName.collectAsState()
+    val c = LocalColorPalette.current
     var showCredits by remember { mutableStateOf(false) }
 
-    if (currentTrackName != null) {
+    if (musicEnabled && !currentTrackName.isNullOrBlank()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF2563EB).copy(alpha = 0.1f))
-                .padding(horizontal = 14.dp, vertical = 5.dp),
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 10.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(20.dp)
-                    .background(Color(0xFF2563EB).copy(alpha = 0.18f), CircleShape)
+                    .background(c.primary.copy(alpha = 0.2f), CircleShape)
             ) {
                 Text("🎵", fontSize = 10.sp)
             }
             Spacer(Modifier.width(8.dp))
             Text(
                 text = currentTrackName!!,
-                color = Color.White.copy(alpha = 0.75f),
+                color = Color.White.copy(alpha = 0.85f),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
@@ -163,9 +177,9 @@ fun MusicBanner() {
             Spacer(Modifier.weight(1f))
             IconButton(
                 onClick = { showCredits = true },
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             ) {
-                Text("ℹ️", fontSize = 14.sp)
+                Text("ℹ️", fontSize = 12.sp)
             }
         }
 
@@ -179,24 +193,23 @@ fun MusicBanner() {
 fun MessageBanner(message: String, type: String) {
     val c = LocalColorPalette.current
     val bg = when (type) {
-        "success" -> c.green.copy(alpha = .15f)
-        "error" -> c.red.copy(alpha = .15f)
-        else -> c.primary.copy(alpha = .15f)
+        "success" -> c.green.copy(alpha = .9f)
+        "error" -> c.red.copy(alpha = .9f)
+        else -> c.primary.copy(alpha = .9f)
     }
     val border = when (type) {
-        "success" -> c.green.copy(alpha = .4f)
-        "error" -> c.red.copy(alpha = .4f)
-        else -> c.primary.copy(alpha = .4f)
+        "success" -> c.green
+        "error" -> c.red
+        else -> c.primary
     }
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(32.dp))
             .background(bg)
-            .border(1.dp, border, RoundedCornerShape(8.dp))
-            .padding(12.dp),
+            .border(1.dp, border.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
+            .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
-        Text(message, fontSize = 13.sp, color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(message, fontSize = 14.sp, color = Color.White, textAlign = TextAlign.Center, fontWeight = FontWeight.SemiBold)
     }
 }
 

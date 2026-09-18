@@ -637,6 +637,7 @@ function App() {
     });
 
     socket.on('leftRoom', () => {
+      setChatMessages([]);
       setPhase('login'); setGameId(''); resetSunk();
       setURLRoom(null);
       setMessageWithTimeout('', 'info', 0);
@@ -791,6 +792,7 @@ function App() {
 
     socket.on('kicked', (data) => {
       setMessageWithTimeout(`❌ ${data.message || 'You have been kicked from the room'}`, 'error', 5000);
+      setChatMessages([]);
       setPhase('login');
       setLoginView('menu');
       setGameId('');

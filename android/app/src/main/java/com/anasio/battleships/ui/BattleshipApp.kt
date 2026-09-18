@@ -3,7 +3,7 @@ package com.anasio.battleships.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.anasio.battleships.i18n.LocalI18n
@@ -63,25 +63,17 @@ fun BattleshipApp(viewModel: GameViewModel) {
 
         Column(modifier = Modifier.fillMaxSize()) {
             GlobalHeader(viewModel)
+            MusicBanner(viewModel)
 
             Box(Modifier.weight(1f)) {
-                Column(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(1f)) {
-                        Crossfade(targetState = phase, label = "phaseTransition") { targetPhase ->
-                            when (targetPhase) {
-                                "login" -> LoginScreen(viewModel)
-                                "waiting" -> WaitingRoomScreen(viewModel)
-                                "placement" -> PlacementScreen(viewModel)
-                                "battle" -> BattleScreen(viewModel)
-                                "gameOver" -> GameOverScreen(viewModel)
-                            }
-                        }
+                Crossfade(targetState = phase, label = "phaseTransition") { targetPhase ->
+                    when (targetPhase) {
+                        "login" -> LoginScreen(viewModel)
+                        "waiting" -> WaitingRoomScreen(viewModel)
+                        "placement" -> PlacementScreen(viewModel)
+                        "battle" -> BattleScreen(viewModel)
+                        "gameOver" -> GameOverScreen(viewModel)
                     }
-                }
-                
-                // Music Banner fixed at top of content area (like iOS ZStack alignment: .top)
-                Box(Modifier.align(Alignment.TopCenter)) {
-                    MusicBanner()
                 }
             }
         }
@@ -89,12 +81,16 @@ fun BattleshipApp(viewModel: GameViewModel) {
         // Message Toast
         val message by viewModel.message.collectAsState()
         val messageType by viewModel.messageType.collectAsState()
-        if (message.isNotBlank()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp, start = 16.dp, end = 16.dp),
-                contentAlignment = Alignment.BottomCenter
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 80.dp, start = 24.dp, end = 24.dp), // Position above chat
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            AnimatedVisibility(
+                visible = message.isNotBlank(),
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it }
             ) {
                 MessageBanner(message, messageType)
             }

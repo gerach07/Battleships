@@ -46,6 +46,7 @@ object MusicManager {
 
     private fun playTrack(context: Context, resId: Int, loop: Boolean = true) {
         if (!enabled) {
+            _currentTrackName.value = null
             currentTrackResId = resId
             currentContext = java.lang.ref.WeakReference(context)
             currentLoop = loop
@@ -78,8 +79,14 @@ object MusicManager {
                 setVolume(VOLUME, VOLUME)
                 start()
             }
+            if (mediaPlayer?.isPlaying == true) {
+                updateCurrentTrackNameFromResId()
+            } else {
+                _currentTrackName.value = null
+            }
         } catch (e: Exception) {
             Log.e("MusicManager", "Error playing music track $resId: ${e.message}")
+            _currentTrackName.value = null
         }
     }
 
@@ -110,11 +117,21 @@ object MusicManager {
     }
 
     fun resumeMusic() {
-        if (!enabled) return
-        if (mediaPlayer?.isPlaying == true) return
+        if (!enabled) {
+            _currentTrackName.value = null
+            return
+        }
+        if (mediaPlayer?.isPlaying == true) {
+            updateCurrentTrackNameFromResId()
+            return
+        }
 
         if (mediaPlayer != null) {
-            try { mediaPlayer?.start(); return } catch (_: Exception) {}
+            try {
+                mediaPlayer?.start()
+                updateCurrentTrackNameFromResId()
+                return
+            } catch (_: Exception) {}
         }
 
         val ctx = currentContext?.get()
@@ -131,8 +148,10 @@ object MusicManager {
                     if (pausedPosition > 0) seekTo(pausedPosition)
                     start()
                 }
+                updateCurrentTrackNameFromResId()
             } catch (e: Exception) {
                 Log.e("MusicManager", "Error resuming music: ${e.message}")
+                _currentTrackName.value = null
             }
         }
     }
@@ -145,6 +164,8 @@ object MusicManager {
             }
         } catch (e: Exception) {
             Log.e("MusicManager", "Error pausing music: ${e.message}")
+        } finally {
+            _currentTrackName.value = null
         }
     }
 
@@ -163,13 +184,28 @@ object MusicManager {
         }
     }
 
+    private fun updateCurrentTrackNameFromResId() {
+        val ctx = currentContext?.get() ?: return
+        val resId = currentTrackResId ?: return
+        for ((name, title) in TRACK_NAMES) {
+            if (ctx.resources.getIdentifier(name, "raw", ctx.packageName) == resId) {
+                _currentTrackName.value = title
+                return
+            }
+        }
+    }
+
     // --- Specific phase triggers ---
     // These functions use reflection/identifier lookup to safely fail if the file isn't present yet.
 
     private fun playIfAvailable(context: Context, filename: String, loop: Boolean = true) {
         val resId = context.resources.getIdentifier(filename, "raw", context.packageName)
         if (resId != 0) {
-            _currentTrackName.value = TRACK_NAMES[filename]
+            if (enabled) {
+                _currentTrackName.value = TRACK_NAMES[filename]
+            } else {
+                _currentTrackName.value = null
+            }
             playTrack(context, resId, loop)
         } else {
             Log.d("MusicManager", "Track $filename not found in res/raw. Skipping.")

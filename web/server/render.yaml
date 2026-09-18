@@ -10,4 +10,4 @@ services:
       - key: NODE_ENV
         value: production
       - key: ALLOWED_ORIGINS
-        value: http://localhost:3000,http://localhost:3001,http://localhost:5000,https://abbattleships.web.app,https://abbattleships.firebaseapp.com
+        value: http://localhost:3000,http://localhost:3001,http://localhost:5000,https://abbattleships.web.app,https://abbattleships.firebaseapp.com,https://battleships-server-jtit.onrender.com
