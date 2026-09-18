@@ -1,6 +1,9 @@
 import Foundation
 import Combine
 import UIKit
+#if canImport(ActivityKit)
+import ActivityKit
+#endif
 
 final class GameViewModel: ObservableObject {
     // MARK: - Phase & Login
@@ -79,13 +82,13 @@ final class GameViewModel: ObservableObject {
     @Published var language: Language {
         didSet { UserDefaults.standard.set(language.rawValue, forKey: "battleships-lang") }
     }
-    @Published var soundEnabled: Bool = true {
+    @Published var soundEnabled: Bool = false {
         didSet {
             SoundManager.shared.enabled = soundEnabled
             UserDefaults.standard.set(soundEnabled, forKey: "battleships-sound")
         }
     }
-    @Published var musicEnabled: Bool = true {
+    @Published var musicEnabled: Bool = false {
         didSet {
             MusicManager.shared.enabled = musicEnabled
             UserDefaults.standard.set(musicEnabled, forKey: "battleships-music")
@@ -119,14 +122,14 @@ final class GameViewModel: ObservableObject {
     init() {
         let langCode = UserDefaults.standard.string(forKey: "battleships-lang") ?? "en"
         language = Language(rawValue: langCode) ?? .en
-        soundEnabled = UserDefaults.standard.object(forKey: "battleships-sound") as? Bool ?? true
+        soundEnabled = UserDefaults.standard.object(forKey: "battleships-sound") as? Bool ?? false
         SoundManager.shared.enabled = soundEnabled
-        musicEnabled = UserDefaults.standard.object(forKey: "battleships-music") as? Bool ?? true
+        musicEnabled = UserDefaults.standard.object(forKey: "battleships-music") as? Bool ?? false
         MusicManager.shared.enabled = musicEnabled
         // Delay to allow AVAudioSession to be ready before first playback
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard self != nil else { return }
-            MusicManager.shared.playMenuMusic()
+            if MusicManager.shared.enabled { MusicManager.shared.playMenuMusic() }
         }
 
         socketManager.connect()
@@ -175,6 +178,9 @@ final class GameViewModel: ObservableObject {
         shootTimeoutWork?.cancel()
         messageTimer?.cancel()
         playerLeftJob?.cancel()
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) { LiveActivityManager.shared.endImmediately() }
+        #endif
         socketManager.disconnect()
     }
 
@@ -356,6 +362,7 @@ final class GameViewModel: ObservableObject {
 
     // MARK: - Navigation
     func handleBackToMenu() {
+        endLiveActivity()
         playerLeftJob?.cancel()
         playerLeftJob = nil
         joiningGame = false
@@ -377,6 +384,94 @@ final class GameViewModel: ObservableObject {
 
     func forceReconnect() {
         socketManager.forceReconnect()
+    }
+
+    // MARK: - Live Activity Helpers
+    private func computeLiveTime(for pid: String) -> Double {
+        let stored = playerTimeLeft[pid] ?? 0
+        if pid == currentTurn, let start = turnStartedAt {
+            let elapsed = (Date().timeIntervalSince1970 * 1000 - start) / 1000
+            return max(0, stored - elapsed)
+        }
+        return stored
+    }
+
+    private func startLiveActivity() {
+        #if canImport(ActivityKit)
+        guard !isSpectator else { return }
+        if #available(iOS 16.2, *) {
+            let state = BattleshipsAttributes.ContentState(
+                phase: phase,
+                isMyTurn: isMyTurn,
+                myTime: Double(gameTimeLimit),
+                opponentTime: Double(gameTimeLimit),
+                mySunkCount: 0,
+                theirSunkCount: 0,
+                lastShot: nil,
+                iWon: nil,
+                opponentName: opponentName
+            )
+            let result = LiveActivityManager.shared.startWithResult(roomCode: gameId, playerName: playerName, state: state)
+            DispatchQueue.main.async {
+                self.setMessage("🔴 LA: \(result)", "info")
+            }
+        } else {
+            DispatchQueue.main.async {
+                self.setMessage("🔴 LA: iOS < 16.2", "error")
+            }
+        }
+        #else
+        DispatchQueue.main.async {
+            self.setMessage("🔴 LA: canImport=false", "error")
+        }
+        #endif
+    }
+
+    private func updateLiveActivity(lastShot: String? = nil) {
+        #if canImport(ActivityKit)
+        guard !isSpectator else { return }
+        if #available(iOS 16.2, *) {
+            let myPid = playerIdRef
+            let oppTime = playerTimeLeft.keys.first(where: { $0 != myPid }).map { computeLiveTime(for: $0) } ?? 0
+            let state = BattleshipsAttributes.ContentState(
+                phase: phase,
+                isMyTurn: isMyTurn,
+                myTime: computeLiveTime(for: myPid),
+                opponentTime: oppTime,
+                mySunkCount: mySunkCount,
+                theirSunkCount: theirSunkCount,
+                lastShot: lastShot,
+                iWon: winner.flatMap { $0 == playerIdRef },
+                opponentName: opponentName
+            )
+            LiveActivityManager.shared.update(state: state)
+        }
+        #endif
+    }
+
+    private func endLiveActivity(showResult: Bool = false) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            if showResult {
+                let myPid = playerIdRef
+                let oppTime = playerTimeLeft.keys.first(where: { $0 != myPid }).map { computeLiveTime(for: $0) } ?? 0
+                let state = BattleshipsAttributes.ContentState(
+                    phase: "gameOver",
+                    isMyTurn: false,
+                    myTime: computeLiveTime(for: myPid),
+                    opponentTime: oppTime,
+                    mySunkCount: mySunkCount,
+                    theirSunkCount: theirSunkCount,
+                    lastShot: nil,
+                    iWon: winner.flatMap { $0 == playerIdRef },
+                    opponentName: opponentName
+                )
+                LiveActivityManager.shared.end(state: state)
+            } else {
+                LiveActivityManager.shared.endImmediately()
+            }
+        }
+        #endif
     }
 
     // MARK: - Helpers
@@ -482,6 +577,7 @@ final class GameViewModel: ObservableObject {
                     // spectator might join mid-battle
                 } else {
                     self.phase = "waiting"
+                    self.startLiveActivity()
                     if self.opponentName.isEmpty {
                         self.setMessage(self.s.waitingForOpponent, "info", duration: 0)
                     } else {
@@ -501,6 +597,7 @@ final class GameViewModel: ObservableObject {
                         self.opponentSocketId = opp["id"] as? String
                     }
                 }
+                self.updateLiveActivity()
                 self.setMessage(self.s.opponentJoined, "success")
             }
         }
@@ -546,6 +643,7 @@ final class GameViewModel: ObservableObject {
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
                 if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = self.localizeTs(data, ts) }
                 if self.isMyTurn { SoundManager.shared.playTurn() }
+                self.updateLiveActivity()
             }
         }
 
@@ -644,6 +742,10 @@ final class GameViewModel: ObservableObject {
                     } else {
                         SoundManager.shared.playDefeat()
                     }
+                    self.endLiveActivity(showResult: true)
+                } else {
+                    let shotType = shipSunk ? "sunk" : (isHit ? "hit" : "miss")
+                    self.updateLiveActivity(lastShot: shotType)
                 }
             }
         }
@@ -653,6 +755,7 @@ final class GameViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.resetBattleState()
                 self.phase = "placement"
+                self.updateLiveActivity()
                 self.setMessage(self.s.newGamePlaceShips, "success")
             }
         }
@@ -662,6 +765,7 @@ final class GameViewModel: ObservableObject {
             DispatchQueue.main.async {
                 let name = data["playerName"] as? String ?? self.s.opponent
                 self.setMessage(self.s.playerLeftGame.fmt(name), "info")
+                self.endLiveActivity()
                 self.resetFullState()
                 self.playerLeftJob?.cancel()
                 let work = DispatchWorkItem { [weak self] in
@@ -687,12 +791,14 @@ final class GameViewModel: ObservableObject {
                 let name = data["playerName"] as? String ?? self.s.opponent
                 self.setMessage(self.s.playerLeftWaiting.fmt(name), "info")
                 self.phase = "waiting"
+                self.updateLiveActivity()
             }
         }
 
         sm.on("leftRoom") { [weak self] _ in
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.endLiveActivity()
                 self.chatMessages = []
                 self.phase = "login"
                 self.gameId = ""
@@ -718,6 +824,7 @@ final class GameViewModel: ObservableObject {
                     self.message = self.s.opponentSurrendered.fmt(name)
                     self.messageType = "success"
                 }
+                self.endLiveActivity(showResult: true)
             }
         }
 
@@ -751,6 +858,7 @@ final class GameViewModel: ObservableObject {
                 self.phase = "placement"
                 self.isReady = false
                 self.opponentReady = false
+                self.updateLiveActivity()
                 self.setMessage(self.s.gameStartedByHost, "success")
             }
         }
@@ -761,6 +869,7 @@ final class GameViewModel: ObservableObject {
                 let data = args.first as? [String: Any]
                 let msg = (data?["error"] as? String ?? data?["message"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? self.s.youWereKicked
                 self.resetFullState()
+                self.endLiveActivity()
                 self.setMessage("❌ \(msg)", "error")
                 self.phase = "login"
                 self.loginView = "menu"
@@ -796,6 +905,7 @@ final class GameViewModel: ObservableObject {
                     self.setMessage(self.s.opponentClockRanOut, "success")
                     SoundManager.shared.playVictory()
                 }
+                self.endLiveActivity(showResult: true)
             }
         }
 
@@ -1000,6 +1110,7 @@ final class GameViewModel: ObservableObject {
                 let data = args.first as? [String: Any]
                 let reason = data?["reason"] as? String ?? "Room was closed"
                 self.setMessage("⚠️ \(reason)", "error")
+                self.endLiveActivity()
                 self.phase = "login"
                 self.gameId = ""
             }

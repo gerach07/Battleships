@@ -25,8 +25,8 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R nodeuser:nodejs /app
 USER nodeuser
 
-# Expose port (Render sets PORT env var, default 10000)
-EXPOSE 10000
+# Expose port (Render uses $PORT env var at runtime; value here is documentation only)
+EXPOSE 3001
 
 # Start server
 CMD ["node", "server.js"]

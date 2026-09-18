@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.iOS(.v16)],
     products: [
         .library(name: "Battleships", targets: ["Battleships"]),
+        .library(name: "BattleshipsWidget", targets: ["BattleshipsWidget"]),
     ],
     dependencies: [
         .package(url: "https://github.com/socketio/socket.io-client-swift", from: "16.1.1"),
@@ -23,6 +24,10 @@ let package = Package(
             resources: [
                 .process("Resources/Assets.xcassets"),
             ]
+        ),
+        .target(
+            name: "BattleshipsWidget",
+            path: "BattleshipsWidget"
         ),
     ]
 )

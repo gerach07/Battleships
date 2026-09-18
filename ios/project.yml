@@ -18,7 +18,7 @@ settings:
 packages:
   SocketIO:
     url: https://github.com/socketio/socket.io-client-swift
-    branch: master
+    from: "16.1.1"
 
 targets:
   Battleships:
@@ -48,3 +48,25 @@ targets:
               NSIncludesSubdomains: true
         UIBackgroundModes:
           - audio
+        NSSupportsLiveActivities: true
+
+  BattleshipsWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: BattleshipsWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.abgames.battleships.widget
+        PRODUCT_NAME: BattleshipsWidget
+        MARKETING_VERSION: "2.3.0"
+        CURRENT_PROJECT_VERSION: "4"
+        CODE_SIGN_STYLE: Automatic
+        IPHONEOS_DEPLOYMENT_TARGET: "16.1"
+    info:
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    dependencies:
+      - target: Battleships
+        embed: false

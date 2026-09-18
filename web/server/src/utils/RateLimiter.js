@@ -61,4 +61,49 @@ class RateLimiter {
     }
 }
 
+/**
+ * Sliding-window timestamp tracker for IP / key-based rate limiting.
+ * Replaces the repeated inline "check size > 500, filter timestamps" pattern
+ * used for IP connections, PIN attempts, and room-listing endpoints.
+ */
+class TimestampTracker {
+    constructor(maxPerWindow, windowMs, maxKeys = 500) {
+        this.maxPerWindow = maxPerWindow;
+        this.windowMs = windowMs;
+        this.maxKeys = maxKeys;
+        this.entries = new Map();
+    }
+
+    /** Returns true if the key is under the rate limit (and records the attempt). */
+    isAllowed(key) {
+        const now = Date.now();
+        this._compactIfNeeded(now);
+        let entry = this.entries.get(key);
+        if (!entry) { entry = { timestamps: [] }; this.entries.set(key, entry); }
+        entry.timestamps = entry.timestamps.filter(t => now - t < this.windowMs);
+        if (entry.timestamps.length >= this.maxPerWindow) return false;
+        entry.timestamps.push(now);
+        return true;
+    }
+
+    /** Prune expired entries from every key. Called on the periodic cleanup interval. */
+    cleanup() {
+        const now = Date.now();
+        for (const [key, entry] of this.entries) {
+            entry.timestamps = entry.timestamps.filter(t => now - t < this.windowMs);
+            if (entry.timestamps.length === 0) this.entries.delete(key);
+        }
+    }
+
+    /** When the tracker grows beyond maxKeys, do an eager full sweep. */
+    _compactIfNeeded(now) {
+        if (this.entries.size <= this.maxKeys) return;
+        for (const [key, entry] of this.entries) {
+            entry.timestamps = entry.timestamps.filter(t => now - t < this.windowMs);
+            if (entry.timestamps.length === 0) this.entries.delete(key);
+        }
+    }
+}
+
 module.exports = RateLimiter;
+module.exports.TimestampTracker = TimestampTracker;

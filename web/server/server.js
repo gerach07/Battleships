@@ -15,22 +15,19 @@ require('dotenv').config();
 // Models & Utils
 const Room = require('./src/models/Room');
 const pkg = require('./package.json');
-const { GameState, DEFAULT_GAME_TIME_SECONDS, MIN_GAME_TIME_SECONDS, MAX_GAME_TIME_SECONDS, SHIPS } = require('./src/constants');
+const { GameState, DEFAULT_GAME_TIME_SECONDS, MIN_GAME_TIME_SECONDS, MAX_GAME_TIME_SECONDS, SHIPS, SHIP_NAMES } = require('./src/constants');
 const { sanitizeInput } = require('./src/utils/sanitizers');
+const { TimestampTracker } = require('./src/utils/RateLimiter');
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:5000,https://abbattleships.web.app,https://abbattleships.firebaseapp.com')
-  .split(',')
-  .map(o => o.trim())
-  .filter(Boolean);
-
-// Ensure production URL is always allowed if not in env
-if (!ALLOWED_ORIGINS.includes('https://abbattleships.web.app')) {
-  ALLOWED_ORIGINS.push('https://abbattleships.web.app');
-}
+const ALLOWED_ORIGINS = [...new Set([
+  ...(process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:5000').split(',').map(o => o.trim()).filter(Boolean),
+  'https://abbattleships.web.app',
+  'https://abbattleships.firebaseapp.com',
+])];
 
 /**
  * CORS origin validator.
@@ -56,7 +53,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      connectSrc: ["'self'", 'wss:', 'ws:', ...ALLOWED_ORIGINS],
+      connectSrc: ["'self'", ...ALLOWED_ORIGINS, ...ALLOWED_ORIGINS.map(o => o.replace(/^http/, 'ws'))],
       imgSrc: ["'self'", 'data:', 'blob:'],
       mediaSrc: ["'self'", 'data:', 'blob:'],
     },
@@ -93,19 +90,16 @@ const playerToRoom = {};
 const roomLocks = {};
 
 /** IP-based connection rate limiter — prevents mass connection spam */
-const ipConnectionTracker = new Map();
-const IP_RATE_LIMIT_WINDOW_MS = 60_000;
-const IP_RATE_LIMIT_MAX = 15; // max connections per IP per window
+const ipConnectionTracker = new TimestampTracker(15, 60_000);
 
 /** PIN brute-force rate limiter — per IP+room, 5 attempts per minute */
-const pinAttemptTracker = new Map();
-const PIN_RATE_LIMIT_WINDOW_MS = 60_000;
-const PIN_RATE_LIMIT_MAX = 5;
+const pinAttemptTracker = new TimestampTracker(5, 60_000);
 
 /** HTTP /rooms listing rate limiter — per IP, 30 requests per minute */
-const roomsListTracker = new Map();
-const ROOMS_LIST_RATE_LIMIT_WINDOW_MS = 60_000;
-const ROOMS_LIST_RATE_LIMIT_MAX = 30;
+const roomsListTracker = new TimestampTracker(30, 60_000);
+
+/** joinGame event rate limiter — per socket, 10 joins per minute */
+const joinEventTracker = new TimestampTracker(10, 60_000);
 
 const ROOM_CLEANUP_INTERVAL_MS = 30000;
 const ROOM_INACTIVE_TIMEOUT_MS = 5 * 60 * 1000;
@@ -251,19 +245,7 @@ io.on('connection', (socket) => {
   });
 
   // ── IP-based connection rate limiting ──
-  const now = Date.now();
-  // Prevent unbounded growth of tracker Maps under heavy traffic
-  if (ipConnectionTracker.size > 500) {
-    for (const [ip, entry] of ipConnectionTracker) {
-      entry.timestamps = entry.timestamps.filter(t => now - t < IP_RATE_LIMIT_WINDOW_MS);
-      if (entry.timestamps.length === 0) ipConnectionTracker.delete(ip);
-    }
-  }
-  let ipEntry = ipConnectionTracker.get(clientIp);
-  if (!ipEntry) { ipEntry = { timestamps: [] }; ipConnectionTracker.set(clientIp, ipEntry); }
-  ipEntry.timestamps = ipEntry.timestamps.filter(t => now - t < IP_RATE_LIMIT_WINDOW_MS);
-  ipEntry.timestamps.push(now);
-  if (ipEntry.timestamps.length > IP_RATE_LIMIT_MAX) {
+  if (!ipConnectionTracker.isAllowed(clientIp)) {
     console.warn(`IP rate limit exceeded: ${clientIp}`);
     socket.emit('error', { error: 'Too many connections. Please wait a moment.' });
     socket.disconnect(true);
@@ -271,6 +253,8 @@ io.on('connection', (socket) => {
   }
 
   socket.on('joinGame', async (payload) => {
+    // Per-socket rate limit on join attempts
+    if (!joinEventTracker.isAllowed(socket.id)) return socket.emit('error', { error: 'Too many join attempts. Wait a moment.' });
     // Defensive: tolerate malformed payloads gracefully
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return socket.emit('error', { error: 'Invalid request' });
     const { gameId, playerName, password, isCreating, isSpectating, timeLimit: hostTimeLimit } = payload;
@@ -335,7 +319,7 @@ io.on('connection', (socket) => {
         socket.emit('gameJoined', {
           playerId: socket.id,
           roomId: room.roomId,
-          password: isCreating ? room.password : undefined,
+          password: isCreating ? pwd : undefined,
           players: room.getPlayerList(),
           board: room.getPlayerBoard(socket.id),
           state: room.getState(),
@@ -594,8 +578,6 @@ io.on('connection', (socket) => {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return;
     const row = payload.row;
     const col = payload.col;
-    if (!Number.isInteger(row) || !Number.isInteger(col)) return;
-    if (row < 0 || row >= 10 || col < 0 || col >= 10) return;
 
     const roomId = playerToRoom[socket.id];
     if (!roomId || !rooms[roomId]) return;
@@ -606,6 +588,10 @@ io.on('connection', (socket) => {
       // Fresh read after acquiring lock — room may have been deleted or state changed
       const room = rooms[roomId];
       if (!room || room.state !== GameState.BATTLE_PHASE) return;
+
+      // Validate coordinates inside lock — after rate limit in processShot
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return;
+      if (row < 0 || row >= 10 || col < 0 || col >= 10) return;
 
       const shot = room.processShot(socket.id, row, col);
       if (!shot.success) return socket.emit('error', { error: shot.error });
@@ -935,21 +921,9 @@ app.get('/version', (req, res) => {
 app.get('/rooms', (req, res) => {
   // Rate-limit room list queries per IP
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
-  const now = Date.now();
-  // Prevent unbounded growth under heavy traffic
-  if (roomsListTracker.size > 500) {
-    for (const [ip, e] of roomsListTracker) {
-      e.timestamps = e.timestamps.filter(t => now - t < ROOMS_LIST_RATE_LIMIT_WINDOW_MS);
-      if (e.timestamps.length === 0) roomsListTracker.delete(ip);
-    }
-  }
-  let rlEntry = roomsListTracker.get(clientIp);
-  if (!rlEntry) { rlEntry = { timestamps: [] }; roomsListTracker.set(clientIp, rlEntry); }
-  rlEntry.timestamps = rlEntry.timestamps.filter(t => now - t < ROOMS_LIST_RATE_LIMIT_WINDOW_MS);
-  if (rlEntry.timestamps.length >= ROOMS_LIST_RATE_LIMIT_MAX) {
+  if (!roomsListTracker.isAllowed(clientIp)) {
     return res.status(429).json({ error: 'Too many requests. Please wait.' });
   }
-  rlEntry.timestamps.push(now);
 
   const activeRooms = Object.values(rooms)
     .filter(r => {
@@ -990,21 +964,9 @@ app.post('/rooms/:id/check-password', (req, res) => {
   // Rate-limit PIN attempts per IP+room
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
   const rateLimitKey = `${clientIp}:${req.params.id.toUpperCase()}`;
-  const now = Date.now();
-  // Prevent unbounded growth under attack
-  if (pinAttemptTracker.size > 500) {
-    for (const [key, e] of pinAttemptTracker) {
-      e.timestamps = e.timestamps.filter(t => now - t < PIN_RATE_LIMIT_WINDOW_MS);
-      if (e.timestamps.length === 0) pinAttemptTracker.delete(key);
-    }
-  }
-  let entry = pinAttemptTracker.get(rateLimitKey);
-  if (!entry) { entry = { timestamps: [] }; pinAttemptTracker.set(rateLimitKey, entry); }
-  entry.timestamps = entry.timestamps.filter(t => now - t < PIN_RATE_LIMIT_WINDOW_MS);
-  if (entry.timestamps.length >= PIN_RATE_LIMIT_MAX) {
+  if (!pinAttemptTracker.isAllowed(rateLimitKey)) {
     return res.status(429).json({ error: 'Too many PIN attempts. Try again later.' });
   }
-  entry.timestamps.push(now);
 
   const room = rooms[req.params.id.toUpperCase()];
   if (!room) return res.status(404).json({ error: 'Room not found' });
@@ -1035,15 +997,15 @@ cleanupIntervalId = setInterval(() => {
           const t = freshRoom.getState() === GameState.GAME_OVER ? ROOM_GAMEOVER_TIMEOUT_MS : ROOM_INACTIVE_TIMEOUT_MS;
           if (!freshRoom.isInactive(t) && !freshRoom.isEmpty()) return;
 
-          // Remove all player/spectator sockets from the socket.io room before deleting
+          // Broadcast room closure to all sockets in the room at once
+          io.to(id).emit('roomClosed', { reason: 'Room closed due to inactivity' });
+          // Remove all player/spectator sockets from the socket.io room
           freshRoom.getPlayerIds().forEach(pid => {
-            io.to(pid).emit('roomClosed', { reason: 'Room closed due to inactivity' });
             const sock = io.sockets.sockets.get(pid);
             sock?.leave(id);
             delete playerToRoom[pid];
           });
           freshRoom.spectators.forEach(sid => {
-            io.to(sid).emit('roomClosed', { reason: 'Room closed due to inactivity' });
             const sock = io.sockets.sockets.get(sid);
             sock?.leave(id);
             delete playerToRoom[sid];
@@ -1066,22 +1028,11 @@ cleanupIntervalId = setInterval(() => {
       })().catch(err => console.error(`Cleanup lock error for room ${id}:`, err));
     }
   });
-  // Cleanup expired IP rate limit entries
-  const now = Date.now();
-  for (const [ip, entry] of ipConnectionTracker) {
-    entry.timestamps = entry.timestamps.filter(t => now - t < IP_RATE_LIMIT_WINDOW_MS);
-    if (entry.timestamps.length === 0) ipConnectionTracker.delete(ip);
-  }
-  // Cleanup expired PIN attempt entries
-  for (const [key, entry] of pinAttemptTracker) {
-    entry.timestamps = entry.timestamps.filter(t => now - t < PIN_RATE_LIMIT_WINDOW_MS);
-    if (entry.timestamps.length === 0) pinAttemptTracker.delete(key);
-  }
-  // Cleanup expired /rooms listing rate limit entries
-  for (const [ip, entry] of roomsListTracker) {
-    entry.timestamps = entry.timestamps.filter(t => now - t < ROOMS_LIST_RATE_LIMIT_WINDOW_MS);
-    if (entry.timestamps.length === 0) roomsListTracker.delete(ip);
-  }
+  // Cleanup expired rate-limit tracker entries
+  ipConnectionTracker.cleanup();
+  pinAttemptTracker.cleanup();
+  roomsListTracker.cleanup();
+  joinEventTracker.cleanup();
   // Cleanup orphaned room locks for rooms that no longer exist
   for (const lockId of Object.keys(roomLocks)) {
     if (!rooms[lockId]) delete roomLocks[lockId];

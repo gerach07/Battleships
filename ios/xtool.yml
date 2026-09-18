@@ -1,5 +1,9 @@
 version: 1
 bundleID: com.abgames.battleships
+product: Battleships
+extensions:
+  - product: BattleshipsWidget
+    infoPath: BattleshipsWidget-Info.plist
 resources:
   - Battleships/Resources/Assets.xcassets
   - Battleships/Resources/AppIcon120.png
@@ -13,6 +17,7 @@ resources:
 infoPlist:
   NSAppTransportSecurity:
     NSAllowsArbitraryLoads: true
+  NSSupportsLiveActivities: true
   UIBackgroundModes:
     - audio
   CFBundleDisplayName: Battleships

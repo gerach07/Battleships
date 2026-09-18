@@ -227,6 +227,7 @@ function App() {
   // Refs for socket handlers to avoid stale closures
   const playerSunk = useRef(new Set());
   const opponentSunk = useRef(new Set());
+  const hasConnectedOnceRef = useRef(false);
   const playerIdRef = useRef(null);
   const soundRef = useRef(soundEnabled);
   const chatOpenRef = useRef(false);
@@ -415,7 +416,7 @@ function App() {
       if (data.timeLimit) setGameTimeLimit(data.timeLimit);
       // Restore chat history from server (don't clear existing chat)
       if (data.chatHistory && data.chatHistory.length > 0) {
-        setChatMessages(data.chatHistory.map(msg => ({
+        setChatMessages(data.chatHistory.slice(-100).map(msg => ({
           ...msg,
           isMine: msg.senderId === data.playerId,
         })));
@@ -702,7 +703,7 @@ function App() {
       else if (data.state === 'PLACEMENT_PHASE') setPhase('placement');
       else if (data.state === 'GAME_OVER') setPhase('gameOver');
       if (data.chatHistory && data.chatHistory.length > 0) {
-        setChatMessages(data.chatHistory.map(msg => ({
+        setChatMessages(data.chatHistory.slice(-100).map(msg => ({
           ...msg,
           isMine: false, // Spectators can't send messages as themselves in the same way (or if they do, senderId won't match)
         })));
@@ -803,10 +804,10 @@ function App() {
 
     // ── Auto-rejoin after brief network interruption ──
     // Track whether this is the first connect (skip) or a reconnection (rejoin)
-    let hasConnectedOnce = socket.connected;
+    if (!hasConnectedOnceRef.current && socket.connected) hasConnectedOnceRef.current = true;
     socket.on('connect', () => {
-      if (!hasConnectedOnce) {
-        hasConnectedOnce = true;
+      if (!hasConnectedOnceRef.current) {
+        hasConnectedOnceRef.current = true;
         return; // first connection — no need to rejoin
       }
       // Only auto-rejoin if we were in a game (not on login screen)
@@ -841,7 +842,7 @@ function App() {
       setOpponentName(data.opponentName || '');
       if (data.shipsPlaced) setIsReady(true);
       if (data.chatHistory?.length > 0) {
-        setChatMessages(data.chatHistory.map(msg => ({
+        setChatMessages(data.chatHistory.slice(-100).map(msg => ({
           ...msg,
           isMine: msg.senderId === data.playerId,
         })));

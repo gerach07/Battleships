@@ -22,7 +22,8 @@ const RateLimiter = require('../utils/RateLimiter');
 class Room {
     constructor(roomId, password = null, hostName = null, timeLimit = DEFAULT_GAME_TIME_SECONDS, hostId = null) {
         this.roomId = roomId;
-        this.password = password;
+        // Store a SHA-256 hash — never keep the plaintext password in memory
+        this.password = password ? crypto.createHash('sha256').update(password).digest('hex') : null;
         this.hostName = hostName;
         this.hostId = hostId;
         this.hostStartedGame = false;
@@ -80,10 +81,10 @@ class Room {
     checkPassword(password) {
         if (!this.hasPassword()) return true;
         if (typeof password !== 'string') return false;
-        // Constant-time comparison: hash both to fixed length to avoid leaking password length
-        const a = crypto.createHash('sha256').update(this.password).digest();
-        const b = crypto.createHash('sha256').update(password).digest();
-        return crypto.timingSafeEqual(a, b);
+        // Constant-time comparison against the stored hash
+        const stored = Buffer.from(this.password, 'hex');
+        const candidate = crypto.createHash('sha256').update(password).digest();
+        return crypto.timingSafeEqual(stored, candidate);
     }
 
     _createEmptyBoard() {
