@@ -1,6 +1,6 @@
-const { initializeApp, cert, applicationDefault } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
+const admin = require('firebase-admin');
 
+// Initialize Firebase Admin SDK
 let initialized = false;
 
 function initFirebase() {
@@ -9,15 +9,15 @@ function initFirebase() {
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-      initializeApp({
-        credential: cert(serviceAccount),
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
       });
     } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      initializeApp({
-        credential: applicationDefault(),
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
       });
     } else {
-      initializeApp();
+      admin.initializeApp();
     }
     initialized = true;
     console.log('✅ Firebase Admin SDK initialized');
@@ -30,7 +30,7 @@ function initFirebase() {
 async function verifyToken(idToken) {
   if (!initialized) return null;
   try {
-    const decoded = await getAuth().verifyIdToken(idToken);
+    const decoded = await admin.auth().verifyIdToken(idToken);
     return decoded;
   } catch (err) {
     return null;
