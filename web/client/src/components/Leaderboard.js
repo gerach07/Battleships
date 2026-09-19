@@ -50,7 +50,6 @@ const Leaderboard = ({ onClose, SOCKET_URL }) => {
                                 <tr className="text-xs uppercase tracking-widest text-slate-500 border-b border-slate-700/50">
                                     <th className="pb-3 px-2 text-center w-12">Rank</th>
                                     <th className="pb-3 px-2">Player</th>
-                                    <th className="pb-3 px-2">Player ID</th>
                                     <th className="pb-3 px-2 text-right">Wins</th>
                                     <th className="pb-3 px-2 text-right hidden sm:table-cell">Played</th>
                                 </tr>
@@ -70,9 +69,6 @@ const Leaderboard = ({ onClose, SOCKET_URL }) => {
                                                 )}
                                                 <span className="font-bold text-white">{player.name}</span>
                                             </div>
-                                        </td>
-                                        <td className="py-3 px-2 font-mono text-xs text-blue-300">
-                                            {player.playerId || '—'}
                                         </td>
                                         <td className="py-3 px-2 text-right font-black text-yellow-400">
                                             {player.wins}

@@ -5,7 +5,6 @@ import { logOut } from '../firebase';
 const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken }) => {
     const { t } = useI18n();
     const [name, setName] = useState(user?.name || '');
-    const [playerId, setPlayerId] = useState(user?.playerId || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -24,7 +23,7 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${firebaseAuthToken}`
                 },
-                body: JSON.stringify({ name, playerId })
+                body: JSON.stringify({ name })
             });
 
             const data = await res.json();
@@ -98,20 +97,6 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Player ID</label>
-                            <input
-                                type="text"
-                                value={playerId}
-                                onChange={(e) => setPlayerId(e.target.value)}
-                                className="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-                                maxLength={30}
-                                placeholder="e.g. player_123"
-                                required
-                            />
-                            <p className="text-xs text-slate-500 mt-1 ml-1">Unique handle (letters, numbers, _ or -)</p>
-                        </div>
-
                         {error && <p className="text-red-400 text-sm font-bold bg-red-500/10 p-2 rounded-lg text-center border border-red-500/20">{error}</p>}
                         {success && <p className="text-emerald-400 text-sm font-bold bg-emerald-500/10 p-2 rounded-lg text-center border border-emerald-500/20">Profile updated successfully!</p>}
 
