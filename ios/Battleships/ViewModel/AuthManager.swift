@@ -29,24 +29,47 @@ class AuthManager: ObservableObject {
 
     func checkLoginState() {
         if let user = GIDSignIn.sharedInstance.currentUser {
-            updateState(with: user)
+            signIntoFirebase(googleUser: user)
         } else {
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 if let user = user {
-                    self.updateState(with: user)
+                    self.signIntoFirebase(googleUser: user)
                 }
             }
         }
     }
 
-    private func updateState(with user: GIDGoogleUser) {
-        DispatchQueue.main.async {
-            self.isSignedIn = true
-            self.userName = user.profile?.name ?? ""
-            self.userEmail = user.profile?.email ?? ""
-            self.profilePicUrl = user.profile?.imageURL(withDimension: 100)
-            self.idToken = user.idToken?.tokenString
-            self.fetchProfile()
+    /// After Google Sign-In succeeds, authenticate with Firebase Auth to get a
+    /// proper Firebase ID token (not a raw Google token). The server requires this.
+    private func signIntoFirebase(googleUser: GIDGoogleUser) {
+        guard let idTokenString = googleUser.idToken?.tokenString else {
+            print("Google idToken missing")
+            return
+        }
+        let credential = GoogleAuthProvider.credential(
+            withIDToken: idTokenString,
+            accessToken: googleUser.accessToken.tokenString
+        )
+        Auth.auth().signIn(with: credential) { result, error in
+            if let error = error {
+                print("Firebase sign-in failed: \(error.localizedDescription)")
+                return
+            }
+            // Refresh the Firebase ID token and update state
+            result?.user.getIDToken { token, error in
+                guard let token = token, error == nil else {
+                    print("Failed to get Firebase ID token: \(String(describing: error))")
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.isSignedIn = true
+                    self.userName = googleUser.profile?.name ?? ""
+                    self.userEmail = googleUser.profile?.email ?? ""
+                    self.profilePicUrl = googleUser.profile?.imageURL(withDimension: 100)
+                    self.idToken = token
+                    self.fetchProfile()
+                }
+            }
         }
     }
 
@@ -69,7 +92,7 @@ class AuthManager: ObservableObject {
                 return
             }
             if let user = result?.user {
-                self.updateState(with: user)
+                self.signIntoFirebase(googleUser: user)
             } else {
                 print("Google sign in returned no user result")
             }
@@ -78,6 +101,7 @@ class AuthManager: ObservableObject {
 
     func signOut() {
         GIDSignIn.sharedInstance.signOut()
+        try? Auth.auth().signOut()
         DispatchQueue.main.async {
             self.isSignedIn = false
             self.userName = ""
@@ -89,82 +113,105 @@ class AuthManager: ObservableObject {
         }
     }
 
-    private func ensureUserProfileExists() {
-        guard let token = idToken else { return }
-
-        var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/auth/login")!)
-        request.httpMethod = "POST"
-        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard error == nil else {
-                print("Login bootstrap failed: \(error!.localizedDescription)")
+    /// Refresh the Firebase ID token before making API calls to avoid expired token errors.
+    func refreshTokenThenCall(_ block: @escaping (String) -> Void) {
+        guard let firebaseUser = Auth.auth().currentUser else {
+            print("No Firebase user signed in")
+            return
+        }
+        firebaseUser.getIDToken(forcingRefresh: false) { token, error in
+            guard let token = token, error == nil else {
+                print("Failed to refresh Firebase token: \(String(describing: error))")
                 return
             }
-            guard let http = response as? HTTPURLResponse else { return }
-            if http.statusCode == 200 || http.statusCode == 201 {
-                self.fetchProfile()
+            DispatchQueue.main.async {
+                self.idToken = token
             }
-        }.resume()
+            block(token)
+        }
+    }
+
+    private func ensureUserProfileExists() {
+        refreshTokenThenCall { token in
+            var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/auth/login")!)
+            request.httpMethod = "POST"
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                guard error == nil else {
+                    print("Login bootstrap failed: \(error!.localizedDescription)")
+                    return
+                }
+                guard let http = response as? HTTPURLResponse else { return }
+                if http.statusCode == 200 || http.statusCode == 201 {
+                    self.fetchProfile()
+                }
+            }.resume()
+        }
     }
 
     func fetchProfile() {
-        guard let token = idToken else { return }
-        var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
-        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        refreshTokenThenCall { token in
+            var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else { return }
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                guard let data = data, error == nil else { return }
 
-            if let http = response as? HTTPURLResponse, (http.statusCode == 401 || http.statusCode == 403 || http.statusCode == 404) {
-                self.ensureUserProfileExists()
-                return
-            }
+                if let http = response as? HTTPURLResponse,
+                   (http.statusCode == 401 || http.statusCode == 403 || http.statusCode == 404) {
+                    self.ensureUserProfileExists()
+                    return
+                }
 
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    DispatchQueue.main.async {
-                        self.playerId = json["playerId"] as? String
-                        self.wins = json["wins"] as? Int ?? 0
-                        if let name = json["name"] as? String, !name.isEmpty {
-                            self.userName = name
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        DispatchQueue.main.async {
+                            self.playerId = json["playerId"] as? String
+                            self.wins = json["wins"] as? Int ?? 0
+                            if let name = json["name"] as? String, !name.isEmpty {
+                                self.userName = name
+                            }
                         }
                     }
+                } catch {
+                    print("Failed to parse profile JSON")
                 }
-            } catch {
-                print("Failed to parse profile JSON")
-            }
-        }.resume()
+            }.resume()
+        }
     }
 
     func updateProfile(name: String, completion: ((Bool) -> Void)? = nil) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let token = idToken, !trimmed.isEmpty else {
+        guard !trimmed.isEmpty else {
             completion?(false)
             return
         }
 
-        var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
-        request.httpMethod = "PUT"
-        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": trimmed])
+        refreshTokenThenCall { token in
+            var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
+            request.httpMethod = "PUT"
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": trimmed])
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard error == nil, let httpResponse = response as? HTTPURLResponse else {
-                DispatchQueue.main.async { completion?(false) }
-                return
-            }
-
-            if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
-                DispatchQueue.main.async {
-                    self.userName = trimmed
-                    completion?(true)
-                    self.fetchProfile()
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                guard error == nil, let httpResponse = response as? HTTPURLResponse else {
+                    DispatchQueue.main.async { completion?(false) }
+                    return
                 }
-            } else {
-                DispatchQueue.main.async { completion?(false) }
-            }
-        }.resume()
+
+                if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
+                    DispatchQueue.main.async {
+                        self.userName = trimmed
+                        completion?(true)
+                    }
+                    // Refresh profile in background to sync all fields
+                    self.fetchProfile()
+                } else {
+                    DispatchQueue.main.async { completion?(false) }
+                }
+            }.resume()
+        }
     }
 }

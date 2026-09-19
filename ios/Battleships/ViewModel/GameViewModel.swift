@@ -794,6 +794,10 @@ final class GameViewModel: ObservableObject {
                         SoundManager.shared.playDefeat()
                     }
                     self.endLiveActivity(showResult: true)
+                    // Refresh profile to update wins count from the server
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+                        AuthManager.shared.fetchProfile()
+                    }
                 } else {
                     let shotType = shipSunk ? "sunk" : (isHit ? "hit" : "miss")
                     self.updateLiveActivity(lastShot: shotType)
@@ -876,6 +880,10 @@ final class GameViewModel: ObservableObject {
                     self.messageType = "success"
                 }
                 self.endLiveActivity(showResult: true)
+                // Refresh profile to update wins count from the server
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+                    AuthManager.shared.fetchProfile()
+                }
             }
         }
 
@@ -958,6 +966,10 @@ final class GameViewModel: ObservableObject {
                     SoundManager.shared.playVictory()
                 }
                 self.endLiveActivity(showResult: true)
+                // Refresh profile to update wins count from the server
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+                    AuthManager.shared.fetchProfile()
+                }
             }
         }
 
