@@ -36,8 +36,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.abgames.battleships
         PRODUCT_NAME: Battleships
-        MARKETING_VERSION: "2.3.0"
-        CURRENT_PROJECT_VERSION: "4"
+        MARKETING_VERSION: "3.0.0"
+        CURRENT_PROJECT_VERSION: "5"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_CFBundleDisplayName: Battleships
         CODE_SIGN_STYLE: Automatic
@@ -69,8 +69,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.abgames.battleships.widget
         PRODUCT_NAME: BattleshipsWidget
-        MARKETING_VERSION: "2.3.0"
-        CURRENT_PROJECT_VERSION: "4"
+        MARKETING_VERSION: "3.0.0"
+        CURRENT_PROJECT_VERSION: "5"
         CODE_SIGN_STYLE: Automatic
         IPHONEOS_DEPLOYMENT_TARGET: "16.1"
     info:

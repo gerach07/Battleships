@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @ObservedObject var authManager = AuthManager.shared
     @Environment(\.presentationMode) var presentationMode
+    private var s: I18nStrings { currentStrings() }
     
     @State private var editName: String = ""
     @State private var isSaving = false
@@ -10,7 +11,7 @@ struct ProfileView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Profile Info")) {
+                Section(header: Text(s.profileInfo)) {
                     if let url = authManager.profilePicUrl {
                         AsyncImage(url: url) { phase in
                             if let image = phase.image {

@@ -772,3 +772,9 @@ func stringsFor(_ lang: Language) -> I18nStrings {
     case .ru: return stringsRU
     }
 }
+
+func currentStrings() -> I18nStrings {
+    let langCode = UserDefaults.standard.string(forKey: "battleships-lang") ?? "en"
+    let language = Language(rawValue: langCode) ?? .en
+    return stringsFor(language)
+}

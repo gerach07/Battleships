@@ -3,6 +3,7 @@ import SwiftUI
 struct LeaderboardView: View {
     @ObservedObject var authManager = AuthManager.shared
     @Environment(\.dismiss) var dismiss
+    private var s: I18nStrings { currentStrings() }
 
     var body: some View {
         NavigationView {
