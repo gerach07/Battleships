@@ -195,6 +195,29 @@
   "app.ship": "корабль",
   "app.language": "Язык",
 
+  "profile.title": "Профиль",
+  "profile.info": "Информация профиля",
+  "profile.totalWins": "Всего побед",
+  "profile.matches": "Матчи",
+  "profile.displayName": "Отображаемое имя",
+  "profile.save": "Сохранить профиль",
+  "profile.signOut": "Выйти",
+  "profile.updated": "Профиль успешно обновлён!",
+  "profile.edit": "Редактировать профиль",
+  "profile.close": "Закрыть",
+  "profile.saving": "Сохранение...",
+
+  "leaderboard.title": "Таблица лидеров",
+  "leaderboard.loading": "Загрузка таблицы...",
+  "leaderboard.empty": "Пока нет игроков в рейтинге. Станьте первым, кто выиграет матч!",
+  "leaderboard.rank": "Ранг",
+  "leaderboard.player": "Игрок",
+  "leaderboard.wins": "Победы",
+  "leaderboard.played": "Сыграно",
+  "leaderboard.topPlayers": "Лучшие игроки",
+  "leaderboard.winRate": "Процент побед",
+  "leaderboard.games": "Игры",
+
   "spectator.placementTitle": "Игроки расставляют корабли",
   "spectator.placementHint": "Бой скоро начнётся. Вы сможете наблюдать, когда оба игрока будут готовы."
 }

@@ -261,7 +261,7 @@ private fun MenuView(viewModel: GameViewModel) {
         viewModel.setLoginView("join"); viewModel.fetchRooms()
     }
     Spacer(Modifier.height(12.dp))
-    GradientButton("🏆  Leaderboard", c.surface.copy(alpha=0.5f), c.surface) {
+    GradientButton("🏆  ${s.leaderboard}", c.surface.copy(alpha=0.5f), c.surface) {
         showLeaderboard = true
     }
 
@@ -711,6 +711,7 @@ fun AuthSection(viewModel: GameViewModel) {
     val userProfile by viewModel.userProfile.collectAsState()
     var showProfile by remember { mutableStateOf(false) }
     val c = LocalColorPalette.current
+    val s = LocalI18n.current
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         try {
@@ -755,7 +756,7 @@ fun AuthSection(viewModel: GameViewModel) {
                 }
             }
             TextButton(onClick = { showProfile = true }) {
-                Text("Profile", color = c.primary)
+                Text(s.profile, color = c.primary)
             }
         }
     } else {
@@ -793,19 +794,21 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
     val userProfile by viewModel.userProfile.collectAsState()
     var name by remember { mutableStateOf(userProfile["name"] ?: "") }
 
+    val s = LocalI18n.current
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF1E293B),
         titleContentColor = Color.White,
         textContentColor = Color.White,
-        title = { Text("Your Profile", fontWeight = FontWeight.Bold) },
+        title = { Text(s.profile, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Wins: ${userProfile["wins"] ?: "0"}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.emerald)
+                Text("${s.winsLabel}: ${userProfile["wins"] ?: "0"}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.emerald)
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Display Name") },
+                    label = { Text(s.displayName) },
                     colors = tfColors(),
                     singleLine = true
                 )
@@ -815,13 +818,13 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
             TextButton(onClick = {
                 viewModel.updateProfile(name)
                 onDismiss()
-            }) { Text("Save", color = c.primary) }
+            }) { Text(s.save, color = c.primary) }
         },
         dismissButton = {
             TextButton(onClick = {
                 viewModel.signOut()
                 onDismiss()
-            }) { Text("Sign Out", color = c.red) }
+            }) { Text(s.signOut, color = c.red) }
         }
     )
 }
@@ -829,6 +832,7 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
 @Composable
 fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
     val c = LocalColorPalette.current
+    val s = LocalI18n.current
     val leaderboardData by viewModel.leaderboardData.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -839,7 +843,7 @@ fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         containerColor = c.surface,
         title = {
-            Text("🏆 Leaderboard", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("🏆 ${s.leaderboard}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
@@ -886,11 +890,11 @@ fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
                                 Spacer(Modifier.width(8.dp))
                                 Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                                     Text(name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                    Text("$winRate% Win Rate", color = c.textDim, fontSize = 11.sp)
+                                    Text("$winRate% ${s.winsLabel}", color = c.textDim, fontSize = 11.sp)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text("${entry.wins} Wins", color = c.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    Text("${entry.gamesPlayed} Games", color = c.textDim, fontSize = 10.sp)
+                                    Text("${entry.wins} ${s.winsLabel}", color = c.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("${entry.gamesPlayed} ${s.matches}", color = c.textDim, fontSize = 10.sp)
                                 }
                             }
                         }
@@ -900,7 +904,7 @@ fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close", color = c.primary)
+                Text(s.close, color = c.primary)
             }
         }
     )

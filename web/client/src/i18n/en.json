@@ -195,6 +195,29 @@
   "app.ship": "ship",
   "app.language": "Language",
 
+  "profile.title": "Profile",
+  "profile.info": "Profile Info",
+  "profile.totalWins": "Total Wins",
+  "profile.matches": "Matches",
+  "profile.displayName": "Display Name",
+  "profile.save": "Save Profile",
+  "profile.signOut": "Sign Out",
+  "profile.updated": "Profile updated successfully!",
+  "profile.edit": "Edit Profile",
+  "profile.close": "Close",
+  "profile.saving": "Saving...",
+
+  "leaderboard.title": "Leaderboard",
+  "leaderboard.loading": "Loading rankings...",
+  "leaderboard.empty": "No ranked players yet. Be the first to win a game!",
+  "leaderboard.rank": "Rank",
+  "leaderboard.player": "Player",
+  "leaderboard.wins": "Wins",
+  "leaderboard.played": "Played",
+  "leaderboard.topPlayers": "Top players",
+  "leaderboard.winRate": "Win Rate",
+  "leaderboard.games": "Games",
+
   "spectator.placementTitle": "Players are placing their ships",
   "spectator.placementHint": "The battle will begin shortly. You'll be able to watch once both players are ready."
 }

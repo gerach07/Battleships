@@ -30,7 +30,7 @@ const Leaderboard = ({ onClose, SOCKET_URL }) => {
             <div className="glass-card w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl shadow-blue-900/20 border-slate-700">
                 <div className="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
                     <h2 className="text-2xl font-black bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent flex items-center gap-2">
-                        <span>🏆</span> Leaderboard
+                        <span>🏆</span> {t('leaderboard.title')}
                     </h2>
                     <button onClick={onClose} className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-xl transition-colors">
                         ✕
@@ -39,19 +39,19 @@ const Leaderboard = ({ onClose, SOCKET_URL }) => {
                 
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {loading ? (
-                        <div className="text-center py-10 text-slate-400">Loading rankings...</div>
+                        <div className="text-center py-10 text-slate-400">{t('leaderboard.loading')}</div>
                     ) : error ? (
                         <div className="text-center py-10 text-red-400">{error}</div>
                     ) : leaders.length === 0 ? (
-                        <div className="text-center py-10 text-slate-400">No ranked players yet. Be the first to win a game!</div>
+                        <div className="text-center py-10 text-slate-400">{t('leaderboard.empty')}</div>
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="text-xs uppercase tracking-widest text-slate-500 border-b border-slate-700/50">
-                                    <th className="pb-3 px-2 text-center w-12">Rank</th>
-                                    <th className="pb-3 px-2">Player</th>
-                                    <th className="pb-3 px-2 text-right">Wins</th>
-                                    <th className="pb-3 px-2 text-right hidden sm:table-cell">Played</th>
+                                    <th className="pb-3 px-2 text-center w-12">{t('leaderboard.rank')}</th>
+                                    <th className="pb-3 px-2">{t('leaderboard.player')}</th>
+                                    <th className="pb-3 px-2 text-right">{t('leaderboard.wins')}</th>
+                                    <th className="pb-3 px-2 text-right hidden sm:table-cell">{t('leaderboard.played')}</th>
                                 </tr>
                             </thead>
                             <tbody>

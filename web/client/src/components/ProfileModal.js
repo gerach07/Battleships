@@ -54,7 +54,7 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
             <div className="glass-card w-full max-w-md shadow-2xl shadow-emerald-900/20 border-slate-700">
                 <div className="p-5 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 rounded-t-2xl">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <span>👤</span> Edit Profile
+                        <span>👤</span> {t('profile.edit')}
                     </h2>
                     <button onClick={onClose} className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-xl transition-colors">
                         ✕
@@ -76,18 +76,18 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 text-center">
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">Total Wins</p>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">{t('profile.totalWins')}</p>
                             <p className="text-2xl font-black text-yellow-400">{user?.wins || 0}</p>
                         </div>
                         <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 text-center">
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">Matches</p>
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">{t('profile.matches')}</p>
                             <p className="text-2xl font-black text-blue-400">{user?.gamesPlayed || 0}</p>
                         </div>
                     </div>
 
                     <form onSubmit={handleSave} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Display Name</label>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">{t('profile.displayName')}</label>
                             <input
                                 type="text"
                                 value={name}
@@ -98,7 +98,7 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
                             />
                         </div>
                         {error && <p className="text-red-400 text-sm font-bold bg-red-500/10 p-2 rounded-lg text-center border border-red-500/20">{error}</p>}
-                        {success && <p className="text-emerald-400 text-sm font-bold bg-emerald-500/10 p-2 rounded-lg text-center border border-emerald-500/20">Profile updated successfully!</p>}
+                        {success && <p className="text-emerald-400 text-sm font-bold bg-emerald-500/10 p-2 rounded-lg text-center border border-emerald-500/20">{t('profile.updated')}</p>}
 
                         <div className="flex gap-3 pt-2">
                             <button
@@ -106,14 +106,14 @@ const ProfileModal = ({ onClose, user, setUser, SOCKET_URL, firebaseAuthToken })
                                 onClick={handleLogout}
                                 className="flex-1 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold rounded-xl transition-all border border-red-500/30"
                             >
-                                Sign Out
+                                {t('profile.signOut')}
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
                                 className="flex-[2] py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50"
                             >
-                                {loading ? 'Saving...' : 'Save Profile'}
+                                {loading ? t('profile.saving') : t('profile.save')}
                             </button>
                         </div>
                     </form>

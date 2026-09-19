@@ -14,7 +14,7 @@ struct LeaderboardView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(1.5)
-                        Text("Loading leaderboard...")
+                        Text(s.loadingLeaderboard)
                             .foregroundColor(.gray)
                             .padding(.top)
                     }
@@ -43,7 +43,7 @@ struct LeaderboardView: View {
                                     Text(displayName(for: entry))
                                         .font(.headline)
                                         .foregroundColor(.white)
-                                    Text("\(entry.gamesPlayed) games played")
+                                    Text("\(entry.gamesPlayed) \(s.gamesPlayed)")
                                         .font(.caption)
                                         .foregroundColor(.gray)
                                 }
@@ -54,7 +54,7 @@ struct LeaderboardView: View {
                                     Text("\(entry.wins)")
                                         .font(.title3.bold())
                                         .foregroundColor(.green)
-                                    Text("Wins")
+                                    Text(s.winsLabel)
                                         .font(.caption2)
                                         .foregroundColor(.gray)
                                 }
@@ -65,11 +65,11 @@ struct LeaderboardView: View {
                     .listStyle(PlainListStyle())
                 }
             }
-            .navigationTitle("🏆 Leaderboard")
+            .navigationTitle("🏆 \(s.leaderboard)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(s.close) {
                         dismiss()
                     }
                 }

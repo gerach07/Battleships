@@ -22,11 +22,11 @@ struct ProfileView: View {
                             }
                         }
                     }
-                    Text("Wins: \(authManager.wins)")
+                    Text("\(s.winsLabel): \(authManager.wins)")
                 }
 
-                Section(header: Text("Edit Details")) {
-                    TextField("Name", text: $editName)
+                Section(header: Text(s.editDetails)) {
+                    TextField(s.displayName, text: $editName)
 
                     Button(action: {
                         let trimmed = editName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -47,7 +47,7 @@ struct ProfileView: View {
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Text("Save")
+                            Text(s.save)
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -55,15 +55,15 @@ struct ProfileView: View {
                 }
                 
                 Section {
-                    Button("Sign Out") {
+                    Button(s.signOut) {
                         authManager.signOut()
                         presentationMode.wrappedValue.dismiss()
                     }
                     .foregroundColor(.red)
                 }
             }
-            .navigationTitle("Profile")
-            .navigationBarItems(trailing: Button("Close") {
+            .navigationTitle(s.profile)
+            .navigationBarItems(trailing: Button(s.close) {
                 presentationMode.wrappedValue.dismiss()
             })
             .onAppear {

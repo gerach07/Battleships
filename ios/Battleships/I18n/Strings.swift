@@ -25,6 +25,27 @@ struct I18nStrings {
     // App / Header
     let appTitle: String
     let appSubtitle: String
+    // Profile & Leaderboard
+    let profile: String
+    let profileInfo: String
+    let editDetails: String
+    let winsLabel: String
+    let save: String
+    let signOut: String
+    let close: String
+    let leaderboard: String
+    let topPlayers: String
+    let loadingLeaderboard: String
+    let gamesPlayed: String
+    let rank: String
+    let player: String
+    let totalWins: String
+    let matches: String
+    let displayName: String
+    let profileUpdated: String
+    let saving: String
+    let saveProfile: String
+    let editProfile: String
     // Login
     let battleships: String
     let multiplayerNavalCombat: String
@@ -206,6 +227,26 @@ extension String {
 let stringsEN = I18nStrings(
     appTitle: "Battleships",
     appSubtitle: "Multiplayer · Real-time",
+    profile: "Profile",
+    profileInfo: "Profile Info",
+    editDetails: "Edit Details",
+    winsLabel: "Wins",
+    save: "Save",
+    signOut: "Sign Out",
+    close: "Close",
+    leaderboard: "Leaderboard",
+    topPlayers: "Top players",
+    loadingLeaderboard: "Loading leaderboard...",
+    gamesPlayed: "games played",
+    rank: "Rank",
+    player: "Player",
+    totalWins: "Total Wins",
+    matches: "Matches",
+    displayName: "Display Name",
+    profileUpdated: "Profile updated successfully!",
+    saving: "Saving...",
+    saveProfile: "Save Profile",
+    editProfile: "Edit Profile",
     battleships: "BATTLESHIPS",
     multiplayerNavalCombat: "Multiplayer Naval Combat",
     createGame: "Create Game",
@@ -367,6 +408,26 @@ let stringsEN = I18nStrings(
 let stringsLV = I18nStrings(
     appTitle: "Kuģu Kaujas",
     appSubtitle: "Daudzspēlētāju · Reāllaikā",
+    profile: "Profils",
+    profileInfo: "Profila informācija",
+    editDetails: "Rediģēt datus",
+    winsLabel: "Uzvaras",
+    save: "Saglabāt",
+    signOut: "Iziet",
+    close: "Aizvērt",
+    leaderboard: "Reitings",
+    topPlayers: "Labākie spēlētāji",
+    loadingLeaderboard: "Ielādē reitingu...",
+    gamesPlayed: "spēles aizvadītas",
+    rank: "Vieta",
+    player: "Spēlētājs",
+    totalWins: "Kopējās uzvaras",
+    matches: "Spēles",
+    displayName: "Rādītais vārds",
+    profileUpdated: "Profils veiksmīgi atjaunināts!",
+    saving: "Saglabā...",
+    saveProfile: "Saglabāt profilu",
+    editProfile: "Rediģēt profilu",
     battleships: "KUĢU KAUJAS",
     multiplayerNavalCombat: "Daudzspēlētāju jūras kauja",
     createGame: "Izveidot spēli",
@@ -528,6 +589,26 @@ let stringsLV = I18nStrings(
 let stringsRU = I18nStrings(
     appTitle: "Морской бой",
     appSubtitle: "Мультиплеер · Реальное время",
+    profile: "Профиль",
+    profileInfo: "Информация профиля",
+    editDetails: "Редактировать данные",
+    winsLabel: "Победы",
+    save: "Сохранить",
+    signOut: "Выйти",
+    close: "Закрыть",
+    leaderboard: "Таблица лидеров",
+    topPlayers: "Лучшие игроки",
+    loadingLeaderboard: "Загрузка таблицы...",
+    gamesPlayed: "игр сыграно",
+    rank: "Ранг",
+    player: "Игрок",
+    totalWins: "Всего побед",
+    matches: "Матчи",
+    displayName: "Отображаемое имя",
+    profileUpdated: "Профиль успешно обновлён!",
+    saving: "Сохранение...",
+    saveProfile: "Сохранить профиль",
+    editProfile: "Редактировать профиль",
     battleships: "МОРСКОЙ БОЙ",
     multiplayerNavalCombat: "Многопользовательский морской бой",
     createGame: "Создать игру",

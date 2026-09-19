@@ -195,6 +195,29 @@
   "app.ship": "kuģis",
   "app.language": "Valoda",
 
+  "profile.title": "Profils",
+  "profile.info": "Profila informācija",
+  "profile.totalWins": "Kopējās uzvaras",
+  "profile.matches": "Spēles",
+  "profile.displayName": "Rādītais vārds",
+  "profile.save": "Saglabāt profilu",
+  "profile.signOut": "Iziet",
+  "profile.updated": "Profils veiksmīgi atjaunināts!",
+  "profile.edit": "Rediģēt profilu",
+  "profile.close": "Aizvērt",
+  "profile.saving": "Saglabā...",
+
+  "leaderboard.title": "Reitings",
+  "leaderboard.loading": "Ielādē reitingu...",
+  "leaderboard.empty": "Vēl nav reitinga spēlētāju. Esiet pirmais, kurš uzvar spēli!",
+  "leaderboard.rank": "Vieta",
+  "leaderboard.player": "Spēlētājs",
+  "leaderboard.wins": "Uzvaras",
+  "leaderboard.played": "Aizvadītas",
+  "leaderboard.topPlayers": "Labākie spēlētāji",
+  "leaderboard.winRate": "Uzvaras procents",
+  "leaderboard.games": "Spēles",
+
   "spectator.placementTitle": "Spēlētāji izvieto savus kuģus",
   "spectator.placementHint": "Cīņa drīz sāksies. Jūs varēsiet skatīties, kad abi spēlētāji būs gatavi."
 }
