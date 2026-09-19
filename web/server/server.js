@@ -613,12 +613,14 @@ io.on('connection', (socket) => {
       const shot = room.processShot(socket.id, row, col);
       if (!shot.success) return socket.emit('error', { error: shot.error });
 
-      // Record win in database for authenticated players
+      // Record win in database (works for both authenticated and guest players)
       if (shot.result.gameWon && room.winner) {
         const winnerUid = room.players[room.winner]?.firebaseUid || null;
         const loserId = room.getOpponentId(room.winner);
         const loserUid = room.players[loserId]?.firebaseUid || null;
-        recordGameResult(winnerUid, loserUid);
+        const winnerName = winnerUid ? null : (room.players[room.winner]?.name || null);
+        const loserName = loserUid ? null : (room.players[loserId]?.name || null);
+        recordGameResult(winnerUid, loserUid, winnerName, loserName);
       }
 
       const opponentId = room.getOpponentId(socket.id);
@@ -740,10 +742,12 @@ io.on('connection', (socket) => {
       const opponentId = room.getOpponentId(socket.id);
       room.winner = opponentId;
       room._transitionState(GameState.GAME_OVER);
-      // Record forfeit result for authenticated players
+      // Record forfeit result for authenticated and guest players
       const winnerUid = room.players[opponentId]?.firebaseUid || null;
       const loserUid = room.players[socket.id]?.firebaseUid || null;
-      recordGameResult(winnerUid, loserUid);
+      const winnerName = winnerUid ? null : (room.players[opponentId]?.name || null);
+      const loserName = loserUid ? null : (room.players[socket.id]?.name || null);
+      recordGameResult(winnerUid, loserUid, winnerName, loserName);
       io.to(roomId).emit('gameForfeited', {
         winner: opponentId,
         forfeiterId: socket.id,
@@ -1091,10 +1095,12 @@ timerIntervalId = setInterval(() => {
         const winner = freshRoom.getOpponentId(loser);
         freshRoom.winner = winner;
         freshRoom._transitionState(GameState.GAME_OVER);
-        // Record timeout result for authenticated players
+        // Record timeout result for authenticated and guest players
         const winnerUid = winner ? freshRoom.players[winner]?.firebaseUid || null : null;
         const loserUid = loser ? freshRoom.players[loser]?.firebaseUid || null : null;
-        recordGameResult(winnerUid, loserUid);
+        const winnerName = winnerUid ? null : (winner ? freshRoom.players[winner]?.name || null : null);
+        const loserName = loserUid ? null : (loser ? freshRoom.players[loser]?.name || null : null);
+        recordGameResult(winnerUid, loserUid, winnerName, loserName);
         const data = { winner, loser, winnerName: winner ? freshRoom.players[winner]?.name : null };
         io.to(roomId).emit('timeUp', data);
       } catch (err) {

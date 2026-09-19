@@ -84,17 +84,43 @@ class AuthManager: ObservableObject {
             self.userEmail = ""
             self.profilePicUrl = nil
             self.idToken = nil
+            self.playerId = nil
+            self.wins = 0
         }
+    }
+
+    private func ensureUserProfileExists() {
+        guard let token = idToken else { return }
+
+        var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/auth/login")!)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard error == nil else {
+                print("Login bootstrap failed: \(error!.localizedDescription)")
+                return
+            }
+            guard let http = response as? HTTPURLResponse else { return }
+            if http.statusCode == 200 || http.statusCode == 201 {
+                self.fetchProfile()
+            }
+        }.resume()
     }
 
     func fetchProfile() {
         guard let token = idToken else { return }
-        // API call to fetch profile
         var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else { return }
+
+            if let http = response as? HTTPURLResponse, (http.statusCode == 401 || http.statusCode == 403 || http.statusCode == 404) {
+                self.ensureUserProfileExists()
+                return
+            }
+
             do {
                 if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     DispatchQueue.main.async {
@@ -111,21 +137,33 @@ class AuthManager: ObservableObject {
         }.resume()
     }
 
-    func updateProfile(name: String, playerId: String? = nil) {
-        guard let token = idToken else { return }
+    func updateProfile(name: String, completion: ((Bool) -> Void)? = nil) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let token = idToken, !trimmed.isEmpty else {
+            completion?(false)
+            return
+        }
+
         var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
-        request.httpMethod = "POST"
+        request.httpMethod = "PUT"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        var body: [String: Any] = ["name": name]
-        if let playerId, !playerId.isEmpty {
-            body["playerId"] = playerId
-        }
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": trimmed])
+
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if error == nil {
-                self.fetchProfile()
+            guard error == nil, let httpResponse = response as? HTTPURLResponse else {
+                DispatchQueue.main.async { completion?(false) }
+                return
+            }
+
+            if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
+                DispatchQueue.main.async {
+                    self.userName = trimmed
+                    completion?(true)
+                    self.fetchProfile()
+                }
+            } else {
+                DispatchQueue.main.async { completion?(false) }
             }
         }.resume()
     }

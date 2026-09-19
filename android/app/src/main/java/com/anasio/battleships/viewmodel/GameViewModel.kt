@@ -381,11 +381,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val id = _joinRoomCode.value.trim()
         if (id.isEmpty()) { setMessage(s.roomCodeRequired, "error"); return }
         _pendingJoin.value = PendingJoin(roomId = id, password = _joinRoomPin.value.ifBlank { null })
+        // If already signed in, use their Firebase display name and skip the name screen
+        val fbUser = _firebaseUser.value
+        if (fbUser != null) {
+            val displayName = fbUser.displayName?.takeIf { it.isNotBlank() } ?: _playerName.value
+            if (displayName.isNotBlank()) {
+                _playerName.value = displayName
+                handleFinalJoin()
+                return
+            }
+        }
         _loginView.value = "enterName"
     }
 
     fun handleFinalJoin() {
-        val name = _playerName.value.trim()
+        // For logged-in users, prefer their Firebase display name; fall back to typed name
+        val fbDisplayName = _firebaseUser.value?.displayName?.takeIf { it.isNotBlank() }
+        val name = (fbDisplayName ?: _playerName.value).trim()
         if (name.isBlank()) { setMessage(s.enterNameFirst, "error"); return }
         val pj = _pendingJoin.value ?: return
         if (joiningGame) return // prevent double-submission

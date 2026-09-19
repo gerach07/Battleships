@@ -1048,8 +1048,35 @@ function App() {
     }
   }, [joinRoomCode, serverUrl, setMessageWithTimeout]);
 
+  // Helper: skip enterName for logged-in users
+  const handleSetLoginView = useCallback((view, join) => {
+    if (view === 'enterName' && user?.name) {
+      // Logged-in: use profile name directly and join immediately
+      const resolvedJoin = join || pendingJoin;
+      if (!resolvedJoin) return;
+      joiningGameRef.current = true;
+      setIsJoining(true);
+      setGameId(resolvedJoin.roomId);
+      setRoomPassword(resolvedJoin.password || '');
+      socket?.emit('joinGame', {
+        gameId: resolvedJoin.roomId,
+        playerName: user.name,
+        password: resolvedJoin.password,
+        isCreating: resolvedJoin.isCreating,
+        isSpectating: resolvedJoin.isSpectating || false,
+        timeLimit: resolvedJoin.timeLimit || gameTimeLimit,
+        authToken: firebaseAuthToken,
+      });
+    } else {
+      if (join) setPendingJoin(join);
+      setLoginView(view);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
+
   const handleFinalJoin = useCallback(() => {
-    const name = playerName.trim();
+    // For logged-in users, use their profile name; for guests, use typed name
+    const name = (user?.name || playerName).trim();
     if (!name) { setMessageWithTimeout(tRef.current('msg.nameRequired'), 'error', 4000); return; }
     if (!pendingJoin) return;
     if (joiningGameRef.current) return; // prevent double-submission
@@ -1067,7 +1094,7 @@ function App() {
       authToken: firebaseAuthToken,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerName, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
+  }, [user, playerName, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
 
   const handleShipPlaced = useCallback((placements) => {
     setClientPlacements(placements);
@@ -1390,7 +1417,7 @@ function App() {
         {phase === 'login' && (
           <LoginView
             loginView={loginView} gameId={gameId} roomPassword={roomPassword} playerName={playerName}
-            setLoginView={setLoginView} setGameId={setGameId} setRoomPassword={setRoomPassword} setPlayerName={setPlayerName}
+            setLoginView={handleSetLoginView} setGameId={setGameId} setRoomPassword={setRoomPassword} setPlayerName={setPlayerName}
             createPassword={createPassword} setCreatePassword={setCreatePassword}
             joinRoomCode={joinRoomCode} setJoinRoomCode={setJoinRoomCode}
             joinRoomPin={joinRoomPin} setJoinRoomPin={setJoinRoomPin}

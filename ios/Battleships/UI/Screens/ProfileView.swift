@@ -5,6 +5,7 @@ struct ProfileView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var editName: String = ""
+    @State private var isSaving = false
 
     var body: some View {
         NavigationView {
@@ -23,25 +24,34 @@ struct ProfileView: View {
                     }
                     Text("Wins: \(authManager.wins)")
                 }
-                
+
                 Section(header: Text("Edit Details")) {
                     TextField("Name", text: $editName)
 
-                    HStack {
-                        Text("Player ID")
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text(authManager.playerId ?? "Not set")
-                            .font(.system(.body, design: .monospaced))
-                            .foregroundColor(.gray)
+                    Button(action: {
+                        let trimmed = editName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        isSaving = true
+                        authManager.updateProfile(name: trimmed) { success in
+                            DispatchQueue.main.async {
+                                isSaving = false
+                                if success {
+                                    authManager.userName = trimmed
+                                    presentationMode.wrappedValue.dismiss()
+                                }
+                            }
+                        }
+                    }) {
+                        if isSaving {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text("Save")
+                                .frame(maxWidth: .infinity)
+                        }
                     }
-                    .padding(.vertical, 4)
-                    
-                    Button("Save") {
-                        authManager.updateProfile(name: editName)
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .disabled(editName.isEmpty)
+                    .disabled(isSaving || editName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 
                 Section {

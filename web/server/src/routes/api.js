@@ -114,20 +114,34 @@ router.put('/profile', requireAuth, async (req, res) => {
 });
 
 // ─── GET /api/leaderboard ─────────────────────────────────────────────────────
-// Public endpoint — returns top 50 players by wins.
+// Public endpoint — returns top 50 players (auth + guest) by wins.
 router.get('/leaderboard', async (req, res) => {
   try {
-    const leaders = await User.find({ wins: { $gte: 0 } })
-      .sort({ wins: -1, gamesPlayed: 1 })
-      .limit(50)
-      .select('name playerId wins gamesPlayed photoUrl')
-      .lean();
+    const GuestPlayer = require('../models/GuestPlayer');
+
+    const [authUsers, guestUsers] = await Promise.all([
+      User.find({ wins: { $gte: 0 } })
+        .select('name wins gamesPlayed photoUrl')
+        .lean(),
+      GuestPlayer.find({ wins: { $gte: 0 } })
+        .select('name wins gamesPlayed')
+        .lean(),
+    ]);
+
+    // Merge into unified list, marking guests with no photoUrl
+    const merged = [
+      ...authUsers.map(u => ({ name: u.name, wins: u.wins, gamesPlayed: u.gamesPlayed, photoUrl: u.photoUrl || null })),
+      ...guestUsers.map(u => ({ name: u.name + ' 👤', wins: u.wins, gamesPlayed: u.gamesPlayed, photoUrl: null })),
+    ];
+
+    // Sort by wins desc, then gamesPlayed asc, limit to 50
+    merged.sort((a, b) => b.wins - a.wins || a.gamesPlayed - b.gamesPlayed);
+    const top50 = merged.slice(0, 50);
 
     res.json({
-      leaderboard: leaders.map((u, i) => ({
+      leaderboard: top50.map((u, i) => ({
         rank: i + 1,
         name: u.name,
-        playerId: u.playerId,
         wins: u.wins,
         gamesPlayed: u.gamesPlayed,
         photoUrl: u.photoUrl,
