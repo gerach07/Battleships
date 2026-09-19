@@ -69,7 +69,7 @@ app.use(helmet({
 }));
 app.use(cors({
   origin: isOriginAllowed,
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   credentials: true,
 }));
 app.use(express.json({ limit: '16kb' }));
@@ -81,7 +81,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: isOriginAllowed,
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
     credentials: true,
   },
   pingTimeout: 60000,

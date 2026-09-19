@@ -197,26 +197,43 @@ function App() {
         if (firebaseUser) {
           const token = await firebaseUser.getIdToken();
           setFirebaseAuthToken(token);
-          
-          // Fetch backend profile data
+
+          const apiBase = (serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`);
+
+          // Fetch backend profile data. A 401/403 means the token is invalid or the
+          // server has not been bootstrapped yet; a 404 means the user record is
+          // missing and must be created via the login endpoint.
           try {
-            const url = (serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`) + '/api/profile';
-            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const profileUrl = `${apiBase}/api/profile`;
+            const res = await fetch(profileUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
             if (res.ok) {
               const profile = await res.json();
               setUser(profile);
-            } else if (res.status === 404) {
-              // User doesn't exist in DB yet, hit login endpoint to create them
-              const loginRes = await fetch((serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`) + '/api/auth/login', {
+              return;
+            }
+
+            if (res.status === 401 || res.status === 403 || res.status === 404) {
+              const loginRes = await fetch(`${apiBase}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
               });
+
               if (loginRes.ok) {
                 setUser(await loginRes.json());
+                return;
               }
+
+              const loginText = await loginRes.text();
+              console.warn('Auth bootstrap failed:', loginRes.status, loginText);
+              return;
             }
+
+            console.error('Failed to load user profile:', res.status, await res.text());
           } catch (err) {
-            console.error("Failed to load user profile:", err);
+            console.error('Failed to load user profile:', err);
           }
         } else {
           setUser(null);
