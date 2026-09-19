@@ -79,6 +79,21 @@ router.put('/profile', requireAuth, async (req, res) => {
       if (!sanitized || sanitized.length < 1) {
         return res.status(400).json({ error: 'Name cannot be empty' });
       }
+      // Block names already claimed by a guest player with wins to prevent
+      // impersonation and leaderboard confusion.
+      if (sanitized.toLowerCase() !== user.name.toLowerCase()) {
+        const GuestPlayer = require('../models/GuestPlayer');
+        const escapedName = sanitized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const guestClash = await GuestPlayer.findOne({
+          name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+          wins: { $gt: 0 },
+        });
+        if (guestClash) {
+          return res.status(409).json({
+            error: `The name "${sanitized}" is already used by a guest player on the leaderboard. Please choose a different name.`,
+          });
+        }
+      }
       user.name = sanitized;
     }
 

@@ -119,7 +119,7 @@ class AuthManager: ObservableObject {
             print("No Firebase user signed in")
             return
         }
-        firebaseUser.getIDToken(forcingRefresh: false) { token, error in
+        firebaseUser.getIDToken { token, error in
             guard let token = token, error == nil else {
                 print("Failed to refresh Firebase token: \(String(describing: error))")
                 return
