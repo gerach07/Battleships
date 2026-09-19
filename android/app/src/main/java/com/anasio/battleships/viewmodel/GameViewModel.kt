@@ -1317,28 +1317,38 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val conn = URL("$SERVER_URL/api/leaderboard").openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
-                conn.connectTimeout = 5000; conn.readTimeout = 5000
-                if (conn.responseCode == 200) {
-                    val jsonArray = org.json.JSONArray(conn.inputStream.bufferedReader().readText())
+                conn.connectTimeout = 8000; conn.readTimeout = 8000
+                val code = conn.responseCode
+                if (code == 200) {
+                    val text = conn.inputStream.bufferedReader().readText()
+                    // Server returns { leaderboard: [...] } — extract the array
+                    val jsonObj = org.json.JSONObject(text)
+                    val jsonArray = jsonObj.optJSONArray("leaderboard") ?: org.json.JSONArray()
                     val list = mutableListOf<LeaderboardEntry>()
                     for (i in 0 until jsonArray.length()) {
                         val obj = jsonArray.getJSONObject(i)
+                        val rawName = obj.optString("name", "Unknown")
+                        val isGuest = rawName.endsWith("\uD83D\uDC64") // 👤
                         list.add(
                             LeaderboardEntry(
-                                name = obj.optString("name", "Unknown"),
+                                name = rawName,
                                 wins = obj.optInt("wins", 0),
                                 gamesPlayed = obj.optInt("gamesPlayed", 0),
-                                photoUrl = obj.optString("photoUrl").takeIf { it.isNotEmpty() },
-                                isGuest = obj.optBoolean("isGuest", false)
+                                photoUrl = obj.optString("photoUrl").takeIf { it.isNotEmpty() && it != "null" },
+                                isGuest = isGuest
                             )
                         )
                     }
                     withContext(Dispatchers.Main) {
                         _leaderboardData.value = list
                     }
+                } else {
+                    android.util.Log.e("Leaderboard", "HTTP $code from /api/leaderboard")
                 }
                 conn.disconnect()
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                android.util.Log.e("Leaderboard", "fetchLeaderboard failed", e)
+            }
         }
     }
 }

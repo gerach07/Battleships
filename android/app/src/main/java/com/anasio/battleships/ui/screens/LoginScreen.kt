@@ -716,14 +716,20 @@ fun AuthSection(viewModel: GameViewModel) {
         try {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+            android.util.Log.d("GoogleSignIn", "Got account: ${account.email}, idToken=${account.idToken?.take(20)}...")
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authResult ->
                 if (authResult.isSuccessful) {
+                    android.util.Log.d("GoogleSignIn", "Firebase auth success: ${authResult.result.user?.email}")
                     viewModel.updateFirebaseUser(authResult.result.user)
+                } else {
+                    android.util.Log.e("GoogleSignIn", "Firebase auth failed: ${authResult.exception?.message}", authResult.exception)
                 }
             }
+        } catch (e: com.google.android.gms.common.api.ApiException) {
+            android.util.Log.e("GoogleSignIn", "ApiException status=${e.statusCode}: ${e.message}", e)
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("GoogleSignIn", "Sign-in failed: ${e.message}", e)
         }
     }
 
