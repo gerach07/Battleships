@@ -1261,7 +1261,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 conn.requestMethod = "GET"
                 conn.setRequestProperty("Authorization", "Bearer $token")
                 conn.connectTimeout = 5000; conn.readTimeout = 5000
-                if (conn.responseCode == 200) {
+                
+                val code = conn.responseCode
+                if (code == 401 || code == 403 || code == 404) {
+                    conn.disconnect()
+                    ensureUserProfileExists()
+                    return@launch
+                }
+                
+                if (code == 200) {
                     val json = JSONObject(conn.inputStream.bufferedReader().readText())
                     withContext(Dispatchers.Main) {
                         _userProfile.value = mapOf(
@@ -1275,6 +1283,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 conn.disconnect()
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+    
+    private fun ensureUserProfileExists() {
+        val token = _firebaseToken.value ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val conn = URL("$SERVER_URL/api/auth/login").openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Authorization", "Bearer $token")
+                conn.connectTimeout = 5000; conn.readTimeout = 5000
+                val code = conn.responseCode
+                conn.disconnect()
+                if (code == 200 || code == 201) {
+                    fetchProfile()
+                }
             } catch (e: Exception) { e.printStackTrace() }
         }
     }
