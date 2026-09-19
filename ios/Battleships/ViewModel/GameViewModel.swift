@@ -239,7 +239,11 @@ final class GameViewModel: ObservableObject {
     // MARK: - Join / Create
     func joinGame(roomId: String, password: String?, name: String, isCreating: Bool, isSpectating: Bool, timeLimit: Int) {
         guard !joiningGame else { return }
-        let trimmedName = String(name.trimmingCharacters(in: .whitespaces).prefix(50))
+
+        let signedInName = AuthManager.shared.isSignedIn
+            ? AuthManager.shared.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+            : ""
+        let trimmedName = String((name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? signedInName : name).prefix(50))
         guard !trimmedName.isEmpty else { setMessage(s.enterNameFirst, "error"); return }
 
         joiningGame = true

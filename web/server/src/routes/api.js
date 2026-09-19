@@ -117,7 +117,7 @@ router.put('/profile', requireAuth, async (req, res) => {
 // Public endpoint — returns top 50 players by wins.
 router.get('/leaderboard', async (req, res) => {
   try {
-    const leaders = await User.find({ wins: { $gt: 0 } })
+    const leaders = await User.find({ wins: { $gte: 0 } })
       .sort({ wins: -1, gamesPlayed: 1 })
       .limit(50)
       .select('name playerId wins gamesPlayed photoUrl')

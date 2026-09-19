@@ -27,6 +27,7 @@ let package = Package(
                       "Resources/bgm_victory.m4a", "Resources/bgm_defeat.m4a"],
             resources: [
                 .process("Resources/Assets.xcassets"),
+                .process("GoogleService-Info.plist"),
             ]
         ),
         .target(

@@ -70,6 +70,25 @@ struct LoginScreen: View {
         }
     }
 
+    private func continuePendingJoin(_ pending: PendingJoin) {
+        if AuthManager.shared.isSignedIn {
+            let signedName = AuthManager.shared.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+            let effectiveName = signedName.isEmpty ? "Player" : signedName
+            vm.playerName = effectiveName
+            vm.joinGame(
+                roomId: pending.roomId,
+                password: pending.password,
+                name: effectiveName,
+                isCreating: pending.isCreating,
+                isSpectating: pending.isSpectating,
+                timeLimit: pending.timeLimit
+            )
+            return
+        }
+
+        vm.loginView = "enterName"
+    }
+
     // MARK: - Menu
     private var menuView: some View {
         VStack(spacing: 16) {
@@ -221,7 +240,11 @@ struct LoginScreen: View {
                         isCreating: true,
                         timeLimit: vm.gameTimeLimit
                     )
-                    vm.loginView = "enterName"
+                    if AuthManager.shared.isSignedIn {
+                        continuePendingJoin(pendingJoin!)
+                    } else {
+                        vm.loginView = "enterName"
+                    }
                 } label: {
                     Text(s.createRoom)
                         .font(.headline)
@@ -270,7 +293,11 @@ struct LoginScreen: View {
                     Button {
                         guard !joinRoomCode.isEmpty else { return }
                         pendingJoin = PendingJoin(roomId: joinRoomCode)
-                        vm.loginView = "enterName"
+                        if AuthManager.shared.isSignedIn {
+                            continuePendingJoin(pendingJoin!)
+                        } else {
+                            vm.loginView = "enterName"
+                        }
                     } label: {
                         Text(s.joinRoom)
                             .font(.subheadline.bold())
@@ -286,7 +313,11 @@ struct LoginScreen: View {
                     Button {
                         guard !joinRoomCode.isEmpty else { return }
                         pendingJoin = PendingJoin(roomId: joinRoomCode, isSpectating: true)
-                        vm.loginView = "enterName"
+                        if AuthManager.shared.isSignedIn {
+                            continuePendingJoin(pendingJoin!)
+                        } else {
+                            vm.loginView = "enterName"
+                        }
                     } label: {
                         Text("👁️ \(s.spectate)")
                             .font(.subheadline.bold())
@@ -416,7 +447,11 @@ struct LoginScreen: View {
                                 roomId: room.roomId,
                                 password: room.hasPassword ? joinRoomPin : nil
                             )
-                            vm.loginView = "enterName"
+                            if AuthManager.shared.isSignedIn {
+                                continuePendingJoin(pendingJoin!)
+                            } else {
+                                vm.loginView = "enterName"
+                            }
                         } label: {
                             Text(room.playerCount >= 2 ? "Full" : s.joinRoom)
                                 .font(.caption.bold())
@@ -435,7 +470,11 @@ struct LoginScreen: View {
                                 password: room.hasPassword ? joinRoomPin : nil,
                                 isSpectating: true
                             )
-                            vm.loginView = "enterName"
+                            if AuthManager.shared.isSignedIn {
+                                continuePendingJoin(pendingJoin!)
+                            } else {
+                                vm.loginView = "enterName"
+                            }
                         } label: {
                             Text("👁️ \(s.spectate)")
                                 .font(.caption.bold())
@@ -495,7 +534,11 @@ struct LoginScreen: View {
                         return
                     }
                     pendingJoin?.password = joinRoomPin
-                    vm.loginView = "enterName"
+                    if let pj = pendingJoin, AuthManager.shared.isSignedIn {
+                        continuePendingJoin(pj)
+                    } else {
+                        vm.loginView = "enterName"
+                    }
                 } label: {
                     Text(joinRoomPin.count == 3 ? "🔓 Continue" : "🔒 Continue")
                         .font(.headline)

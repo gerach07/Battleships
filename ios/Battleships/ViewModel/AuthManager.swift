@@ -55,6 +55,14 @@ class AuthManager: ObservableObject {
             print("GoogleService-Info.plist not found, cannot sign in.")
             return
         }
+
+        if let clientID = FirebaseApp.app()?.options.clientID {
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+        } else {
+            print("Google Sign-In client ID missing; Firebase config may not be loaded.")
+            return
+        }
+
         GIDSignIn.sharedInstance.signIn(withPresenting: presenting) { result, error in
             if let error = error {
                 print("Google sign in failed: \(error.localizedDescription)")
@@ -103,13 +111,16 @@ class AuthManager: ObservableObject {
         }.resume()
     }
 
-    func updateProfile(name: String, playerId: String) {
+    func updateProfile(name: String, playerId: String? = nil) {
         guard let token = idToken else { return }
         var request = URLRequest(url: URL(string: "\(SERVER_URL)/api/profile")!)
         request.httpMethod = "POST"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = ["name": name, "playerId": playerId]
+        var body: [String: Any] = ["name": name]
+        if let playerId, !playerId.isEmpty {
+            body["playerId"] = playerId
+        }
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         URLSession.shared.dataTask(with: request) { data, response, error in

@@ -5,7 +5,6 @@ struct ProfileView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var editName: String = ""
-    @State private var editPlayerId: String = ""
 
     var body: some View {
         NavigationView {
@@ -27,13 +26,22 @@ struct ProfileView: View {
                 
                 Section(header: Text("Edit Details")) {
                     TextField("Name", text: $editName)
-                    TextField("Player ID", text: $editPlayerId)
+
+                    HStack {
+                        Text("Player ID")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(authManager.playerId ?? "Not set")
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.vertical, 4)
                     
                     Button("Save") {
-                        authManager.updateProfile(name: editName, playerId: editPlayerId)
+                        authManager.updateProfile(name: editName)
                         presentationMode.wrappedValue.dismiss()
                     }
-                    .disabled(editName.isEmpty || editPlayerId.isEmpty)
+                    .disabled(editName.isEmpty)
                 }
                 
                 Section {
@@ -50,7 +58,6 @@ struct ProfileView: View {
             })
             .onAppear {
                 editName = authManager.userName
-                editPlayerId = authManager.playerId ?? ""
             }
         }
     }
