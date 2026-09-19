@@ -29,6 +29,13 @@
             {
               "client_id": "498836539028-2ifu7b1d9mp804841u76iv5b2bj2ko0t.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "498836539028-ppqdtbvc6eos5urr7kgd5hctrvv82dr3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.anasio.battleships"
+              }
             }
           ]
         }
