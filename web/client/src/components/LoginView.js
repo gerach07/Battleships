@@ -66,7 +66,6 @@ const LoginView = memo(({
                     <span className="text-4xl sm:text-5xl opacity-20 animate-float-slow" style={{ transform: 'scaleX(-1) translateY(-6px)', animationDelay: '0s' }}>🚢</span>
                     <div className="relative animate-float-slow" style={{ animationDelay: '0.5s' }}>
                         <div className="text-8xl sm:text-9xl" style={{ filter: 'drop-shadow(0 0 24px rgba(59,130,246,0.6)) drop-shadow(0 0 8px rgba(59,130,246,0.4))' }}>⚓</div>
-                        <div className="absolute -top-1 -right-5 bg-gradient-to-r from-yellow-400 to-orange-400 text-[0.55rem] font-black text-slate-900 px-2 py-0.5 rounded-full shadow-lg shadow-yellow-900/60 animate-pulse">v2</div>
                     </div>
                     <span className="text-4xl sm:text-5xl opacity-20 animate-float-slow" style={{ transform: 'translateY(-6px)', animationDelay: '1s' }}>🚢</span>
                 </div>
