@@ -33,6 +33,7 @@ fun BattleScreen(viewModel: GameViewModel) {
     val opponentBoard by viewModel.opponentBoard.collectAsState()
     val currentTurn by viewModel.currentTurn.collectAsState()
     val myId by viewModel.playerId.collectAsState()
+    val playerName by viewModel.playerName.collectAsState()
     val opponentName by viewModel.opponentName.collectAsState()
     val message by viewModel.message.collectAsState()
     val messageType by viewModel.messageType.collectAsState()
@@ -74,6 +75,7 @@ fun BattleScreen(viewModel: GameViewModel) {
                 currentTurn = currentTurn,
                 myId = myId,
                 opponentName = opponentName,
+                playerName = playerName,
                 isSpectator = isSpectator,
                 spectatorPlayerNames = spectatorNameMap,
             )
@@ -102,7 +104,7 @@ fun BattleScreen(viewModel: GameViewModel) {
             },
             label = "turnTransition",
         ) { myTurn ->
-            val text = if (myTurn) "🎯 ${s.yourTurnFire}" else if (isSpectator) turnText else "⏳ ${s.opponentsTurn}"
+            val text = if (myTurn) "🎯 ${s.yourTurnFire}" else if (isSpectator) turnText else "⏳ ${s.namesTurn.fmt(opponentName)}"
             val color = if (myTurn) c.green else if (isSpectator) c.primary else c.orange
             Text(
                 text,
@@ -151,9 +153,10 @@ fun BattleScreen(viewModel: GameViewModel) {
             }
         } else {
             // Enemy waters (interactive)
+            val enemyLabel = "🎯 ${s.enemyWaters.fmt(opponentName)}"
             GameBoard(
                 board = opponentBoard,
-                label = "🎯 ${s.enemyWaters}",
+                label = enemyLabel,
                 showShips = false,
                 interactive = isMyTurn,
                 lastShotKey = opponentLastShotKey,

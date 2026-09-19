@@ -39,7 +39,7 @@ fun GameOverScreen(viewModel: GameViewModel) {
     val winnerName = when {
         isSpectator -> spectatorBoards.find { it.playerId == winner }?.playerName ?: "?"
         iWon -> s.you
-        else -> opponentName.ifEmpty { s.opponent }
+        else -> opponentName
     }
 
     Column(
@@ -93,7 +93,7 @@ fun GameOverScreen(viewModel: GameViewModel) {
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    if (isSpectator) s.winsMessage.fmt(winnerName) else if (iWon) s.youSunkEnemy else s.destroyedYourFleet.fmt(winnerName),
+                    if (isSpectator) s.winsMessage.fmt(winnerName) else if (iWon) s.youSunkEnemy.fmt(opponentName) else s.destroyedYourFleet.fmt(winnerName),
                     fontSize = 14.sp, color = c.textPrimary, textAlign = TextAlign.Center,
                 )
                 if (iWon && !isSpectator) {
@@ -121,16 +121,21 @@ fun GameOverScreen(viewModel: GameViewModel) {
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("🔄 ${s.opWantsRematch}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("🔄 ${s.opWantsRematch.fmt(opponentName)}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Button(
                                 onClick = viewModel::handlePlayAgain,
                                 colors = ButtonDefaults.buttonColors(containerColor = c.green),
+                                modifier = Modifier.weight(1f),
                             ) { Text(s.accept) }
                             OutlinedButton(
                                 onClick = viewModel::handleDeclinePlayAgain,
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = c.red),
+                                modifier = Modifier.weight(1f),
                             ) { Text(s.decline) }
                         }
                     }

@@ -50,6 +50,7 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
     val c = LocalColorPalette.current
 
     val hasOpponent = opponentName.isNotBlank()
+    val normalizedRoomPassword = roomPassword.takeIf { it != "null" && it.isNotBlank() } ?: ""
 
     Column(
         modifier = Modifier
@@ -64,9 +65,10 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = c.surface),
             border = BorderStroke(1.dp, c.yellow.copy(alpha = .4f)),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(20.dp).fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(s.roomCodeLabel, fontSize = 12.sp, color = c.textDim, letterSpacing = 2.sp)
@@ -80,17 +82,16 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (roomPassword.isNotBlank()) {
-                        Text(
-                            "🔒 ${s.pinLabel}: $roomPassword",
-                            fontSize = 12.sp, color = c.orange,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(c.orange.copy(alpha = .1f))
-                                .border(1.dp, c.orange.copy(alpha = .3f), RoundedCornerShape(16.dp))
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                        )
-                    }
+                    val pinDisplay = if (normalizedRoomPassword.isNotBlank()) normalizedRoomPassword else "Not set"
+                    Text(
+                        "🔒 ${s.pinLabel}: $pinDisplay",
+                        fontSize = 12.sp, color = c.orange,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(c.orange.copy(alpha = .1f))
+                            .border(1.dp, c.orange.copy(alpha = .3f), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
                     Text(
                         "⏱️ ${gameTimeLimit / 60} ${s.min}",
                         fontSize = 12.sp, color = c.primary,
@@ -113,15 +114,21 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
         ) {
             // You slot
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .height(128.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = c.green.copy(alpha = .08f)),
                 border = BorderStroke(1.dp, c.green.copy(alpha = .3f)),
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     Column(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
                     ) {
                         Text("✓", fontSize = 22.sp, color = c.green)
                         Spacer(Modifier.height(4.dp))
@@ -156,7 +163,10 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
             }
             // Opponent slot
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .height(128.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (hasOpponent) c.green.copy(alpha = .08f) else c.primary.copy(alpha = .05f)
@@ -167,8 +177,11 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
                 ),
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     if (hasOpponent) {
                         Text("✓", fontSize = 22.sp, color = c.green)
@@ -184,7 +197,14 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
                             letterSpacing = 2.sp,
                         )
                     } else {
-                        BounceDots()
+                        Box(
+                            modifier = Modifier
+                                .width(56.dp)
+                                .height(24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            BounceDots()
+                        }
                         Spacer(Modifier.height(4.dp))
                         Text(
                             s.waitingFor, fontSize = 14.sp,
@@ -292,23 +312,32 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
         // Share buttons — show when no opponent yet
         if (!hasOpponent) {
             Spacer(Modifier.height(16.dp))
-            Text(s.waitingForOpponent, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(s.shareRoom, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = {
-                    val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clip.setPrimaryClip(ClipData.newPlainText("Room Code", gameId))
-                    Toast.makeText(context, s.roomCodeCopied, Toast.LENGTH_SHORT).show()
-                }) { Text("📋 ${s.copyCode}") }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clip.setPrimaryClip(ClipData.newPlainText("Room Code", gameId))
+                        Toast.makeText(context, s.roomCodeCopied, Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("📋 ${s.copyCode}") }
 
-                OutlinedButton(onClick = {
-                    val txt = "${s.joinMyGame}\n${s.roomCodeLabel}: $gameId" +
-                            if (roomPassword.isNotBlank()) "\n${s.pinLabel}: $roomPassword" else ""
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        putExtra(Intent.EXTRA_TEXT, txt); type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(intent, s.shareRoom))
-                }) { Text("🔗 ${s.share}") }
+                OutlinedButton(
+                    onClick = {
+                        val pinText = if (normalizedRoomPassword.isNotBlank()) "${s.pinLabel}: $normalizedRoomPassword" else "${s.pinLabel}: Not set"
+                        val txt = "${s.joinMyGame}\n${s.roomCodeLabel}: $gameId\n$pinText"
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            putExtra(Intent.EXTRA_TEXT, txt); type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(intent, s.shareRoom))
+                    },
+                    modifier = Modifier.weight(1f),
+                ) { Text("🔗 ${s.share}") }
             }
         }
 
@@ -317,6 +346,7 @@ fun WaitingRoomScreen(viewModel: GameViewModel) {
         OutlinedButton(
             onClick = viewModel::handleBackToMenu,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = c.red),
+            modifier = Modifier.fillMaxWidth(),
         ) { Text("← ${s.leaveRoom}") }
 
         Spacer(Modifier.height(16.dp))
@@ -349,7 +379,10 @@ private fun BounceDots() {
     val c = LocalColorPalette.current
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(400); tick++ } }
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         repeat(3) { i ->
             val active = tick % 3 == i
             val animatedSize by animateDpAsState(

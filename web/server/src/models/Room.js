@@ -93,7 +93,7 @@ class Room {
             .map(() => Array(GRID_SIZE).fill(CellState.WATER));
     }
 
-    addPlayer(playerId, playerName) {
+    addPlayer(playerId, playerName, firebaseUid = null) {
         if (Object.keys(this.players).length >= 2) {
             return false;
         }
@@ -101,6 +101,7 @@ class Room {
         this.players[playerId] = {
             id: playerId,
             name: playerName,
+            firebaseUid: firebaseUid,
             board: this._createEmptyBoard(),
             ships: [],
             shipsPlaced: false,

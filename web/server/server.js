@@ -10,6 +10,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 // Models & Utils
@@ -18,6 +19,11 @@ const pkg = require('./package.json');
 const { GameState, DEFAULT_GAME_TIME_SECONDS, MIN_GAME_TIME_SECONDS, MAX_GAME_TIME_SECONDS, SHIPS, SHIP_NAMES } = require('./src/constants');
 const { sanitizeInput } = require('./src/utils/sanitizers');
 const { TimestampTracker } = require('./src/utils/RateLimiter');
+
+// Auth & API
+const { initFirebase, verifyToken } = require('./src/auth/firebase');
+const apiRoutes = require('./src/routes/api');
+const { recordGameResult } = require('./src/utils/gameStats');
 
 // ============================================================================
 // CONFIGURATION
@@ -67,6 +73,9 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '16kb' }));
+
+// Mount API routes
+app.use('/api', apiRoutes);
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -212,7 +221,7 @@ async function handlePlayerLeave(socketId, io) {
         room.resetToWaiting(opponentId);
         // Boot spectators — nothing to watch in WAITING
         room.spectators.forEach(sid => {
-          io.to(sid).emit('playerLeft', { playerName: playerName || 'Opponent' });
+          io.to(sid).emit('playerLeft', { playerName: playerName });
           const specSocket = io.sockets.sockets.get(sid);
           specSocket?.leave(roomId);
           delete playerToRoom[sid];
@@ -258,7 +267,14 @@ io.on('connection', (socket) => {
     if (!joinEventTracker.isAllowed(socket.id)) return socket.emit('error', { error: 'Too many join attempts. Wait a moment.' });
     // Defensive: tolerate malformed payloads gracefully
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return socket.emit('error', { error: 'Invalid request' });
-    const { gameId, playerName, password, isCreating, isSpectating, timeLimit: hostTimeLimit } = payload;
+    const { gameId, playerName, password, isCreating, isSpectating, timeLimit: hostTimeLimit, authToken } = payload;
+
+    // Optionally verify Firebase token for authenticated players
+    let firebaseUid = null;
+    if (authToken) {
+      const decoded = await verifyToken(authToken);
+      if (decoded) firebaseUid = decoded.uid;
+    }
 
     // Clean up any stale room membership from a previous game
     if (playerToRoom[socket.id]) {
@@ -313,7 +329,7 @@ io.on('connection', (socket) => {
         if (!room.checkPassword(pwd)) return socket.emit('error', { error: 'Incorrect password' });
       }
 
-      if (room.addPlayer(socket.id, name)) {
+      if (room.addPlayer(socket.id, name, firebaseUid)) {
         playerToRoom[socket.id] = roomId;
         socket.join(roomId);
 
@@ -597,6 +613,14 @@ io.on('connection', (socket) => {
       const shot = room.processShot(socket.id, row, col);
       if (!shot.success) return socket.emit('error', { error: shot.error });
 
+      // Record win in database for authenticated players
+      if (shot.result.gameWon && room.winner) {
+        const winnerUid = room.players[room.winner]?.firebaseUid || null;
+        const loserId = room.getOpponentId(room.winner);
+        const loserUid = room.players[loserId]?.firebaseUid || null;
+        recordGameResult(winnerUid, loserUid);
+      }
+
       const opponentId = room.getOpponentId(socket.id);
       const result = shot.result;
       const serverNow = Date.now();
@@ -653,13 +677,13 @@ io.on('connection', (socket) => {
     if (room.getPlayerIds().length < 2) {
       room.playAgainVotes.clear();
       room.resetToWaiting(socket.id);
-      socket.emit('opponentLeft', { playerName: 'Opponent', isHost: room.isHost(socket.id) });
+      socket.emit('opponentLeft', { isHost: room.isHost(socket.id) });
       room.touch();
       return;
     }
 
     room.playAgainVotes.add(socket.id);
-    socket.to(roomId).emit('playAgainRequested', { requesterName: room.players[socket.id]?.name || '?' });
+    socket.to(roomId).emit('playAgainRequested', { requesterName: room.players[socket.id]?.name });
 
     if (room.playAgainVotes.size === 2 && room.getPlayerIds().length === 2) {
       room._transitionState(GameState.PLACEMENT_PHASE);
@@ -695,7 +719,7 @@ io.on('connection', (socket) => {
       const room = rooms[roomId];
       if (!room || room.state !== GameState.GAME_OVER) return;
       if (!room.players[socket.id]) return; // spectators can't decline
-      socket.to(roomId).emit('playAgainDeclined', { declinerName: room.players[socket.id]?.name || '?' });
+      socket.to(roomId).emit('playAgainDeclined', { declinerName: room.players[socket.id]?.name });
       room.playAgainVotes.delete(socket.id);
       room.touch();
     } finally {
@@ -716,6 +740,10 @@ io.on('connection', (socket) => {
       const opponentId = room.getOpponentId(socket.id);
       room.winner = opponentId;
       room._transitionState(GameState.GAME_OVER);
+      // Record forfeit result for authenticated players
+      const winnerUid = room.players[opponentId]?.firebaseUid || null;
+      const loserUid = room.players[socket.id]?.firebaseUid || null;
+      recordGameResult(winnerUid, loserUid);
       io.to(roomId).emit('gameForfeited', {
         winner: opponentId,
         forfeiterId: socket.id,
@@ -1063,6 +1091,10 @@ timerIntervalId = setInterval(() => {
         const winner = freshRoom.getOpponentId(loser);
         freshRoom.winner = winner;
         freshRoom._transitionState(GameState.GAME_OVER);
+        // Record timeout result for authenticated players
+        const winnerUid = winner ? freshRoom.players[winner]?.firebaseUid || null : null;
+        const loserUid = loser ? freshRoom.players[loser]?.firebaseUid || null : null;
+        recordGameResult(winnerUid, loserUid);
         const data = { winner, loser, winnerName: winner ? freshRoom.players[winner]?.name : null };
         io.to(roomId).emit('timeUp', data);
       } catch (err) {
@@ -1073,6 +1105,19 @@ timerIntervalId = setInterval(() => {
     })();
   }
 }, 1000);
+
+// Initialize Firebase Admin SDK
+initFirebase();
+
+// Connect to MongoDB (optional — server works without it, auth features disabled)
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ MongoDB connected'))
+    .catch(err => console.error('⚠️  MongoDB connection failed:', err.message, '— auth features disabled'));
+} else {
+  console.log('ℹ️  No MONGODB_URI set — running without database (guest-only mode)');
+}
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {

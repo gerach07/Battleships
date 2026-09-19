@@ -40,7 +40,7 @@ const GameOver = memo(({
                     <p className="text-slate-400 text-sm mt-3 leading-relaxed">
                         {isSpectator
                             ? t('gameover.spectatorSubtitle')
-                            : (isWinner ? t('gameover.winSubtitle') : t('gameover.loseSubtitle', opponentName))}
+                            : (isWinner ? t('gameover.winSubtitle', opponentName) : t('gameover.loseSubtitle', opponentName))}
                     </p>
                 </div>
 

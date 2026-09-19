@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "498836539028",
+    "project_id": "abbattleships",
+    "storage_bucket": "abbattleships.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498836539028:android:a0efcf9a859b21606f1681",
+        "android_client_info": {
+          "package_name": "com.anasio.battleships"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "498836539028-2ifu7b1d9mp804841u76iv5b2bj2ko0t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkpVS3S226Lh8XuiS1bbObYlkLd-F9fmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "498836539028-2ifu7b1d9mp804841u76iv5b2bj2ko0t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

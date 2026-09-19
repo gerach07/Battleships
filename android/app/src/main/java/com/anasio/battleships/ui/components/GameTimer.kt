@@ -28,6 +28,7 @@ fun GameTimer(
     currentTurn: String?,
     myId: String?,
     opponentName: String,
+    playerName: String = "",
     isSpectator: Boolean = false,
     spectatorPlayerNames: Map<String, String> = emptyMap(),
 ) {
@@ -64,8 +65,8 @@ fun GameTimer(
             val isLow = isActive && live <= 30
             val label = when {
                 isSpectator -> spectatorPlayerNames[pid] ?: pid.take(6)
-                pid == myId -> s.you
-                else -> opponentName.ifEmpty { s.opponent }
+                pid == myId -> playerName.ifBlank { s.you }
+                else -> opponentName.ifBlank { s.opponent }
             }
             val bgBrush = when {
                 isCritical -> Brush.horizontalGradient(listOf(Color(0xFFB91C1C), Color(0xFF991B1B)))

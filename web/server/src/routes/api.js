@@ -1,0 +1,142 @@
+const express = require('express');
+const { requireAuth, optionalAuth } = require('../auth/firebase');
+const User = require('../models/User');
+const { sanitizeInput } = require('../utils/sanitizers');
+
+const router = express.Router();
+
+// ─── POST /api/auth/login ─────────────────────────────────────────────────────
+// Called after Google Sign-In on any client. Creates user in DB if new.
+router.post('/auth/login', requireAuth, async (req, res) => {
+  try {
+    const { uid, email, name: firebaseName, picture } = req.user;
+
+    let user = await User.findOne({ firebaseUid: uid });
+    if (!user) {
+      user = await User.create({
+        firebaseUid: uid,
+        email: email || '',
+        name: sanitizeInput(firebaseName || 'Anonymous', 50),
+        photoUrl: picture || null,
+      });
+    } else {
+      // Update last login and photo
+      user.lastLoginAt = new Date();
+      if (picture && !user.photoUrl) user.photoUrl = picture;
+      await user.save();
+    }
+
+    res.json({
+      id: user._id,
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      name: user.name,
+      playerId: user.playerId,
+      photoUrl: user.photoUrl,
+      wins: user.wins,
+      gamesPlayed: user.gamesPlayed,
+    });
+  } catch (err) {
+    console.error('Auth login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// ─── GET /api/profile ─────────────────────────────────────────────────────────
+// Get the authenticated user's profile.
+router.get('/profile', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findOne({ firebaseUid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({
+      id: user._id,
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      name: user.name,
+      playerId: user.playerId,
+      photoUrl: user.photoUrl,
+      wins: user.wins,
+      gamesPlayed: user.gamesPlayed,
+    });
+  } catch (err) {
+    console.error('Profile get error:', err);
+    res.status(500).json({ error: 'Failed to get profile' });
+  }
+});
+
+// ─── PUT /api/profile ─────────────────────────────────────────────────────────
+// Update name and/or playerId.
+router.put('/profile', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findOne({ firebaseUid: req.user.uid });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { name, playerId } = req.body;
+
+    if (name !== undefined) {
+      const sanitized = sanitizeInput(name, 50);
+      if (!sanitized || sanitized.length < 1) {
+        return res.status(400).json({ error: 'Name cannot be empty' });
+      }
+      user.name = sanitized;
+    }
+
+    if (playerId !== undefined) {
+      const sanitizedId = sanitizeInput(playerId, 30).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!sanitizedId || sanitizedId.length < 3) {
+        return res.status(400).json({ error: 'Player ID must be at least 3 characters (letters, numbers, _ or -)' });
+      }
+      // Check uniqueness
+      const existing = await User.findOne({ playerId: sanitizedId, firebaseUid: { $ne: req.user.uid } });
+      if (existing) {
+        return res.status(409).json({ error: 'Player ID is already taken' });
+      }
+      user.playerId = sanitizedId;
+    }
+
+    await user.save();
+
+    res.json({
+      id: user._id,
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      name: user.name,
+      playerId: user.playerId,
+      photoUrl: user.photoUrl,
+      wins: user.wins,
+      gamesPlayed: user.gamesPlayed,
+    });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// ─── GET /api/leaderboard ─────────────────────────────────────────────────────
+// Public endpoint — returns top 50 players by wins.
+router.get('/leaderboard', async (req, res) => {
+  try {
+    const leaders = await User.find({ wins: { $gt: 0 } })
+      .sort({ wins: -1, gamesPlayed: 1 })
+      .limit(50)
+      .select('name playerId wins gamesPlayed photoUrl')
+      .lean();
+
+    res.json({
+      leaderboard: leaders.map((u, i) => ({
+        rank: i + 1,
+        name: u.name,
+        playerId: u.playerId,
+        wins: u.wins,
+        gamesPlayed: u.gamesPlayed,
+        photoUrl: u.photoUrl,
+      })),
+    });
+  } catch (err) {
+    console.error('Leaderboard error:', err);
+    res.status(500).json({ error: 'Failed to load leaderboard' });
+  }
+});
+
+module.exports = router;

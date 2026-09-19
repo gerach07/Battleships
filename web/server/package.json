@@ -16,7 +16,9 @@
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^4.18.2",
+    "firebase-admin": "^14.4.0",
     "helmet": "^7.1.0",
+    "mongoose": "^9.10.1",
     "socket.io": "^4.5.4"
   },
   "devDependencies": {

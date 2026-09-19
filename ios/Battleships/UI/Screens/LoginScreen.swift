@@ -9,6 +9,9 @@ struct LoginScreen: View {
     @State private var selectedRoomId: String?
 
     private var s: I18nStrings { vm.s }
+    
+    @ObservedObject var authManager = AuthManager.shared
+    @State private var showProfile = false
 
     var body: some View {
         ScrollView {
@@ -34,6 +37,9 @@ struct LoginScreen: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 40)
+        }
+        .sheet(isPresented: $showProfile) {
+            ProfileView()
         }
     }
 
@@ -67,6 +73,46 @@ struct LoginScreen: View {
     // MARK: - Menu
     private var menuView: some View {
         VStack(spacing: 16) {
+            
+            if authManager.isSignedIn {
+                HStack(spacing: 14) {
+                    if let url = authManager.profilePicUrl {
+                        AsyncImage(url: url) { phase in
+                            if let image = phase.image {
+                                image.resizable().scaledToFit().frame(width: 56, height: 56).clipShape(Circle())
+                            } else {
+                                Image(systemName: "person.circle.fill").resizable().frame(width: 56, height: 56).foregroundColor(.gray)
+                            }
+                        }
+                    } else {
+                        Image(systemName: "person.circle.fill").resizable().frame(width: 56, height: 56).foregroundColor(.gray)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(authManager.userName).font(.headline).foregroundColor(.white)
+                        if let pId = authManager.playerId { Text(pId).font(.caption).foregroundColor(.gray) }
+                    }
+                    Spacer()
+                    Button("Profile") { showProfile = true }
+                        .padding(8).background(Color.blue.opacity(0.2)).cornerRadius(8)
+                }
+                .padding(16)
+                .background(glassCard)
+            } else {
+                Button(action: {
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let rootVC = windowScene.windows.first?.rootViewController {
+                        authManager.signIn(presenting: rootVC)
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "g.circle.fill").foregroundColor(.red) // Dummy G icon
+                        Text("Sign in with Google").font(.headline).foregroundColor(.white)
+                    }
+                    .padding().frame(maxWidth: .infinity).background(Color.white.opacity(0.1)).cornerRadius(12)
+                }
+            }
+
             Button {
                 vm.loginView = "create"
             } label: {

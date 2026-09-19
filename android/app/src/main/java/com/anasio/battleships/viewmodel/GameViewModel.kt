@@ -61,6 +61,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentTurn = MutableStateFlow<String?>(null)
     val currentTurn: StateFlow<String?> = _currentTurn
 
+    // ── Auth & Profile ──
+    private val _firebaseUser = MutableStateFlow<com.google.firebase.auth.FirebaseUser?>(null)
+    val firebaseUser: StateFlow<com.google.firebase.auth.FirebaseUser?> = _firebaseUser
+    private val _firebaseToken = MutableStateFlow<String?>(null)
+    val firebaseToken: StateFlow<String?> = _firebaseToken
+    private val _userProfile = MutableStateFlow<Map<String, String>>(emptyMap())
+    val userProfile: StateFlow<Map<String, String>> = _userProfile
+    
+    // Auth init
+    private var auth: com.google.firebase.auth.FirebaseAuth? = null
+
     // ── Boards ──
     private val _playerBoard = MutableStateFlow(createEmptyBoard())
     val playerBoard: StateFlow<Board> = _playerBoard
@@ -200,6 +211,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!saved.isNullOrBlank()) _playerName.value = saved
         SoundManager.enabled = _soundEnabled.value
         MusicManager.enabled = _musicEnabled.value
+        
+        try {
+            auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+            val user = auth?.currentUser
+            _firebaseUser.value = user
+            if (user != null) {
+                user.getIdToken(true).addOnSuccessListener { res ->
+                    _firebaseToken.value = res.token
+                    fetchProfile()
+                }
+            }
+        } catch (e: Exception) {
+            auth = null
+        }
+        
         SocketManager.connect()
         setupSocketListeners()
         
@@ -271,12 +297,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun setPendingJoin(v: PendingJoin?) { _pendingJoin.value = v }
     fun setGameTimeLimit(v: Int) { _gameTimeLimit.value = v }
     fun setGameId(v: String) { _gameId.value = v }
-    fun setMessage(msg: String, type: String = "info") {
+    fun setMessage(msg: String, type: String = "info", duration: Long = 4000) {
         _message.value = msg; _messageType.value = type
         messageAutoClearJob?.cancel()
-        if (msg.isNotBlank()) {
+        if (msg.isNotBlank() && duration > 0) {
             messageAutoClearJob = viewModelScope.launch {
-                kotlinx.coroutines.delay(4000)
+                kotlinx.coroutines.delay(duration)
                 _message.value = ""; _messageType.value = "info"
             }
         }
@@ -381,6 +407,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             put("isCreating", pj.isCreating)
             put("isSpectating", pj.isSpectating)
             put("timeLimit", pj.timeLimit)
+            _firebaseToken.value?.let { put("authToken", it) }
         }
         SocketManager.emit("joinGame", data)
     }
@@ -638,7 +665,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     for (i in 0 until players.length()) {
                         val p = players.optJSONObject(i) ?: continue
                         if (p.optString("id") != pid) {
-                            _opponentName.value = p.optString("name", s.opponent)
+                            _opponentName.value = p.optString("name", "")
                             _opponentSocketId.value = p.optString("id").ifEmpty { null }
                         }
                     }
@@ -649,7 +676,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         // Both players in waiting room, wait for host to start
                         _phase.value = "waiting"
-                        setMessage(s.opponentJoined, "success")
+                        setMessage(s.opponentJoined.fmt(_opponentName.value), "success")
                     }
                 } else {
                     _opponentName.value = ""
@@ -670,7 +697,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     for (i in 0 until players.length()) {
                         val p = players.optJSONObject(i) ?: continue
                         if (p.optString("id") != playerIdRef) {
-                            _opponentName.value = p.optString("name", s.opponent)
+                            _opponentName.value = p.optString("name", "")
                             _opponentSocketId.value = p.optString("id").ifEmpty { null }
                         }
                     }
@@ -679,10 +706,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 if (state == "PLACEMENT_PHASE") {
                     // Server already in placement (host started before we got the event)
                     _phase.value = "placement"; _isReady.value = false; _opponentReady.value = false
-                    setMessage(s.opponentJoined, "success")
+                    setMessage(s.opponentJoined.fmt(_opponentName.value), "success")
                 } else {
                     // Stay in waiting room — host will start the game
-                    setMessage(s.opponentJoined, "success")
+                    setMessage(s.opponentJoined.fmt(_opponentName.value), "success")
                 }
                 // Update host status if provided
                 data.optString("hostId", "").takeIf { it.isNotEmpty() }?.let { hostId ->
@@ -706,7 +733,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         reg("placementFinished") { _ ->
             _isReady.value = true
-            setMessage(s.waitingOpponentPlace, "info")
+            setMessage(s.waitingOpponentPlace.fmt(_opponentName.value), "info")
         }
 
         reg("playerReady") { args ->
@@ -817,12 +844,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _opponentBoard.value = overlayBoard(rawO, opponentSunk)
 
                 val shipName = data.optString("sunkShipName", "ship")
+                val oppName = _opponentName.value
                 val msg = when {
                     shipSunk && iShot -> s.sunkTheirShip.fmt(shipName)
-                    shipSunk -> s.yourShipSunk.fmt(shipName)
+                    shipSunk -> s.yourShipSunk.fmt(shipName, oppName)
                     isHit && iShot -> s.hitShootAgain
                     isHit -> s.theyHitYourShip
-                    iShot -> s.missOpponentTurn
+                    iShot -> s.missOpponentTurn.fmt(oppName)
                     else -> s.theyMissedYourTurn
                 }
                 _message.value = msg
@@ -856,7 +884,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         reg("playerLeft") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
-            setMessage(s.playerLeftGame.fmt(data.optString("playerName", s.opponent)), "info")
+            val name = data.optString("playerName", "").ifEmpty { _opponentName.value }
+            setMessage(s.playerLeftGame.fmt(name), "info")
             resetFullGameState()
             playerLeftJob?.cancel()
             playerLeftJob = viewModelScope.launch {
@@ -868,10 +897,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         reg("opponentLeft") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             resetBattleState()
+            val name = data.optString("playerName", "").ifEmpty { _opponentName.value }
+            setMessage(s.playerLeftWaiting.fmt(name), "info")
             _opponentName.value = ""
             _opponentSocketId.value = null
             if (data.has("isHost")) _isHost.value = data.optBoolean("isHost", false)
-            setMessage(s.playerLeftWaiting.fmt(data.optString("playerName", s.opponent)), "info")
             _phase.value = "waiting"
         }
 
@@ -887,26 +917,27 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _winner.value = data.optString("winner").ifEmpty { null }  // set winner BEFORE phase so observer plays correct music
             _phase.value = "gameOver"
             if (iForfeited) SoundManager.playDefeat() else SoundManager.playVictory()
-            _message.value = if (iForfeited) s.youSurrendered else s.opponentSurrendered.fmt(data.optString("forfeiterName", s.opponent))
+            val name = data.optString("forfeiterName", "").ifEmpty { _opponentName.value }
+            _message.value = if (iForfeited) s.youSurrendered else s.opponentSurrendered.fmt(name)
             _messageType.value = if (iForfeited) "info" else "success"
         }
 
         reg("playAgainRequested") { args ->
             val data = args.getOrNull(0) as? JSONObject
             if (_isSpectator.value) {
-                val name = data?.optString("requesterName", "")?.takeIf { it.isNotEmpty() } ?: s.opponent
-                setMessage("🎮 $name wants a rematch!", "info")
+                val name = data?.optString("requesterName", "")?.takeIf { it.isNotEmpty() } ?: _opponentName.value
+                setMessage("🎮 ${s.opWantsRematch.fmt(name)}", "info")
             } else { _opponentWantsPlayAgain.value = true }
         }
 
         reg("playAgainDeclined") { args ->
             val data = args.getOrNull(0) as? JSONObject
             if (_isSpectator.value) {
-                val name = data?.optString("declinerName", "")?.takeIf { it.isNotEmpty() } ?: s.opponent
-                setMessage("❌ $name declined the rematch", "error")
+                val name = data?.optString("declinerName", "")?.takeIf { it.isNotEmpty() } ?: _opponentName.value
+                setMessage("❌ ${s.opponentDeclinedRematch.fmt(name)}", "error")
             } else {
                 _playAgainPending.value = false; _opponentWantsPlayAgain.value = false
-                setMessage(s.opponentDeclinedRematch, "error")
+                setMessage(s.opponentDeclinedRematch.fmt(_opponentName.value), "error")
             }
         }
 
@@ -1148,7 +1179,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _phase.value = "gameOver"
             _winner.value = data.optString("winner").ifEmpty { null }
             val iLost = data.optString("loser") == playerIdRef
-            _message.value = if (iLost) s.yourClockRanOut else s.opponentClockRanOut
+            _message.value = if (iLost) s.yourClockRanOut else s.opponentClockRanOut.fmt(_opponentName.value)
             _messageType.value = if (iLost) "error" else "success"
             if (SoundManager.enabled) {
                 if (data.optString("winner") == playerIdRef) SoundManager.playVictory() else SoundManager.playDefeat()
@@ -1165,6 +1196,86 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 playerName = b.optString("playerName", ""),
                 board = b.optJSONArray("board")?.let { parseBoardFromJson(it) } ?: createEmptyBoard(),
             )
+        }
+    }
+
+    // ── Auth Methods ──
+    fun updateFirebaseUser(user: com.google.firebase.auth.FirebaseUser?) {
+        _firebaseUser.value = user
+        if (user != null) {
+            user.getIdToken(true).addOnSuccessListener { res ->
+                _firebaseToken.value = res.token
+                fetchProfile()
+            }.addOnFailureListener {
+                _firebaseToken.value = null
+            }
+        } else {
+            _firebaseToken.value = null
+            _userProfile.value = emptyMap()
+        }
+    }
+
+    fun signOut() {
+        auth?.signOut()
+        updateFirebaseUser(null)
+    }
+
+    fun fetchProfile() {
+        val token = _firebaseToken.value ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val conn = URL("$SERVER_URL/api/profile").openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $token")
+                conn.connectTimeout = 5000; conn.readTimeout = 5000
+                if (conn.responseCode == 200) {
+                    val json = JSONObject(conn.inputStream.bufferedReader().readText())
+                    withContext(Dispatchers.Main) {
+                        _userProfile.value = mapOf(
+                            "name" to json.optString("name", ""),
+                            "playerId" to json.optString("playerId", ""),
+                            "wins" to json.optString("wins", "0")
+                        )
+                        val fetchedName = json.optString("name", "")
+                        if (fetchedName.isNotBlank() && _playerName.value.isBlank()) {
+                            setPlayerName(fetchedName)
+                        }
+                    }
+                }
+                conn.disconnect()
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+    
+    fun updateProfile(newName: String, newPlayerId: String) {
+        val token = _firebaseToken.value ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val conn = URL("$SERVER_URL/api/profile").openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Authorization", "Bearer $token")
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+                val payload = JSONObject().put("name", newName).put("playerId", newPlayerId).toString()
+                conn.outputStream.write(payload.toByteArray())
+                if (conn.responseCode == 200) {
+                    val json = JSONObject(conn.inputStream.bufferedReader().readText())
+                    withContext(Dispatchers.Main) {
+                        _userProfile.value = mapOf(
+                            "name" to json.optString("name", ""),
+                            "playerId" to json.optString("playerId", ""),
+                            "wins" to json.optString("wins", "0")
+                        )
+                        setPlayerName(json.optString("name", ""))
+                        setMessage("Profile updated", "success")
+                    }
+                } else {
+                    withContext(Dispatchers.Main) { setMessage("Failed to update profile", "error") }
+                }
+                conn.disconnect()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { setMessage("Failed to update profile", "error") }
+            }
         }
     }
 }

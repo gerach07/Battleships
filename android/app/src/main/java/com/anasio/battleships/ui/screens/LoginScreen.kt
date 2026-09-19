@@ -40,6 +40,14 @@ import com.anasio.battleships.util.MusicManager
 import com.anasio.battleships.viewmodel.GameViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
 
 @Composable
 fun LoginScreen(viewModel: GameViewModel) {
@@ -236,7 +244,10 @@ private fun MenuView(viewModel: GameViewModel) {
         }
     }
 
-    Spacer(Modifier.height(24.dp))
+    Spacer(Modifier.height(16.dp))
+    AuthSection(viewModel)
+    Spacer(Modifier.height(8.dp))
+
     GradientButton("🎮  ${s.createGame}", c.primaryDark, c.primary) {
         viewModel.setLoginView("create")
     }
@@ -677,5 +688,128 @@ fun tfColors(): TextFieldColors {
         cursorColor = c.primary,
         focusedTextColor = Color.White,
         unfocusedTextColor = Color.White,
+    )
+}
+
+@Composable
+fun AuthSection(viewModel: GameViewModel) {
+    val context = LocalContext.current
+    val firebaseUser by viewModel.firebaseUser.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsState()
+    var showProfile by remember { mutableStateOf(false) }
+    val c = LocalColorPalette.current
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { authResult ->
+                if (authResult.isSuccessful) {
+                    viewModel.updateFirebaseUser(authResult.result.user)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    if (firebaseUser != null) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(8.dp)).background(c.surface.copy(alpha=0.5f)).padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (firebaseUser?.photoUrl != null) {
+                    AsyncImage(
+                        model = firebaseUser?.photoUrl,
+                        contentDescription = "Profile Photo",
+                        modifier = Modifier.size(40.dp).clip(CircleShape)
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(40.dp), tint = c.textDim)
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(userProfile["name"]?.takeIf { it.isNotBlank() } ?: firebaseUser?.displayName ?: "Player", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("ID: ${userProfile["playerId"] ?: "N/A"}", color = c.textDim, fontSize = 12.sp)
+                }
+            }
+            TextButton(onClick = { showProfile = true }) {
+                Text("Profile", color = c.primary)
+            }
+        }
+    } else {
+        OutlinedButton(
+            onClick = {
+                try {
+                    val clientId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName).let {
+                        if (it != 0) context.getString(it) else "dummy_client_id"
+                    }
+                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(clientId)
+                        .requestEmail()
+                        .build()
+                    val client = GoogleSignIn.getClient(context, gso)
+                    launcher.launch(client.signInIntent)
+                } catch (e: Exception) { e.printStackTrace() }
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White, containerColor = c.surface.copy(alpha = 0.5f))
+        ) {
+            Text("Sign in with Google")
+        }
+    }
+
+    if (showProfile) {
+        ProfileScreen(viewModel = viewModel, onDismiss = { showProfile = false })
+    }
+}
+
+@Composable
+fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
+    val c = LocalColorPalette.current
+    val userProfile by viewModel.userProfile.collectAsState()
+    var name by remember { mutableStateOf(userProfile["name"] ?: "") }
+    var playerId by remember { mutableStateOf(userProfile["playerId"] ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E293B),
+        titleContentColor = Color.White,
+        textContentColor = Color.White,
+        title = { Text("Your Profile", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Wins: ${userProfile["wins"] ?: "0"}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.emerald)
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Display Name") },
+                    colors = tfColors(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = playerId,
+                    onValueChange = { playerId = it },
+                    label = { Text("Player ID (Handle)") },
+                    colors = tfColors(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                viewModel.updateProfile(name, playerId)
+                onDismiss()
+            }) { Text("Save", color = c.primary) }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                viewModel.signOut()
+                onDismiss()
+            }) { Text("Sign Out", color = c.red) }
+        }
     )
 }

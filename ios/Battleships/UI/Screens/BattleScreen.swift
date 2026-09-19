@@ -16,6 +16,7 @@ struct BattleScreen: View {
                         currentTurn: vm.currentTurn,
                         myId: vm.playerIdRef,
                         opponentName: vm.opponentName,
+                        playerName: vm.playerName,
                         strings: s,
                         spectatorPlayerNames: vm.isSpectator
                             ? Dictionary(uniqueKeysWithValues: vm.spectatorBoards.map { ($0.playerId, $0.playerName) })
@@ -155,7 +156,8 @@ struct BattleScreen: View {
     private var normalBoards: some View {
         VStack(spacing: 14) {
             // Enemy waters
-            boardCard(label: s.enemyWaters.fmt(vm.opponentName), isHighlighted: vm.isMyTurn, showShipLegend: false) {
+            let enemyLabel = s.enemyWaters.fmt(vm.opponentName)
+            boardCard(label: enemyLabel, isHighlighted: vm.isMyTurn, showShipLegend: false) {
                 GameBoardView(
                     board: vm.opponentBoard,
                     isOpponentBoard: true,

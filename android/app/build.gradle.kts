@@ -91,6 +91,11 @@ dependencies {
     // Android
     implementation(libs.androidx.core.ktx)
 
+    // Firebase & Auth
+    implementation("com.google.firebase:firebase-auth:23.0.0")
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

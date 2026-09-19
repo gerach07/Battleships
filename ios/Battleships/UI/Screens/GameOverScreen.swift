@@ -36,7 +36,7 @@ struct GameOverScreen: View {
                     Text(vm.isSpectator
                         ? s.winsMessage.fmt(spectatorWinnerName)
                         : isWinner
-                            ? s.youSunkEnemy
+                            ? s.youSunkEnemy.fmt(vm.opponentName)
                             : s.destroyedYourFleet.fmt(vm.opponentName))
                         .font(.subheadline)
                         .foregroundColor(.gray)
@@ -96,7 +96,7 @@ struct GameOverScreen: View {
         if vm.opponentWantsPlayAgain {
             // Opponent wants rematch
             VStack(spacing: 12) {
-                Text(s.opWantsRematch)
+                Text(s.opWantsRematch.fmt(vm.opponentName))
                     .font(.subheadline.bold())
                     .foregroundColor(.blue)
                     .multilineTextAlignment(.center)

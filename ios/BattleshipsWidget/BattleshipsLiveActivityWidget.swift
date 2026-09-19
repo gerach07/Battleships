@@ -56,7 +56,7 @@ struct BattleshipsLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     ExpandedPlayerTimer(
-                        label: context.state.opponentName.isEmpty ? "Opponent" : String(context.state.opponentName.prefix(10)),
+                        label: String(context.state.opponentName.prefix(10)),
                         time: context.state.opponentTime,
                         isActive: !context.state.isMyTurn && context.state.phase == "battle",
                         tint: !context.state.isMyTurn ? .orange : .secondary
@@ -128,7 +128,7 @@ private struct LockScreenBannerView: View {
                     Text("vs").font(.caption).foregroundStyle(.white.opacity(0.5))
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(state.opponentName.isEmpty ? "Opponent" : state.opponentName)
+                        Text(state.opponentName)
                             .font(.caption2).foregroundStyle(.white.opacity(0.6))
                         TimerDisplay(seconds: state.opponentTime, isActive: !state.isMyTurn, tint: .orange)
                     }
@@ -304,7 +304,7 @@ private struct TurnIndicator: View {
                 .font(.caption).fontWeight(.bold)
                 .foregroundStyle(.green)
         } else {
-            Text("⏳ Opponent's turn")
+            Text("⏳ \(state.opponentName)'s turn")
                 .font(.caption)
                 .foregroundStyle(.orange)
         }

@@ -7,6 +7,7 @@ struct GameTimerView: View {
     let currentTurn: String?
     let myId: String
     let opponentName: String
+    let playerName: String
     let strings: I18nStrings
     var spectatorPlayerNames: [String: String] = [:]
 
@@ -22,6 +23,7 @@ struct GameTimerView: View {
                     pid: pid,
                     myId: myId,
                     opponentName: opponentName,
+                    playerName: playerName,
                     spectatorName: spectatorPlayerNames[pid],
                     isActive: pid == currentTurn,
                     liveTime: liveTime(for: pid),
@@ -69,6 +71,7 @@ private struct PlayerTimerCell: View {
     let pid: String
     let myId: String
     let opponentName: String
+    let playerName: String
     let spectatorName: String?
     let isActive: Bool
     let liveTime: Double
@@ -78,7 +81,8 @@ private struct PlayerTimerCell: View {
     private var isLow: Bool { isActive && liveTime <= 30 }
     private var label: String {
         if let name = spectatorName { return name }
-        return pid == myId ? strings.you : (opponentName.isEmpty ? strings.opponent : opponentName)
+        if pid == myId { return playerName.isEmpty ? strings.you : playerName }
+        return opponentName.isEmpty ? strings.opponent : opponentName
     }
     private var timeColor: Color {
         guard isActive else { return .gray }

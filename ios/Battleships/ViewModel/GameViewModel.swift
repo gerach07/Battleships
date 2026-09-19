@@ -252,6 +252,10 @@ final class GameViewModel: ObservableObject {
         payload["isSpectating"] = isSpectating
         if !password.isNilOrEmpty { payload["password"] = password }
         if isCreating { payload["timeLimit"] = timeLimit }
+        
+        if let token = AuthManager.shared.idToken {
+            payload["authToken"] = token
+        }
 
         socketManager.emit("joinGame", payload)
     }
@@ -439,18 +443,7 @@ final class GameViewModel: ObservableObject {
                 iWon: nil,
                 opponentName: opponentName
             )
-            let result = LiveActivityManager.shared.startWithResult(roomCode: gameId, playerName: playerName, state: state)
-            DispatchQueue.main.async {
-                self.setMessage("🔴 LA: \(result)", "info")
-            }
-        } else {
-            DispatchQueue.main.async {
-                self.setMessage("🔴 LA: iOS < 16.2", "error")
-            }
-        }
-        #else
-        DispatchQueue.main.async {
-            self.setMessage("🔴 LA: canImport=false", "error")
+            _ = LiveActivityManager.shared.startWithResult(roomCode: gameId, playerName: playerName, state: state)
         }
         #endif
     }
@@ -603,6 +596,21 @@ final class GameViewModel: ObservableObject {
                         self.opponentSocketId = opp["id"] as? String
                     }
                 }
+                // Restore chat history from server
+                if let chatHistory = data["chatHistory"] as? [[String: Any]], !chatHistory.isEmpty {
+                    self.chatMessages = Array(chatHistory.compactMap { m -> ChatMessage? in
+                        guard let id = m["id"] as? String,
+                              let senderId = m["senderId"] as? String,
+                              let senderName = m["senderName"] as? String,
+                              let text = m["text"] as? String else { return nil }
+                        let ts = m["timestamp"] as? Double ?? 0
+                        let isImportant = m["isImportant"] as? Bool ?? false
+                        return ChatMessage(id: id, senderId: senderId, senderName: senderName,
+                                          text: text, timestamp: ts, isMine: senderId == pid,
+                                          isImportant: isImportant, isSystem: m["isSystem"] as? Bool ?? false)
+                    }.suffix(100))
+                }
+                self.chatUnread = 0
                 if data["spectator"] as? Bool == true {
                     self.isSpectator = true
                     // spectator might join mid-battle
@@ -629,7 +637,7 @@ final class GameViewModel: ObservableObject {
                     }
                 }
                 self.updateLiveActivity()
-                self.setMessage(self.s.opponentJoined, "success")
+                self.setMessage(self.s.opponentJoined.fmt(self.opponentName), "success")
             }
         }
 
@@ -642,19 +650,27 @@ final class GameViewModel: ObservableObject {
                 self.joiningGame = false
                 let msg = data["error"] as? String ?? data["message"] as? String ?? self.s.unknownError
                 self.setMessage("❌ \(msg)", "error")
+                if msg.contains("does not exist") || msg.contains("Incorrect password") || msg.contains("not found") {
+                    self.loginView = "join"
+                    self.gameId = ""
+                    self.roomPassword = ""
+                }
             }
         }
 
         sm.on("placementFinished") { [weak self] args in
             guard let self else { return }
-            DispatchQueue.main.async { self.isReady = true }
+            DispatchQueue.main.async {
+                self.isReady = true
+                self.setMessage(self.s.waitingOpponentPlace.fmt(self.opponentName), "info")
+            }
         }
 
         sm.on("playerReady") { [weak self] _ in
             guard let self else { return }
             DispatchQueue.main.async {
                 self.opponentReady = true
-                self.setMessage(self.s.opponentIsReady.fmt(self.opponentName.isEmpty ? self.s.opponent : self.opponentName), "success")
+                self.setMessage(self.s.opponentIsReady.fmt(self.opponentName), "success")
             }
         }
 
@@ -706,7 +722,7 @@ final class GameViewModel: ObservableObject {
                         self.setMessage(self.s.sunkTheirShip.fmt(shipName), "success")
                     } else {
                         self.mySunkCount += 1
-                        self.setMessage(self.s.yourShipSunk.fmt(shipName), "error")
+                        self.setMessage(self.s.yourShipSunk.fmt(shipName, self.opponentName), "error")
                         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                     }
                     SoundManager.shared.playSunk()
@@ -745,7 +761,7 @@ final class GameViewModel: ObservableObject {
                     SoundManager.shared.playHit()
                 } else {
                     if isMine {
-                        self.setMessage(self.s.missOpponentTurn, "info")
+                        self.setMessage(self.s.missOpponentTurn.fmt(self.opponentName), "info")
                     } else {
                         self.setMessage(self.s.theyMissedYourTurn, "success")
                     }
@@ -794,7 +810,7 @@ final class GameViewModel: ObservableObject {
         sm.on("playerLeft") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
-                let name = data["playerName"] as? String ?? self.s.opponent
+                let name = (data["playerName"] as? String)?.isEmpty == false ? (data["playerName"] as! String) : self.opponentName
                 self.setMessage(self.s.playerLeftGame.fmt(name), "info")
                 self.endLiveActivity()
                 self.resetFullState()
@@ -816,11 +832,11 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 self.resetBattleState()
+                let name = (data["playerName"] as? String)?.isEmpty == false ? (data["playerName"] as! String) : self.opponentName
+                self.setMessage(self.s.playerLeftWaiting.fmt(name), "info")
                 self.opponentName = ""
                 self.opponentSocketId = nil
                 if let h = data["isHost"] as? Bool { self.isHost = h }
-                let name = data["playerName"] as? String ?? self.s.opponent
-                self.setMessage(self.s.playerLeftWaiting.fmt(name), "info")
                 self.phase = "waiting"
                 self.updateLiveActivity()
             }
@@ -851,7 +867,7 @@ final class GameViewModel: ObservableObject {
                     self.messageType = "info"
                 } else {
                     SoundManager.shared.playVictory()
-                    let name = data["forfeiterName"] as? String ?? self.s.opponent
+                    let name = (data["forfeiterName"] as? String)?.isEmpty == false ? (data["forfeiterName"] as! String) : self.opponentName
                     self.message = self.s.opponentSurrendered.fmt(name)
                     self.messageType = "success"
                 }
@@ -863,8 +879,8 @@ final class GameViewModel: ObservableObject {
             guard let self else { return }
             DispatchQueue.main.async {
                 if self.isSpectator {
-                    let name = (args.first as? [String: Any])?["requesterName"] as? String ?? self.s.opponent
-                    self.setMessage("🎮 \(name) wants a rematch!", "info")
+                    let name = (args.first as? [String: Any])?["requesterName"] as? String ?? self.opponentName
+                    self.setMessage("🎮 \(self.s.opWantsRematch.fmt(name))", "info")
                 } else { self.opponentWantsPlayAgain = true }
             }
         }
@@ -873,12 +889,12 @@ final class GameViewModel: ObservableObject {
             guard let self else { return }
             DispatchQueue.main.async {
                 if self.isSpectator {
-                    let name = (args.first as? [String: Any])?["declinerName"] as? String ?? self.s.opponent
-                    self.setMessage("❌ \(name) declined the rematch", "error")
+                    let name = (args.first as? [String: Any])?["declinerName"] as? String ?? self.opponentName
+                    self.setMessage("❌ \(self.s.opponentDeclinedRematch.fmt(name))", "error")
                 } else {
                     self.playAgainPending = false
                     self.opponentWantsPlayAgain = false
-                    self.setMessage(self.s.opponentDeclinedRematch, "error")
+                    self.setMessage(self.s.opponentDeclinedRematch.fmt(self.opponentName), "error")
                 }
             }
         }
@@ -934,7 +950,7 @@ final class GameViewModel: ObservableObject {
                     self.setMessage(self.s.yourClockRanOut, "error")
                     SoundManager.shared.playDefeat()
                 } else {
-                    self.setMessage(self.s.opponentClockRanOut, "success")
+                    self.setMessage(self.s.opponentClockRanOut.fmt(self.opponentName), "success")
                     SoundManager.shared.playVictory()
                 }
                 self.endLiveActivity(showResult: true)
@@ -1163,7 +1179,7 @@ final class GameViewModel: ObservableObject {
                     isSystem: data["isSystem"] as? Bool ?? false
                 )
                 self.chatMessages.append(msg)
-                if self.chatMessages.count > 200 { self.chatMessages.removeFirst(self.chatMessages.count - 200) }
+                if self.chatMessages.count > 100 { self.chatMessages.removeFirst(self.chatMessages.count - 100) }
                 if !isMine {
                     if !self.chatOpen { self.chatUnread += 1 }
                     SoundManager.shared.playChat()

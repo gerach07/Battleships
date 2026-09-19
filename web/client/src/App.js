@@ -29,6 +29,8 @@ const ShipPlacement = lazy(() => import('./components/ShipPlacement'));
 const BattleField = lazy(() => import('./components/BattleField'));
 const GameOver = lazy(() => import('./components/GameOver'));
 const ChatBox = lazy(() => import('./components/ChatBox'));
+const ProfileModal = lazy(() => import('./components/ProfileModal'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
 
 /* ── Floating bubble background (hoisted to module scope — never re-computed) ── */
 const BUBBLE_COUNT = 14;
@@ -182,7 +184,48 @@ function App() {
   const [myShipsSunk, setMyShipsSunk] = useState(0);
   const [theirShipsSunk, setTheirShipsSunk] = useState(0);
 
-  // New feature state
+  // Auth & New feature state
+  const [user, setUser] = useState(null);
+  const [firebaseAuthToken, setFirebaseAuthToken] = useState(null);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  
+  // Listen for Firebase Auth state changes
+  useEffect(() => {
+    import('./firebase').then(({ auth }) => {
+      auth.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+          const token = await firebaseUser.getIdToken();
+          setFirebaseAuthToken(token);
+          
+          // Fetch backend profile data
+          try {
+            const url = (serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`) + '/api/profile';
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+              const profile = await res.json();
+              setUser(profile);
+            } else if (res.status === 404) {
+              // User doesn't exist in DB yet, hit login endpoint to create them
+              const loginRes = await fetch((serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`) + '/api/auth/login', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (loginRes.ok) {
+                setUser(await loginRes.json());
+              }
+            }
+          } catch (err) {
+            console.error("Failed to load user profile:", err);
+          }
+        } else {
+          setUser(null);
+          setFirebaseAuthToken(null);
+        }
+      });
+    });
+  }, [serverUrl]);
+
   const [theme, setTheme] = useState(() => localStorage.getItem('battleships-theme') || 'dark');
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const val = localStorage.getItem('battleships-sound');
@@ -245,6 +288,7 @@ function App() {
   const gameIdRef = useRef('');
   const roomPasswordRef = useRef('');
   const playerNameRef = useRef('');
+  const opponentNameRef = useRef('');
   const isSpectatorRef = useRef(false);
   const [isJoining, setIsJoining] = useState(false);
 
@@ -261,8 +305,9 @@ function App() {
     gameIdRef.current = gameId;
     roomPasswordRef.current = roomPassword;
     playerNameRef.current = playerName;
+    opponentNameRef.current = opponentName;
     isSpectatorRef.current = isSpectator;
-  }, [playerId, soundEnabled, chatOpen, phase, winner, gameId, roomPassword, playerName, isSpectator]);
+  }, [playerId, soundEnabled, chatOpen, phase, winner, gameId, roomPassword, playerName, opponentName, isSpectator]);
 
   // Persistence
   useEffect(() => {
@@ -425,7 +470,7 @@ function App() {
       setIsSpectator(false);
       if (data.players.length === 2) {
         const opp = data.players.find(p => p.id !== data.playerId);
-        setOpponentName(opp?.name || tRef.current('app.opponent'));
+        setOpponentName(opp?.name || '');
         setOpponentSocketId(opp?.id || null);
         // If server is already in placement (e.g. reconnect), go to placement
         // Otherwise go to waiting and let the host start
@@ -434,7 +479,7 @@ function App() {
           setMessageWithTimeout(tRef.current('msg.bothIn'), 'success');
         } else {
           setPhase('waiting');
-          setMessageWithTimeout(tRef.current('msg.opJoined'), 'success');
+          setMessageWithTimeout(tRef.current('msg.opJoined', opp?.name || ''), 'success');
         }
       } else {
         setOpponentName('');
@@ -448,10 +493,10 @@ function App() {
       const myId = playerIdRef.current;
       const opp = data.players.find(p => p.id !== myId);
       if (opp) {
-        setOpponentName(opp.name || tRef.current('app.opponent'));
+        setOpponentName(opp.name || '');
         setOpponentSocketId(opp.id || null);
       }
-      setMessageWithTimeout(tRef.current('msg.opJoined'), 'success');
+      setMessageWithTimeout(tRef.current('msg.opJoined', opp.name || ''), 'success');
     });
 
     socket.on('error', (data) => {
@@ -471,7 +516,7 @@ function App() {
 
     socket.on('placementFinished', () => {
       setIsReady(true);
-      setMessageWithTimeout(tRef.current('msg.waitingPlace'), 'info');
+      setMessageWithTimeout(tRef.current('msg.waitingPlace', opponentNameRef.current), 'info');
     });
 
     socket.on('playerReady', (data) => {
@@ -559,11 +604,12 @@ function App() {
       setOpponentBoard(overlay(raw_o, opponentSunk.current));
 
       const shipName = data.sunkShipName || tRef.current('app.ship');
+      const oppName = opponentNameRef.current;
       let msg = data.shipSunk
-        ? (iShot ? tRef.current('msg.sunkTheir', shipName) : tRef.current('msg.yourSunk', shipName))
+        ? (iShot ? tRef.current('msg.sunkTheir', shipName) : tRef.current('msg.yourSunk', shipName, oppName))
         : data.isHit
           ? (iShot ? tRef.current('msg.hit') : tRef.current('msg.theyHit'))
-          : (iShot ? tRef.current('msg.miss') : tRef.current('msg.theyMissed'));
+          : (iShot ? tRef.current('msg.miss', oppName) : tRef.current('msg.theyMissed'));
       setMessageWithTimeout(msg, data.isHit ? (iShot ? 'success' : 'error') : (iShot ? 'info' : 'success'), 5000);
       if (data.gameWon) {
         setPhase('gameOver');
@@ -599,7 +645,7 @@ function App() {
     });
 
     socket.on('playerLeft', (data) => {
-      setMessageWithTimeout(tRef.current('msg.playerLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
+      setMessageWithTimeout(tRef.current('msg.playerLeft', data.playerName || opponentNameRef.current), 'info', 4000);
       setPlayAgainPending(false);
       setOpponentWantsPlayAgain(false);
       if (playerLeftTimerRef.current) clearTimeout(playerLeftTimerRef.current);
@@ -623,7 +669,7 @@ function App() {
       if (data.isHost !== undefined) setIsHost(data.isHost);
 
       if (phaseRef.current === 'gameOver') {
-        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
+        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || opponentNameRef.current), 'info', 4000);
       } else {
         setOpponentBoard(createEmptyBoard());
         setPlayerBoard(createEmptyBoard());
@@ -631,7 +677,7 @@ function App() {
         setWinner(null);
         setTurnStartedAt(null);
         setPlayerTimeLeft({});
-        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || tRef.current('app.opponent')), 'info', 4000);
+        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || opponentNameRef.current), 'info', 4000);
         setPhase('waiting');
       }
     });
@@ -656,7 +702,7 @@ function App() {
 
     socket.on('playAgainRequested', (data) => {
       if (isSpectatorRef.current) {
-        setMessageWithTimeout(`🎮 ${data?.requesterName || tRef.current('app.opponent')} wants a rematch!`, 'info', 6000);
+        setMessageWithTimeout(tRef.current('gameover.rematchOffer', data?.requesterName || opponentNameRef.current), 'info', 6000);
       } else {
         setOpponentWantsPlayAgain(true);
       }
@@ -664,11 +710,11 @@ function App() {
 
     socket.on('playAgainDeclined', (data) => {
       if (isSpectatorRef.current) {
-        setMessageWithTimeout(`❌ ${data?.declinerName || tRef.current('app.opponent')} declined the rematch`, 'info', 5000);
+        setMessageWithTimeout(tRef.current('msg.declinedRematch', data?.declinerName || opponentNameRef.current), 'info', 5000);
       } else {
         setPlayAgainPending(false);
         setOpponentWantsPlayAgain(false);
-        setMessageWithTimeout(tRef.current('msg.declinedRematch'), 'error', 5000);
+        setMessageWithTimeout(tRef.current('msg.declinedRematch', opponentNameRef.current), 'error', 5000);
       }
     });
 
@@ -778,7 +824,7 @@ function App() {
       setWinner(data.winner);
       const myId = playerIdRef.current;
       const iLost = data.loser === myId;
-      const msg = iLost ? tRef.current('msg.yourTimeUp') : tRef.current('msg.opTimeUp');
+      const msg = iLost ? tRef.current('msg.yourTimeUp') : tRef.current('msg.opTimeUp', opponentNameRef.current);
       setMessageWithTimeout(msg, iLost ? 'error' : 'success', 5000);
       if (soundRef.current) playSound(data.winner === myId ? 'victory' : 'defeat');
     });
@@ -1001,9 +1047,10 @@ function App() {
       isCreating: pendingJoin.isCreating,
       isSpectating: pendingJoin.isSpectating || false,
       timeLimit: pendingJoin.timeLimit || gameTimeLimit,
+      authToken: firebaseAuthToken,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerName, pendingJoin, socket, gameTimeLimit]);
+  }, [playerName, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
 
   const handleShipPlaced = useCallback((placements) => {
     setClientPlacements(placements);
@@ -1126,6 +1173,17 @@ function App() {
     error: 'from-red-500/20 to-red-600/10 border-red-500/40 text-red-200 shadow-red-900/20'
   }[messageType] || ''), [messageType]);
 
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      const { signInWithGoogle } = await import('./firebase');
+      await signInWithGoogle();
+      // Auth state listener handles the rest
+    } catch (err) {
+      console.error(err);
+      setMessageWithTimeout('Google Sign-In failed', 'error');
+    }
+  }, [setMessageWithTimeout]);
+
   return (
     <div className="min-h-screen theme-bg text-white flex flex-col" data-theme={theme}>
       {/* Skip to main content — accessible keyboard shortcut */}
@@ -1242,18 +1300,39 @@ function App() {
                 {theme === 'dark' ? '☀️' : '🌙'}
               </button>
             </div>
-            <div className="relative">
+            <div className="relative flex gap-1">
+              <button
+                onClick={() => setShowLeaderboard(true)}
+                className="flex items-center justify-center p-1.5 hover:bg-white/10 rounded-lg active:scale-95 transition text-base"
+                title="Leaderboard" aria-label="Leaderboard"
+              >
+                🏆
+              </button>
+              {user ? (
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition cursor-pointer"
+                  title="Profile"
+                >
+                  {user.photoUrl ? (
+                    <img src={user.photoUrl} alt="Avatar" className="w-4 h-4 rounded-full" />
+                  ) : (
+                    <span className="text-[0.65rem]">👤</span>
+                  )}
+                  <span className="hidden sm:inline text-[0.65rem] font-bold max-w-[5rem] truncate">{user.name}</span>
+                </button>
+              ) : null}
               <button
                 ref={serverInfoBtnRef}
                 onClick={() => setServerInfoOpen(o => !o)}
-                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[0.65rem] font-semibold cursor-pointer transition border ${isConnected ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
+                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[0.65rem] font-semibold cursor-pointer transition border ${isConnected ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
                 title={t('serverInfo.title')}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-blue-400 animate-pulse' : 'bg-red-400'}`} />
                 <span className="hidden sm:inline">{isConnected ? t('app.online') : t('app.offline')}</span>
               </button>
             </div>
-            {phase !== 'login' && playerName && (
+            {phase !== 'login' && playerName && !user && (
               <span className="hidden sm:block text-xs font-bold text-slate-300 max-w-[6rem] truncate" title={playerName}>{playerName}</span>
             )}
           </div>
@@ -1308,6 +1387,8 @@ function App() {
             roomNotFound={roomNotFound}
             roomHasPassword={roomHasPassword}
             isJoining={isJoining}
+            handleGoogleLogin={handleGoogleLogin}
+            user={user}
           />
         )}
 
@@ -1377,6 +1458,7 @@ function App() {
             dispPlayer={isSpectator ? (dispSpectatorBoards[0]?.board || dispPlayer) : dispPlayer}
             dispOpponent={isSpectator ? (dispSpectatorBoards[1]?.board || dispOpponent) : dispOpponent}
             spectatorPlayerNames={isSpectator ? [dispSpectatorBoards[0]?.playerName, dispSpectatorBoards[1]?.playerName] : []}
+            playerName={playerName}
             handleShoot={isSpectator ? noop : handleShoot}
             explosionCells={explosionCells} noop={noop}
             playerTimeLeft={playerTimeLeft} turnStartedAt={turnStartedAt}
@@ -1413,6 +1495,21 @@ function App() {
           />
         </Suspense>
       )}
+
+      <Suspense fallback={null}>
+        {showLeaderboard && (
+          <Leaderboard onClose={() => setShowLeaderboard(false)} SOCKET_URL={serverUrl} />
+        )}
+        {showProfile && user && (
+          <ProfileModal 
+            onClose={() => setShowProfile(false)} 
+            user={user} 
+            setUser={setUser} 
+            SOCKET_URL={serverUrl}
+            firebaseAuthToken={firebaseAuthToken}
+          />
+        )}
+      </Suspense>
 
       <footer className="max-w-5xl mx-auto px-3 sm:px-6 py-4 text-center mt-auto relative z-10" role="contentinfo">
         <p className="text-[0.6rem] text-slate-500 font-semibold mb-2">⚓ Battleships &mdash; Created by Adrians Bergmanis</p>

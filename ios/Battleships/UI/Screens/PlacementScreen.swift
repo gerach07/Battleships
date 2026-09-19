@@ -395,7 +395,7 @@ struct PlacementScreen: View {
                 Circle()
                     .fill(vm.opponentReady ? Color.green : Color.orange)
                     .frame(width: 8, height: 8)
-                Text(vm.opponentReady ? s.opponentIsReady.fmt(vm.opponentName.isEmpty ? s.opponent : vm.opponentName) : s.opponentPlacing.fmt(vm.opponentName))
+                Text(vm.opponentReady ? s.opponentIsReady.fmt(vm.opponentName) : s.opponentPlacing.fmt(vm.opponentName))
                     .font(.caption)
                     .foregroundColor(vm.opponentReady ? .green : .orange)
             }

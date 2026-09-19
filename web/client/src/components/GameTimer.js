@@ -6,7 +6,7 @@ const fmt = (secs) => {
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 };
 
-const GameTimer = memo(({ playerTimeLeft, turnStartedAt, currentTurn, myId, opponentName }) => {
+const GameTimer = memo(({ playerTimeLeft, turnStartedAt, currentTurn, myId, opponentName, playerName }) => {
     const { t } = useI18n();
     const [, setTick] = useState(0);
     const lastDisplayRef = useRef('');
@@ -56,7 +56,7 @@ const GameTimer = memo(({ playerTimeLeft, turnStartedAt, currentTurn, myId, oppo
                     : stored;
                 const isCritical = isActive && live <= 10;
                 const isLow = isActive && live <= 30;
-                const label = pid === myId ? t('timer.you') : (opponentName || t('timer.opponent'));
+                const label = pid === myId ? (playerName || t('timer.you')) : (opponentName || t('timer.opponent'));
 
                 return (
                     <div key={pid} className={`flex-1 flex flex-col items-center py-1.5 px-3 rounded-xl border font-mono font-bold transition-all

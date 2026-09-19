@@ -19,6 +19,12 @@ packages:
   SocketIO:
     url: https://github.com/socketio/socket.io-client-swift
     from: "16.1.1"
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "10.22.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "7.1.0"
 
 targets:
   Battleships:
@@ -38,6 +44,10 @@ targets:
     dependencies:
       - package: SocketIO
         product: SocketIO
+      - package: Firebase
+        product: FirebaseAuth
+      - package: GoogleSignIn
+        product: GoogleSignIn
     info:
       path: Battleships/Info.plist
       properties:

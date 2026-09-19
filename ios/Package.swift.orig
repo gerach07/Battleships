@@ -10,16 +10,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/socketio/socket.io-client-swift", from: "16.1.1"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.22.0"),
-        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "7.1.0"),
     ],
     targets: [
         .target(
             name: "Battleships",
             dependencies: [
                 .product(name: "SocketIO", package: "socket.io-client-swift"),
-                .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
-                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
             ],
             path: "Battleships",
             exclude: ["Info.plist", "Resources/AppIcon120.png", "Resources/AppIcon180.png", "Resources/AppIcon1024.png",

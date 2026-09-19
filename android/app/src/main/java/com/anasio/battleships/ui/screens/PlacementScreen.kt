@@ -319,7 +319,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
         // Status (always rendered to prevent layout shift)
         Text(
             when {
-                opponentReady -> s.opponentIsReady.replace("{0}", opponentName.ifEmpty { s.opponent })
+                opponentReady -> s.opponentIsReady.replace("{0}", opponentName)
                 opponentName.isNotEmpty() -> s.opponentPlacing.replace("{0}", opponentName)
                 else -> "\u00A0"
             },
@@ -367,6 +367,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
         OutlinedButton(
             onClick = viewModel::handleBackToMenu,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = c.red),
+            modifier = Modifier.fillMaxWidth(),
         ) { Text("← ${s.leave}") }
         Spacer(Modifier.height(16.dp))
     }

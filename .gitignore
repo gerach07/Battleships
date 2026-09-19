@@ -21,6 +21,7 @@ yarn-error.log*
 coverage/
 .nyc_output/
 .cache/
+*firebase-adminsdk*.json
 
 # =========================
 # Android
