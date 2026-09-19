@@ -752,7 +752,6 @@ fun AuthSection(viewModel: GameViewModel) {
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(userProfile["name"]?.takeIf { it.isNotBlank() } ?: firebaseUser?.displayName ?: "Player", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Text("ID: ${userProfile["playerId"] ?: "N/A"}", color = c.textDim, fontSize = 12.sp)
                 }
             }
             TextButton(onClick = { showProfile = true }) {
@@ -793,7 +792,6 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
     val c = LocalColorPalette.current
     val userProfile by viewModel.userProfile.collectAsState()
     var name by remember { mutableStateOf(userProfile["name"] ?: "") }
-    var playerId by remember { mutableStateOf(userProfile["playerId"] ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -811,18 +809,11 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
                     colors = tfColors(),
                     singleLine = true
                 )
-                OutlinedTextField(
-                    value = playerId,
-                    onValueChange = { playerId = it },
-                    label = { Text("Player ID (Handle)") },
-                    colors = tfColors(),
-                    singleLine = true
-                )
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                viewModel.updateProfile(name, playerId)
+                viewModel.updateProfile(name)
                 onDismiss()
             }) { Text("Save", color = c.primary) }
         },

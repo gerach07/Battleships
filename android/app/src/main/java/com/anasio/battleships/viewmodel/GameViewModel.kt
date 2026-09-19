@@ -1266,7 +1266,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     withContext(Dispatchers.Main) {
                         _userProfile.value = mapOf(
                             "name" to json.optString("name", ""),
-                            "playerId" to json.optString("playerId", ""),
                             "wins" to json.optString("wins", "0")
                         )
                         val fetchedName = json.optString("name", "")
@@ -1280,7 +1279,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun updateProfile(newName: String, newPlayerId: String) {
+    fun updateProfile(newName: String) {
         val token = _firebaseToken.value ?: return
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -1289,7 +1288,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 conn.setRequestProperty("Authorization", "Bearer $token")
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
-                val payload = JSONObject().put("name", newName).put("playerId", newPlayerId).toString()
+                val payload = JSONObject().put("name", newName).toString()
                 conn.outputStream.write(payload.toByteArray())
                 val code = conn.responseCode
                 if (code == 200) {
@@ -1297,7 +1296,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     withContext(Dispatchers.Main) {
                         _userProfile.value = mapOf(
                             "name" to json.optString("name", ""),
-                            "playerId" to json.optString("playerId", ""),
                             "wins" to json.optString("wins", "0")
                         )
                         setPlayerName(json.optString("name", ""))

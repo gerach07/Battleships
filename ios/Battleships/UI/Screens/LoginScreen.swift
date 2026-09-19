@@ -113,7 +113,6 @@ struct LoginScreen: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text(authManager.userName).font(.headline).foregroundColor(.white)
-                        if let pId = authManager.playerId { Text(pId).font(.caption).foregroundColor(.gray) }
                     }
                     Spacer()
                     Button("Profile") { showProfile = true }

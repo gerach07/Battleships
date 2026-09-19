@@ -12,7 +12,7 @@ class AuthManager: ObservableObject {
     @Published var userEmail: String = ""
     @Published var profilePicUrl: URL? = nil
     @Published var idToken: String? = nil
-    @Published var playerId: String? = nil
+
     @Published var wins: Int = 0
     @Published var leaderboard: [LeaderboardEntry] = []
 
@@ -109,7 +109,7 @@ class AuthManager: ObservableObject {
             self.userEmail = ""
             self.profilePicUrl = nil
             self.idToken = nil
-            self.playerId = nil
+
             self.wins = 0
         }
     }
@@ -168,7 +168,7 @@ class AuthManager: ObservableObject {
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
                         DispatchQueue.main.async {
-                            self.playerId = json["playerId"] as? String
+
                             self.wins = json["wins"] as? Int ?? 0
                             if let name = json["name"] as? String, !name.isEmpty {
                                 self.userName = name

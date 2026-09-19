@@ -31,7 +31,7 @@ router.post('/auth/login', requireAuth, async (req, res) => {
       firebaseUid: user.firebaseUid,
       email: user.email,
       name: user.name,
-      playerId: user.playerId,
+
       photoUrl: user.photoUrl,
       wins: user.wins,
       gamesPlayed: user.gamesPlayed,
@@ -54,7 +54,7 @@ router.get('/profile', requireAuth, async (req, res) => {
       firebaseUid: user.firebaseUid,
       email: user.email,
       name: user.name,
-      playerId: user.playerId,
+
       photoUrl: user.photoUrl,
       wins: user.wins,
       gamesPlayed: user.gamesPlayed,
@@ -66,13 +66,13 @@ router.get('/profile', requireAuth, async (req, res) => {
 });
 
 // ─── PUT /api/profile ─────────────────────────────────────────────────────────
-// Update name and/or playerId.
+// Update name.
 router.put('/profile', requireAuth, async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.user.uid });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const { name, playerId } = req.body;
+    const { name } = req.body;
 
     if (name !== undefined) {
       const sanitized = sanitizeInput(name, 50);
@@ -97,18 +97,7 @@ router.put('/profile', requireAuth, async (req, res) => {
       user.name = sanitized;
     }
 
-    if (playerId !== undefined) {
-      const sanitizedId = sanitizeInput(playerId, 30).replace(/[^a-zA-Z0-9_-]/g, '');
-      if (!sanitizedId || sanitizedId.length < 3) {
-        return res.status(400).json({ error: 'Player ID must be at least 3 characters (letters, numbers, _ or -)' });
-      }
-      // Check uniqueness
-      const existing = await User.findOne({ playerId: sanitizedId, firebaseUid: { $ne: req.user.uid } });
-      if (existing) {
-        return res.status(409).json({ error: 'Player ID is already taken' });
-      }
-      user.playerId = sanitizedId;
-    }
+
 
     await user.save();
 
@@ -117,7 +106,7 @@ router.put('/profile', requireAuth, async (req, res) => {
       firebaseUid: user.firebaseUid,
       email: user.email,
       name: user.name,
-      playerId: user.playerId,
+
       photoUrl: user.photoUrl,
       wins: user.wins,
       gamesPlayed: user.gamesPlayed,

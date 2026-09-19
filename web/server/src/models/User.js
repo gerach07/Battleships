@@ -17,12 +17,7 @@ const userSchema = new mongoose.Schema({
     default: 'Anonymous',
     maxlength: 50,
   },
-  playerId: {
-    type: String,
-    unique: true,
-    sparse: true,
-    maxlength: 30,
-  },
+
   photoUrl: {
     type: String,
     default: null,
@@ -47,12 +42,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Generate a default playerId from the first part of firebaseUid if not set
-userSchema.pre('save', function (next) {
-  if (!this.playerId) {
-    this.playerId = 'player_' + this.firebaseUid.slice(0, 8);
-  }
-  next();
-});
+
 
 module.exports = mongoose.model('User', userSchema);
