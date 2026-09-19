@@ -15,11 +15,14 @@ import com.anasio.battleships.util.MusicManager
 import com.anasio.battleships.data.SocketManager
 import android.app.NotificationManager
 
+import com.google.firebase.FirebaseApp
+
 class MainActivity : ComponentActivity() {
     private val viewModel: GameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
