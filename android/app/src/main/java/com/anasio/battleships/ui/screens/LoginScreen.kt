@@ -856,41 +856,41 @@ fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
+                                    .padding(vertical = 4.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(c.surface.copy(alpha = 0.5f))
-                                    .padding(12.dp),
+                                    .padding(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "#${index + 1}",
                                     color = c.primary,
-                                    fontSize = 16.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.width(36.dp)
+                                    modifier = Modifier.width(28.dp)
                                 )
                                 if (entry.photoUrl != null) {
                                     AsyncImage(
                                         model = entry.photoUrl,
                                         contentDescription = "Profile Photo",
-                                        modifier = Modifier.size(36.dp).clip(CircleShape)
+                                        modifier = Modifier.size(32.dp).clip(CircleShape)
                                     )
                                 } else {
                                     Box(
-                                        modifier = Modifier.size(36.dp).clip(CircleShape).background(c.textDim.copy(alpha = 0.2f)),
+                                        modifier = Modifier.size(32.dp).clip(CircleShape).background(c.textDim.copy(alpha = 0.2f)),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(Icons.Default.Person, contentDescription = null, tint = c.textDim, modifier = Modifier.size(24.dp))
                                     }
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-                                    Text("$winRate% Win Rate", color = c.textDim, fontSize = 12.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f).padding(end = 4.dp)) {
+                                    Text(name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                    Text("$winRate% Win Rate", color = c.textDim, fontSize = 11.sp)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text("${entry.wins} Wins", color = c.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                    Text("${entry.gamesPlayed} Games", color = c.textDim, fontSize = 12.sp)
+                                    Text("${entry.wins} Wins", color = c.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("${entry.gamesPlayed} Games", color = c.textDim, fontSize = 10.sp)
                                 }
                             }
                         }
