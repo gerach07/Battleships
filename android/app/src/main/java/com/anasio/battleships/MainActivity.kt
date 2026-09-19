@@ -16,13 +16,27 @@ import com.anasio.battleships.data.SocketManager
 import android.app.NotificationManager
 
 import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 
 class MainActivity : ComponentActivity() {
     private val viewModel: GameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
+        
+        try {
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                val options = FirebaseOptions.Builder()
+                    .setApplicationId("1:498836539028:android:a0efcf9a859b21606f1681") // mobilesdk_app_id
+                    .setApiKey("AIzaSyDkpVS3S226Lh8XuiS1bbObYlkLd-F9fmg") // api_key
+                    .setProjectId("abbattleships")
+                    .build()
+                FirebaseApp.initializeApp(this, options)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Firebase init failed", e)
+        }
+        
         enableEdgeToEdge()
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
