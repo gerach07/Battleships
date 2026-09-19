@@ -22,6 +22,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anasio.battleships.data.PendingJoin
 import com.anasio.battleships.data.RoomInfo
+import com.anasio.battleships.data.LeaderboardEntry
 import com.anasio.battleships.i18n.Language
 import com.anasio.battleships.i18n.LocalI18n
 import com.anasio.battleships.ui.theme.*
@@ -192,6 +196,7 @@ private fun MenuView(viewModel: GameViewModel) {
     val themeId by viewModel.themeId.collectAsState()
     var serverInfo by remember { mutableStateOf<Map<String, Any?>>(emptyMap()) }
     var showServerInfo by remember { mutableStateOf(false) }
+    var showLeaderboard by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -254,6 +259,10 @@ private fun MenuView(viewModel: GameViewModel) {
     Spacer(Modifier.height(12.dp))
     GradientButton("🚀  ${s.joinGame}", c.accent, Color(0xFF7C3AED)) {
         viewModel.setLoginView("join"); viewModel.fetchRooms()
+    }
+    Spacer(Modifier.height(12.dp))
+    GradientButton("🏆  Leaderboard", c.surface.copy(alpha=0.5f), c.surface) {
+        showLeaderboard = true
     }
 
     Spacer(Modifier.height(16.dp))
@@ -810,6 +819,86 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
                 viewModel.signOut()
                 onDismiss()
             }) { Text("Sign Out", color = c.red) }
+        }
+    )
+}
+
+@Composable
+fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
+    val c = LocalColorPalette.current
+    val leaderboardData by viewModel.leaderboardData.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchLeaderboard()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = c.surface,
+        title = {
+            Text("🏆 Leaderboard", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                if (leaderboardData.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = c.primary)
+                    }
+                } else {
+                    LazyColumn {
+                        items(leaderboardData.size) { index ->
+                            val entry = leaderboardData[index]
+                            val winRate = if (entry.gamesPlayed > 0) (entry.wins * 100 / entry.gamesPlayed) else 0
+                            val name = if (entry.isGuest && !entry.name.contains("👤")) "${entry.name} 👤" else entry.name
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(c.surface.copy(alpha = 0.5f))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "#${index + 1}",
+                                    color = c.primary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(36.dp)
+                                )
+                                if (entry.photoUrl != null) {
+                                    AsyncImage(
+                                        model = entry.photoUrl,
+                                        contentDescription = "Profile Photo",
+                                        modifier = Modifier.size(36.dp).clip(CircleShape)
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier.size(36.dp).clip(CircleShape).background(c.textDim.copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Person, contentDescription = null, tint = c.textDim, modifier = Modifier.size(24.dp))
+                                    }
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                                    Text("$winRate% Win Rate", color = c.textDim, fontSize = 12.sp)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("${entry.wins} Wins", color = c.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text("${entry.gamesPlayed} Games", color = c.textDim, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = c.primary)
+            }
         }
     )
 }

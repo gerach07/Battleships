@@ -128,7 +128,7 @@ const SOCKET_EVENTS = [
   'gameJoined', 'playerJoined', 'error', 'placementFinished', 'playerReady',
   'placementUnreadied', 'playerUnreadied', 'battleStarted', 'shotResult',
   'gameReset', 'playerLeft', 'opponentLeft', 'leftRoom', 'gameForfeited',
-  'playAgainRequested', 'playAgainDeclined', 'chatMessage',
+  'playAgainRequested', 'playAgainDeclined', 'chatMessage', 'gameSessionEnded',
   'spectatorJoined', 'spectatorShotResult', 'spectatorBattleStarted',
   'spectatorUpdate', 'timeUp', 'gameStartedByHost', 'kicked', 'playerKicked',
   'connect', 'rejoinSuccess', 'rejoinFailed',
@@ -685,19 +685,40 @@ function App() {
       setOpponentSocketId(null);
       if (data.isHost !== undefined) setIsHost(data.isHost);
 
-      if (phaseRef.current === 'gameOver') {
-        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || opponentNameRef.current), 'info', 4000);
-      } else {
-        setOpponentBoard(createEmptyBoard());
-        setPlayerBoard(createEmptyBoard());
-        resetSunk();
-        setWinner(null);
-        setTurnStartedAt(null);
-        setPlayerTimeLeft({});
-        setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || opponentNameRef.current), 'info', 4000);
-        setPhase('waiting');
-      }
+      // Only reset to waiting if NOT in game over — game over is handled by gameSessionEnded
+      setOpponentBoard(createEmptyBoard());
+      setPlayerBoard(createEmptyBoard());
+      resetSunk();
+      setWinner(null);
+      setTurnStartedAt(null);
+      setPlayerTimeLeft({});
+      setMessageWithTimeout(tRef.current('msg.opLeft', data.playerName || opponentNameRef.current), 'info', 4000);
+      setPhase('waiting');
     });
+
+    // Fired when opponent leaves after the game is already over — room is discarded
+    socket.on('gameSessionEnded', (data) => {
+      setPlayAgainPending(false);
+      setOpponentWantsPlayAgain(false);
+      setOpponentName('');
+      setOpponentSocketId(null);
+      setOpponentBoard(createEmptyBoard());
+      setPlayerBoard(createEmptyBoard());
+      resetSunk();
+      setWinner(null);
+      setTurnStartedAt(null);
+      setPlayerTimeLeft({});
+      setGameId('');
+      setRoomPassword('');
+      setChatMessages([]);
+      setPhase('login');
+      setLoginView('menu');
+      setMessageWithTimeout(
+        tRef.current('msg.opLeft', data.playerName || opponentNameRef.current),
+        'info', 4000
+      );
+    });
+
 
     socket.on('leftRoom', () => {
       setChatMessages([]);

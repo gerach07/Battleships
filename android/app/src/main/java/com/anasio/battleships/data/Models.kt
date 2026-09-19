@@ -50,3 +50,11 @@ data class SpectatorBoard(
     val playerName: String,
     val board: Board,
 )
+
+data class LeaderboardEntry(
+    val name: String,
+    val wins: Int,
+    val gamesPlayed: Int,
+    val photoUrl: String?,
+    val isGuest: Boolean
+)

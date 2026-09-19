@@ -217,20 +217,36 @@ async function handlePlayerLeave(socketId, io) {
       delete rooms[roomId];
       delete roomLocks[roomId];
     } else if (opponentId) {
-      if (prevState === GameState.PLACEMENT_PHASE || prevState === GameState.GAME_OVER || prevState === GameState.BATTLE_PHASE || prevState === GameState.WAITING_FOR_PLAYERS) {
+      if (prevState === GameState.GAME_OVER) {
+        // Game is fully over — discard the room entirely and send winner home
+        room.spectators.forEach(sid => {
+          io.to(sid).emit('playerLeft', { playerName });
+          const specSocket = io.sockets.sockets.get(sid);
+          specSocket?.leave(roomId);
+          delete playerToRoom[sid];
+        });
+        // Tell the remaining player (winner) the session is over
+        io.to(opponentId).emit('gameSessionEnded', { reason: 'opponentLeft', playerName });
+        // Clean up the winner's room membership too
+        const winnerSocket = io.sockets.sockets.get(opponentId);
+        winnerSocket?.leave(roomId);
+        delete playerToRoom[opponentId];
+        delete rooms[roomId];
+        delete roomLocks[roomId];
+      } else if (prevState === GameState.PLACEMENT_PHASE || prevState === GameState.BATTLE_PHASE || prevState === GameState.WAITING_FOR_PLAYERS) {
         room.resetToWaiting(opponentId);
         // Boot spectators — nothing to watch in WAITING
         room.spectators.forEach(sid => {
-          io.to(sid).emit('playerLeft', { playerName: playerName });
+          io.to(sid).emit('playerLeft', { playerName });
           const specSocket = io.sockets.sockets.get(sid);
           specSocket?.leave(roomId);
           delete playerToRoom[sid];
         });
         room.spectators.clear();
         io.to(opponentId).emit('opponentLeft', { playerName, isHost: room.isHost(opponentId) });
+        room.touch();
       }
       // For BATTLE_PHASE, gameForfeited was already emitted above
-      room.touch();
     }
 
     const s = io.sockets.sockets.get(socketId);

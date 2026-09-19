@@ -12,6 +12,7 @@ struct LoginScreen: View {
     
     @ObservedObject var authManager = AuthManager.shared
     @State private var showProfile = false
+    @State private var showLeaderboard = false
 
     var body: some View {
         ScrollView {
@@ -40,6 +41,9 @@ struct LoginScreen: View {
         }
         .sheet(isPresented: $showProfile) {
             ProfileView()
+        }
+        .sheet(isPresented: $showLeaderboard) {
+            LeaderboardView()
         }
     }
 
@@ -163,6 +167,25 @@ struct LoginScreen: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(s.joinGame).font(.headline).foregroundColor(.white)
                         Text(s.joinGameTitle).font(.caption).foregroundColor(.gray)
+                    }
+                    Spacer()
+                    Text("›").font(.title).foregroundColor(.gray)
+                }
+                .padding(16)
+                .background(glassCard)
+            }
+
+            Button {
+                showLeaderboard = true
+            } label: {
+                HStack(spacing: 14) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(width: 56, height: 56)
+                        .overlay(Text("🏆").font(.title))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Leaderboard").font(.headline).foregroundColor(.white)
+                        Text("Top players").font(.caption).foregroundColor(.gray)
                     }
                     Spacer()
                     Text("›").font(.title).foregroundColor(.gray)

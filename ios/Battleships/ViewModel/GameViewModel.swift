@@ -862,6 +862,30 @@ final class GameViewModel: ObservableObject {
             }
         }
 
+        // Fired when opponent leaves AFTER game is over — room is discarded, go home
+        sm.on("gameSessionEnded") { [weak self] args in
+            guard let self else { return }
+            let data = args.first as? [String: Any]
+            let name = (data?["playerName"] as? String)?.isEmpty == false
+                ? (data!["playerName"] as! String)
+                : self.opponentName
+            DispatchQueue.main.async {
+                self.resetBattleState()
+                self.endLiveActivity()
+                self.chatMessages = []
+                self.opponentName = ""
+                self.opponentSocketId = nil
+                self.winner = nil
+                self.gameId = ""
+                self.roomPassword = ""
+                self.playAgainPending = false
+                self.opponentWantsPlayAgain = false
+                self.phase = "login"
+                self.loginView = "menu"
+                self.setMessage(self.s.playerLeftWaiting.fmt(name), "info")
+            }
+        }
+
         sm.on("gameForfeited") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {

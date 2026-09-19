@@ -14,6 +14,7 @@ class AuthManager: ObservableObject {
     @Published var idToken: String? = nil
     @Published var playerId: String? = nil
     @Published var wins: Int = 0
+    @Published var leaderboard: [LeaderboardEntry] = []
 
     init() {
         if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
@@ -213,5 +214,53 @@ class AuthManager: ObservableObject {
                 }
             }.resume()
         }
+    }
+
+    func fetchLeaderboard() {
+        let url = URL(string: "\(SERVER_URL)/api/leaderboard")!
+        var request = URLRequest(url: url)
+
+        let performRequest = { (req: URLRequest) in
+            URLSession.shared.dataTask(with: req) { data, response, error in
+                guard let data = data, error == nil else {
+                    print("Failed to fetch leaderboard: \(String(describing: error))")
+                    return
+                }
+                do {
+                    let payload = try JSONDecoder().decode(LeaderboardResponse.self, from: data)
+                    DispatchQueue.main.async {
+                        self.leaderboard = payload.leaderboard
+                    }
+                } catch {
+                    print("Failed to decode leaderboard: \(error)")
+                }
+            }.resume()
+        }
+
+        if Auth.auth().currentUser != nil {
+            refreshTokenThenCall { token in
+                request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                performRequest(request)
+            }
+        } else {
+            performRequest(request)
+        }
+    }
+}
+
+struct LeaderboardResponse: Codable {
+    let leaderboard: [LeaderboardEntry]
+}
+
+struct LeaderboardEntry: Codable, Identifiable {
+    let rank: Int?
+    let name: String
+    let wins: Int
+    let gamesPlayed: Int
+    let photoUrl: String?
+    let isGuest: Bool?
+
+    var id: String {
+        "\(rank ?? 0)-\(name)-\(wins)-\(gamesPlayed)-\(photoUrl ?? "")"
     }
 }

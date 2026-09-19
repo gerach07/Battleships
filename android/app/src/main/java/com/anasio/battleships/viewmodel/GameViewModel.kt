@@ -144,6 +144,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _pendingJoin = MutableStateFlow<PendingJoin?>(null)
     val pendingJoin: StateFlow<PendingJoin?> = _pendingJoin
 
+    private val _leaderboardData = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
+    val leaderboardData: StateFlow<List<LeaderboardEntry>> = _leaderboardData
+
     // ── Features ──
     private val _language = MutableStateFlow(Language.fromCode(prefs.getString("lang", "en") ?: "en"))
     val language: StateFlow<Language> = _language
@@ -923,6 +926,24 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _message.value = ""; _messageType.value = "info"
         }
 
+        // Fired when opponent leaves AFTER game is over — room is discarded, go home
+        reg("gameSessionEnded") { args ->
+            val data = args.getOrNull(0) as? JSONObject
+            val name = data?.optString("playerName", "")?.takeIf { it.isNotEmpty() } ?: _opponentName.value
+            resetBattleState()
+            _chatMessages.value = emptyList()
+            _opponentName.value = ""
+            _opponentSocketId.value = null
+            _winner.value = null
+            _gameId.value = ""
+            _roomPassword.value = ""
+            _playAgainPending.value = false
+            _opponentWantsPlayAgain.value = false
+            _phase.value = "login"
+            _loginView.value = "menu"
+            setMessage(s.playerLeftWaiting.fmt(name), "info")
+        }
+
         reg("gameForfeited") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             val iForfeited = data.optString("forfeiterId") == playerIdRef
@@ -1288,6 +1309,36 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) { setMessage("Failed to update profile", "error") }
             }
+        }
+    }
+
+    fun fetchLeaderboard() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val conn = URL("$SERVER_URL/api/leaderboard").openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 5000; conn.readTimeout = 5000
+                if (conn.responseCode == 200) {
+                    val jsonArray = org.json.JSONArray(conn.inputStream.bufferedReader().readText())
+                    val list = mutableListOf<LeaderboardEntry>()
+                    for (i in 0 until jsonArray.length()) {
+                        val obj = jsonArray.getJSONObject(i)
+                        list.add(
+                            LeaderboardEntry(
+                                name = obj.optString("name", "Unknown"),
+                                wins = obj.optInt("wins", 0),
+                                gamesPlayed = obj.optInt("gamesPlayed", 0),
+                                photoUrl = obj.optString("photoUrl").takeIf { it.isNotEmpty() },
+                                isGuest = obj.optBoolean("isGuest", false)
+                            )
+                        )
+                    }
+                    withContext(Dispatchers.Main) {
+                        _leaderboardData.value = list
+                    }
+                }
+                conn.disconnect()
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 }
