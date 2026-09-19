@@ -47,3 +47,10 @@
 
 # Keep JSON parsing classes used by Socket.IO
 -keep class org.json.** { *; }
+
+# ============================================================================
+# Firebase & Google Sign-In — keep rules for R8 (Release builds)
+# ============================================================================
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.auth.api.signin.** { *; }
+-keep class com.google.android.gms.common.api.** { *; }
