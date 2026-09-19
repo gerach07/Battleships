@@ -1285,13 +1285,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val conn = URL("$SERVER_URL/api/profile").openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
+                conn.requestMethod = "PUT"
                 conn.setRequestProperty("Authorization", "Bearer $token")
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
                 val payload = JSONObject().put("name", newName).put("playerId", newPlayerId).toString()
                 conn.outputStream.write(payload.toByteArray())
-                if (conn.responseCode == 200) {
+                val code = conn.responseCode
+                if (code == 200) {
                     val json = JSONObject(conn.inputStream.bufferedReader().readText())
                     withContext(Dispatchers.Main) {
                         _userProfile.value = mapOf(
@@ -1303,11 +1304,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         setMessage("Profile updated", "success")
                     }
                 } else {
-                    withContext(Dispatchers.Main) { setMessage("Failed to update profile", "error") }
+                    val errorText = try {
+                        val errorJson = JSONObject(conn.errorStream.bufferedReader().readText())
+                        errorJson.optString("error", "Failed to update profile")
+                    } catch (e: Exception) {
+                        "Failed to update profile (HTTP $code)"
+                    }
+                    withContext(Dispatchers.Main) { setMessage(errorText, "error") }
                 }
                 conn.disconnect()
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) { setMessage("Failed to update profile", "error") }
+                withContext(Dispatchers.Main) { setMessage("Network error: ${e.message}", "error") }
             }
         }
     }
