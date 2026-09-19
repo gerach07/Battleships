@@ -45,7 +45,7 @@ class AuthManager: ObservableObject {
             self.userName = user.profile?.name ?? ""
             self.userEmail = user.profile?.email ?? ""
             self.profilePicUrl = user.profile?.imageURL(withDimension: 100)
-            user.idToken?.tokenString.map { self.idToken = $0 }
+            self.idToken = user.idToken?.tokenString
             self.fetchProfile()
         }
     }
@@ -56,8 +56,14 @@ class AuthManager: ObservableObject {
             return
         }
         GIDSignIn.sharedInstance.signIn(withPresenting: presenting) { result, error in
+            if let error = error {
+                print("Google sign in failed: \(error.localizedDescription)")
+                return
+            }
             if let user = result?.user {
                 self.updateState(with: user)
+            } else {
+                print("Google sign in returned no user result")
             }
         }
     }

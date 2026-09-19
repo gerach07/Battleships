@@ -31,6 +31,17 @@
 	<string>2.3.0</string>
 	<key>CFBundleVersion</key>
 	<string>4</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.498836539028-ppqdtbvc6eos5urr7kgd5hctrvv82dr3</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon180</string>
 	<key>LSRequiresIPhoneOS</key>
