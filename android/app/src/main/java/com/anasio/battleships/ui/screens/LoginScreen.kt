@@ -305,6 +305,10 @@ private fun MenuView(viewModel: GameViewModel) {
             }
         }
     }
+
+    if (showLeaderboard) {
+        LeaderboardModal(viewModel) { showLeaderboard = false }
+    }
 }
 
 // ── Create ──
@@ -753,9 +757,11 @@ fun AuthSection(viewModel: GameViewModel) {
         OutlinedButton(
             onClick = {
                 try {
-                    val clientId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName).let {
-                        if (it != 0) context.getString(it) else "dummy_client_id"
-                    }
+                    // Use the web client ID from google-services.json directly.
+                    // The auto-generated default_web_client_id string only exists when a
+                    // native Android OAuth client (client_type:1) is registered — we only
+                    // have a web client (client_type:3), so we reference it explicitly.
+                    val clientId = "498836539028-2ifu7b1d9mp804841u76iv5b2bj2ko0t.apps.googleusercontent.com"
                     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestIdToken(clientId)
                         .requestEmail()
