@@ -356,7 +356,7 @@ private fun CreateView(viewModel: GameViewModel) {
                     timeLimit = (timeSlider * 60).toInt(),
                 )
             )
-            viewModel.setLoginView("enterName")
+            viewModel.continueOrAskName()
         }
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = { viewModel.setLoginView("menu") }) {
@@ -519,12 +519,12 @@ private fun RoomItem(room: RoomInfo, isSelected: Boolean, viewModel: GameViewMod
                                             viewModel.setJoinRoomCode(room.roomId)
                                             viewModel.setJoinRoomPin(pinInput)
                                             viewModel.setPendingJoin(PendingJoin(roomId = room.roomId, password = pinInput))
-                                            viewModel.setLoginView("enterName")
+                                            viewModel.continueOrAskName()
                                         } else pinError = err ?: s.incorrectPin
                                     }
                                 } else {
                                     viewModel.setPendingJoin(PendingJoin(roomId = room.roomId))
-                                    viewModel.setLoginView("enterName")
+                                    viewModel.continueOrAskName()
                                 }
                             },
                             enabled = !checking && (!room.hasPassword || pinInput.length == 3),
@@ -541,12 +541,12 @@ private fun RoomItem(room: RoomInfo, isSelected: Boolean, viewModel: GameViewMod
                                     checking = false
                                     if (valid) {
                                         viewModel.setPendingJoin(PendingJoin(roomId = room.roomId, password = pinInput, isSpectating = true))
-                                        viewModel.setLoginView("enterName")
+                                        viewModel.continueOrAskName()
                                     } else pinError = err ?: s.incorrectPin
                                 }
                             } else {
                                 viewModel.setPendingJoin(PendingJoin(roomId = room.roomId, isSpectating = true))
-                                viewModel.setLoginView("enterName")
+                                viewModel.continueOrAskName()
                             }
                         },
                         enabled = !checking && (!room.hasPassword || pinInput.length == 3),
@@ -804,7 +804,28 @@ fun ProfileScreen(viewModel: GameViewModel, onDismiss: () -> Unit) {
         title = { Text(s.profile, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("${s.winsLabel}: ${userProfile["wins"] ?: "0"}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.emerald)
+                val wins = (userProfile["wins"] ?: "0").toIntOrNull() ?: 0
+                val games = (userProfile["gamesPlayed"] ?: "0").toIntOrNull() ?: 0
+                val effectiveGames = maxOf(games, wins)
+                val winRate = if (effectiveGames > 0) (wins * 100 / effectiveGames) else 0
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$wins", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.emerald)
+                        Text(s.winsLabel, fontSize = 11.sp, color = c.textDim)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$games", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.accent)
+                        Text(s.matches, fontSize = 11.sp, color = c.textDim)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$winRate%", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.primary)
+                        Text(s.winRate, fontSize = 11.sp, color = c.textDim)
+                    }
+                }
+                HorizontalDivider(color = c.border.copy(alpha = 0.3f))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -855,7 +876,8 @@ fun LeaderboardModal(viewModel: GameViewModel, onDismiss: () -> Unit) {
                     LazyColumn {
                         items(leaderboardData.size) { index ->
                             val entry = leaderboardData[index]
-                            val winRate = if (entry.gamesPlayed > 0) (entry.wins * 100 / entry.gamesPlayed) else 0
+                            val effectiveGames = maxOf(entry.gamesPlayed, entry.wins)
+                            val winRate = if (effectiveGames > 0) (entry.wins * 100 / effectiveGames) else 0
                             val name = if (entry.isGuest && !entry.name.contains("👤")) "${entry.name} 👤" else entry.name
                             Row(
                                 modifier = Modifier

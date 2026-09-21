@@ -46,15 +46,21 @@ router.post('/auth/login', requireAuth, async (req, res) => {
 // Get the authenticated user's profile.
 router.get('/profile', requireAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ firebaseUid: req.user.uid });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    let user = await User.findOne({ firebaseUid: req.user.uid });
+    if (!user) {
+      user = await User.create({
+        firebaseUid: req.user.uid,
+        email: req.user.email || '',
+        name: sanitizeInput(req.user.name || 'Anonymous', 50),
+        photoUrl: req.user.picture || null,
+      });
+    }
 
     res.json({
       id: user._id,
       firebaseUid: user.firebaseUid,
       email: user.email,
       name: user.name,
-
       photoUrl: user.photoUrl,
       wins: user.wins,
       gamesPlayed: user.gamesPlayed,
@@ -69,8 +75,15 @@ router.get('/profile', requireAuth, async (req, res) => {
 // Update name.
 router.put('/profile', requireAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ firebaseUid: req.user.uid });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    let user = await User.findOne({ firebaseUid: req.user.uid });
+    if (!user) {
+      user = await User.create({
+        firebaseUid: req.user.uid,
+        email: req.user.email || '',
+        name: sanitizeInput(req.user.name || 'Anonymous', 50),
+        photoUrl: req.user.picture || null,
+      });
+    }
 
     const { name } = req.body;
 

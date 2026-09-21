@@ -445,7 +445,7 @@ function App() {
       row.map((cell, ci) => {
         const key = `${ri},${ci}`;
         if (sunkSet.has(key)) return CELL.SUNK;
-        if (sunkSet.has(key + '_safe') && (cell === CELL.WATER || cell === CELL.MISS)) return CELL.SAFE;
+        if (sunkSet.has(key + '_safe') && cell === CELL.WATER) return CELL.SAFE;
         return cell;
       })
     );
@@ -508,12 +508,12 @@ function App() {
 
     socket.on('playerJoined', (data) => {
       const myId = playerIdRef.current;
-      const opp = data.players.find(p => p.id !== myId);
+      const opp = data.players?.find(p => p.id !== myId);
       if (opp) {
         setOpponentName(opp.name || '');
         setOpponentSocketId(opp.id || null);
+        setMessageWithTimeout(tRef.current('msg.opJoined', opp.name || ''), 'success');
       }
-      setMessageWithTimeout(tRef.current('msg.opJoined', opp.name || ''), 'success');
     });
 
     socket.on('error', (data) => {
@@ -522,7 +522,7 @@ function App() {
       shootPendingRef.current = false;
       const errorMsg = data.error || tRef.current('app.unknownError');
       setMessageWithTimeout(`❌ ${errorMsg}`, 'error', 6000);
-      if (errorMsg.includes('does not exist') || errorMsg.includes('Incorrect password') || errorMsg.includes('not found')) {
+      if (errorMsg.includes('does not exist') || errorMsg.includes('Incorrect password') || errorMsg.includes('not found') || errorMsg.includes('is full')) {
         setLoginView('join');
         setGameId('');
         setRoomPassword('');
@@ -1069,10 +1069,9 @@ function App() {
     }
   }, [joinRoomCode, serverUrl, setMessageWithTimeout]);
 
-  // Helper: skip enterName for logged-in users
   const handleSetLoginView = useCallback((view, join) => {
-    if (view === 'enterName' && user?.name) {
-      // Logged-in: use profile name directly and join immediately
+    if (view === 'enterName' && firebaseAuthToken) {
+      // Logged-in: use profile name directly (or 'Player' if still loading) and join immediately
       const resolvedJoin = join || pendingJoin;
       if (!resolvedJoin) return;
       joiningGameRef.current = true;
@@ -1081,7 +1080,7 @@ function App() {
       setRoomPassword(resolvedJoin.password || '');
       socket?.emit('joinGame', {
         gameId: resolvedJoin.roomId,
-        playerName: user.name,
+        playerName: user?.name || 'Player',
         password: resolvedJoin.password,
         isCreating: resolvedJoin.isCreating,
         isSpectating: resolvedJoin.isSpectating || false,
@@ -1096,8 +1095,9 @@ function App() {
   }, [user, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
 
   const handleFinalJoin = useCallback(() => {
-    // For logged-in users, use their profile name; for guests, use typed name
-    const name = (user?.name || playerName).trim();
+    // For logged-in users, use their profile name (or 'Player' if still loading); for guests, use typed name
+    const rawName = firebaseAuthToken ? (user?.name || 'Player') : playerName;
+    const name = rawName.trim();
     if (!name) { setMessageWithTimeout(tRef.current('msg.nameRequired'), 'error', 4000); return; }
     if (!pendingJoin) return;
     if (joiningGameRef.current) return; // prevent double-submission
@@ -1195,6 +1195,7 @@ function App() {
     setIsSpectator(false); setSpectatorCount(0); setSpectatorBoards([]); spectatorSunkMap.current.clear();
     setChatMessages([]); setChatOpen(false); setChatUnread(0);
     setTurnStartedAt(null); setPlayerTimeLeft({});
+    setIsReady(false); setOpponentReady(false); // Prevent stale ready state on next join
     setPlayAgainPending(false); setOpponentWantsPlayAgain(false);
   }, [socket, resetSunk]);
 

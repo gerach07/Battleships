@@ -24,6 +24,16 @@ coverage/
 *firebase-adminsdk*.json
 
 # =========================
+# Sensitive Firebase / Google config files
+# These must be placed manually after cloning — never commit them
+# =========================
+google-services.json
+google-services*.json
+GoogleService-Info.plist
+GoogleService-Info*.plist
+*.plist
+
+# =========================
 # Android
 # =========================
 *.iml

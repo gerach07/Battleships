@@ -256,7 +256,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     // Socket just reconnected — auto-rejoin if mid-game
                     val phase = _phase.value
                     val gId = _gameId.value
-                    val pName = _playerName.value
+                    // Prefer profile name (authoritative) if signed in, else fall back to cached name
+                    val pName = if (_firebaseUser.value != null) {
+                        _userProfile.value["name"]?.takeIf { it.isNotBlank() }
+                            ?: _firebaseUser.value?.displayName?.takeIf { it.isNotBlank() }
+                            ?: _playerName.value
+                    } else {
+                        _playerName.value
+                    }
                     if (phase != "login" && gId.isNotBlank() && pName.isNotBlank()) {
                         setMessage("🔄 ${s.reconnectingToGame}", "info")
                         val data = JSONObject().apply {
@@ -380,27 +387,36 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun handleJoinGame() {
-        val id = _joinRoomCode.value.trim()
-        if (id.isEmpty()) { setMessage(s.roomCodeRequired, "error"); return }
-        _pendingJoin.value = PendingJoin(roomId = id, password = _joinRoomPin.value.ifBlank { null })
-        // If already signed in, use their Firebase display name and skip the name screen
-        val fbUser = _firebaseUser.value
-        if (fbUser != null) {
-            val displayName = fbUser.displayName?.takeIf { it.isNotBlank() } ?: _playerName.value
-            if (displayName.isNotBlank()) {
-                _playerName.value = displayName
-                handleFinalJoin()
-                return
-            }
+    /**
+     * If the user is signed in and has a profile name, skip the "enter name"
+     * screen and go straight to joining. Otherwise show the name screen.
+     * Call this from the UI instead of setLoginView("enterName").
+     */
+    fun continueOrAskName() {
+        if (_firebaseUser.value != null) {
+            handleFinalJoin()
+            return
         }
         _loginView.value = "enterName"
     }
 
+    fun handleJoinGame() {
+        val id = _joinRoomCode.value.trim()
+        if (id.isEmpty()) { setMessage(s.roomCodeRequired, "error"); return }
+        _pendingJoin.value = PendingJoin(roomId = id, password = _joinRoomPin.value.ifBlank { null })
+        continueOrAskName()
+    }
+
     fun handleFinalJoin() {
-        // For logged-in users, prefer their Firebase display name; fall back to typed name
         val fbDisplayName = _firebaseUser.value?.displayName?.takeIf { it.isNotBlank() }
-        val name = (fbDisplayName ?: _playerName.value).trim()
+        val profileName = if (_firebaseToken.value != null) _userProfile.value["name"]?.takeIf { it.isNotBlank() } else null
+        
+        val name = if (_firebaseUser.value != null) {
+             (profileName ?: fbDisplayName ?: "Player").trim()
+        } else {
+             _playerName.value.trim()
+        }
+        
         if (name.isBlank()) { setMessage(s.enterNameFirst, "error"); return }
         val pj = _pendingJoin.value ?: return
         if (joiningGame) return // prevent double-submission
@@ -478,7 +494,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             // Auto-reset if server never responds (e.g. connection lost mid-shot)
             shootTimeoutJob?.cancel()
             shootTimeoutJob = viewModelScope.launch {
-                kotlinx.coroutines.delay(5_000)
+                kotlinx.coroutines.delay(10_000) // Match web client 10s timeout
                 shootPending.set(false)
             }
         } else {

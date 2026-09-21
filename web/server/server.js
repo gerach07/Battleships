@@ -193,6 +193,14 @@ async function handlePlayerLeave(socketId, io) {
     if (prevState === GameState.BATTLE_PHASE && opponentId) {
       room.winner = opponentId;
       room._transitionState(GameState.GAME_OVER);
+      // Record disconnect forfeit for both auth'd and guest players
+      const winnerUid = room.players[opponentId]?.firebaseUid || null;
+      const loserUid = room.players[socketId]?.firebaseUid || null;
+      const winnerName = winnerUid ? null : (room.players[opponentId]?.name || null);
+      const loserName = loserUid ? null : (room.players[socketId]?.name || null);
+      recordGameResult(winnerUid, loserUid, winnerName, loserName).catch(err =>
+        console.error('recordGameResult (disconnect):', err.message)
+      );
       io.to(roomId).emit('gameForfeited', {
         winner: opponentId,
         forfeiterId: socketId,
@@ -636,7 +644,9 @@ io.on('connection', (socket) => {
         const loserUid = room.players[loserId]?.firebaseUid || null;
         const winnerName = winnerUid ? null : (room.players[room.winner]?.name || null);
         const loserName = loserUid ? null : (room.players[loserId]?.name || null);
-        recordGameResult(winnerUid, loserUid, winnerName, loserName);
+        recordGameResult(winnerUid, loserUid, winnerName, loserName).catch(err =>
+          console.error('recordGameResult (shot):', err.message)
+        );
       }
 
       const opponentId = room.getOpponentId(socket.id);
@@ -738,7 +748,8 @@ io.on('connection', (socket) => {
       if (!room || room.state !== GameState.GAME_OVER) return;
       if (!room.players[socket.id]) return; // spectators can't decline
       socket.to(roomId).emit('playAgainDeclined', { declinerName: room.players[socket.id]?.name });
-      room.playAgainVotes.delete(socket.id);
+      // Clear ALL votes so next play-again attempt requires fresh consent from both players
+      room.playAgainVotes.clear();
       room.touch();
     } finally {
       release();
@@ -763,7 +774,9 @@ io.on('connection', (socket) => {
       const loserUid = room.players[socket.id]?.firebaseUid || null;
       const winnerName = winnerUid ? null : (room.players[opponentId]?.name || null);
       const loserName = loserUid ? null : (room.players[socket.id]?.name || null);
-      recordGameResult(winnerUid, loserUid, winnerName, loserName);
+      recordGameResult(winnerUid, loserUid, winnerName, loserName).catch(err =>
+        console.error('recordGameResult (forfeit):', err.message)
+      );
       io.to(roomId).emit('gameForfeited', {
         winner: opponentId,
         forfeiterId: socket.id,
@@ -1116,7 +1129,9 @@ timerIntervalId = setInterval(() => {
         const loserUid = loser ? freshRoom.players[loser]?.firebaseUid || null : null;
         const winnerName = winnerUid ? null : (winner ? freshRoom.players[winner]?.name || null : null);
         const loserName = loserUid ? null : (loser ? freshRoom.players[loser]?.name || null : null);
-        recordGameResult(winnerUid, loserUid, winnerName, loserName);
+        recordGameResult(winnerUid, loserUid, winnerName, loserName).catch(err =>
+          console.error('recordGameResult (timer):', err.message)
+        );
         const data = { winner, loser, winnerName: winner ? freshRoom.players[winner]?.name : null };
         io.to(roomId).emit('timeUp', data);
       } catch (err) {

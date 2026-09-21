@@ -44,7 +44,9 @@ struct LeaderboardView: View {
                                     Text(displayName(for: entry))
                                         .font(.headline)
                                         .foregroundColor(.white)
-                                    Text("\(entry.gamesPlayed) \(s.gamesPlayed)")
+                                    let effectiveGames = max(entry.gamesPlayed, entry.wins)
+                                    let winRate = effectiveGames > 0 ? Int(Double(entry.wins) / Double(effectiveGames) * 100) : 0
+                                    Text("\(entry.gamesPlayed) \(s.gamesPlayed) • \(winRate)% \(s.winsLabel)")
                                         .font(.caption)
                                         .foregroundColor(.gray)
                                 }

@@ -240,10 +240,16 @@ final class GameViewModel: ObservableObject {
     func joinGame(roomId: String, password: String?, name: String, isCreating: Bool, isSpectating: Bool, timeLimit: Int) {
         guard !joiningGame else { return }
 
-        let signedInName = AuthManager.shared.isSignedIn
-            ? AuthManager.shared.userName.trimmingCharacters(in: .whitespacesAndNewlines)
-            : ""
-        let trimmedName = String((name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? signedInName : name).prefix(50))
+        let trimmedName: String
+        if AuthManager.shared.isSignedIn {
+            let signedInName = AuthManager.shared.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+            // If they are signed in, ALWAYS use their profile name, or default to "Player" if it hasn't loaded yet.
+            // Never fallback to their old guest name.
+            trimmedName = String((signedInName.isEmpty ? "Player" : signedInName).prefix(50))
+        } else {
+            trimmedName = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(50))
+        }
+
         guard !trimmedName.isEmpty else { setMessage(s.enterNameFirst, "error"); return }
 
         joiningGame = true

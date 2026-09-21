@@ -2,7 +2,7 @@ const GRID_SIZE = 10;
 const SHIPS = [5, 4, 3, 3, 2];
 const SHIP_NAMES = ['Carrier', 'Battleship', 'Destroyer', 'Submarine', 'Patrol'];
 const TOTAL_SEGMENTS = SHIPS.reduce((a, b) => a + b, 0);
-const RATE_LIMIT_SHOTS_PER_SECOND = 10;
+const RATE_LIMIT_SHOTS_PER_SECOND = 2;
 const RATE_LIMIT_PLACEMENTS_PER_SECOND = 5;
 const RATE_LIMIT_CHAT_PER_SECOND = 3;
 const MAX_CHAT_LENGTH = 200;
