@@ -947,7 +947,7 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 if let boards = data["boards"] as? [[String: Any]] {
-                    self.spectatorBoards = boards.compactMap { parseSpectatorBoard($0) }
+                    self.spectatorBoards = self.buildSpectatorBoards(boards)
                 }
                 self.currentTurn = data["currentTurn"] as? String
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
