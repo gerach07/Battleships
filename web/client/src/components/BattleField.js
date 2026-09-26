@@ -133,7 +133,7 @@ const BattleField = memo(({
                     <GameBoard board={dispOpponent} isYourBoard={false} onCellClick={isSpectator ? noop : handleShoot} isYourTurn={!isSpectator && isMyTurn} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[1]) : t('battle.enemyWaters', opponentName)} explosionCells={opponentExplosions} lastShot={opponentLastShot} />
                 </div>
                 <div className={`glass-card p-3 sm:p-4 transition-all animate-board-entry ${isSpectator ? '' : isMyTurn ? '' : 'border-yellow-500/15'}`}>
-                    <GameBoard board={dispPlayer} isYourBoard={!isSpectator} onCellClick={noop} isYourTurn={false} label={isSpectator ? `🛡️ ${spectatorPlayerNames[0]}` : t('battle.yourFleet')} explosionCells={playerExplosions} lastShot={playerLastShot} />
+                    <GameBoard board={dispPlayer} isYourBoard={!isSpectator} onCellClick={noop} isYourTurn={false} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[0]) : t('battle.yourFleet')} explosionCells={playerExplosions} lastShot={playerLastShot} />
                 </div>
             </div>
         </div>

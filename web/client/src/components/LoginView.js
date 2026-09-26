@@ -32,6 +32,7 @@ const LoginView = memo(({
     setGameTimeLimit,
     roomNotFound,
     roomHasPassword,
+    roomIsFull,
     isJoining,
     handleGoogleLogin,
     user,
@@ -182,20 +183,22 @@ const LoginView = memo(({
                                 />
                             </div>
                         )}
-                        <button
-                            onClick={async () => {
-                                if (roomHasPassword && !roomPassword) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
-                                if (roomHasPassword && roomPassword) {
-                                    const valid = await checkPassword(gameId, roomPassword);
-                                    if (!valid) return;
-                                }
-                                setPendingJoin({ roomId: gameId, password: roomPassword || null }); setLoginView('enterName');
-                            }}
-                            disabled={roomHasPassword && !roomPassword}
-                            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-blue-900/30 text-base"
-                        >
-                            {t('login.joinGameBtn')}
-                        </button>
+                        {!roomIsFull && (
+                            <button
+                                onClick={async () => {
+                                    if (roomHasPassword && !roomPassword) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
+                                    if (roomHasPassword && roomPassword) {
+                                        const valid = await checkPassword(gameId, roomPassword);
+                                        if (!valid) return;
+                                    }
+                                    setPendingJoin({ roomId: gameId, password: roomPassword || null }); setLoginView('enterName');
+                                }}
+                                disabled={roomHasPassword && !roomPassword}
+                                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-blue-900/30 text-base"
+                            >
+                                {t('login.joinGameBtn')}
+                            </button>
+                        )}
                         <button
                             onClick={async () => {
                                 if (roomHasPassword && !roomPassword) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
@@ -205,7 +208,10 @@ const LoginView = memo(({
                                 }
                                 setPendingJoin({ roomId: gameId, password: roomPassword || null, isSpectating: true }); setLoginView('enterName');
                             }}
-                            className="w-full py-3 border border-purple-500/40 text-purple-300 hover:bg-purple-500/15 font-bold rounded-2xl transition-all hover:scale-[1.01] text-sm"
+                            disabled={roomHasPassword && !roomPassword}
+                            className={roomIsFull 
+                                ? "w-full py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-purple-900/30 text-base"
+                                : "w-full py-3 border border-purple-500/40 text-purple-300 hover:bg-purple-500/15 font-bold rounded-2xl transition-all hover:scale-[1.01] text-sm"}
                         >
                             👁️ {t('login.spectateBtn')}
                         </button>

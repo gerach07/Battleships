@@ -171,6 +171,7 @@ function App() {
   const [availableRooms, setAvailableRooms] = useState([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [roomNotFound, setRoomNotFound] = useState(false);
+  const [roomIsFull, setRoomIsFull] = useState(false);
   const [roomHasPassword, setRoomHasPassword] = useState(false);
   const [createPassword, setCreatePassword] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -425,7 +426,21 @@ function App() {
     const ac = new AbortController();
     fetch(`${serverUrl}/rooms/${urlInfo.roomCode}`, { signal: ac.signal })
       .then(r => r.json().catch(() => ({ exists: false })))
-      .then(data => { if (!data.exists) setRoomNotFound(true); else setRoomHasPassword(data.hasPassword || false); })
+      .then(data => { 
+        if (!data.exists) {
+          setRoomNotFound(true); 
+        } else {
+          setRoomHasPassword(data.hasPassword || false);
+          if (data.playerCount >= 2) {
+            setRoomIsFull(true);
+            // If room is full and no password is required, automatically join as spectator
+            if (!data.hasPassword) {
+              setPendingJoin({ roomId: urlInfo.roomCode, password: null, isSpectating: true });
+              setLoginView('enterName');
+            }
+          }
+        }
+      })
       .catch((err) => { if (err.name !== 'AbortError') setRoomNotFound(true); });
     return () => ac.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1452,6 +1467,7 @@ function App() {
             gameTimeLimit={gameTimeLimit} setGameTimeLimit={setGameTimeLimit}
             roomNotFound={roomNotFound}
             roomHasPassword={roomHasPassword}
+            roomIsFull={roomIsFull}
             isJoining={isJoining}
             handleGoogleLogin={handleGoogleLogin}
             user={user}

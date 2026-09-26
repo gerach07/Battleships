@@ -635,7 +635,10 @@ io.on('connection', (socket) => {
       if (row < 0 || row >= 10 || col < 0 || col >= 10) return;
 
       const shot = room.processShot(socket.id, row, col);
-      if (!shot.success) return socket.emit('error', { error: shot.error });
+      if (!shot.success) {
+        if (shot.error === 'Shot rate limit exceeded') return;
+        return socket.emit('error', { error: shot.error });
+      }
 
       // Record win in database (works for both authenticated and guest players)
       if (shot.result.gameWon && room.winner) {

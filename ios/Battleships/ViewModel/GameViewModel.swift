@@ -332,7 +332,7 @@ final class GameViewModel: ObservableObject {
     func shoot(row: Int, col: Int) {
         guard phase == "battle", isMyTurn, !shootPending, !isSpectator else { return }
         let cell = opponentBoard[row][col]
-        guard cell == CellState.WATER || cell == CellState.SAFE else { return }
+        guard cell == CellState.WATER else { return }
         shootPending = true
         socketManager.emit("shoot", ["row": row, "col": col])
         // Auto-reset if server never responds (e.g. connection lost mid-shot)
