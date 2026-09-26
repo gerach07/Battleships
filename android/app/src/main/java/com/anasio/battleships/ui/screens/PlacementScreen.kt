@@ -94,7 +94,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
         canPlaceShipOnBoard(board, dragTargetRow, dragTargetCol, ship.length, dragDirection).first
     }
 
-    val placedIds = savedPlacements.map { it.shipId }.toSet()
+    val placedIds = (placements + savedPlacements).map { it.shipId }.toSet()
     val allPlaced = placedIds.size == SHIPS.size
 
     if (isSpectator) {
@@ -179,9 +179,9 @@ fun PlacementScreen(viewModel: GameViewModel) {
                     }
                     val shape = RoundedCornerShape(9.dp)
                     val tileColor = when {
-                        placed -> c.green.copy(alpha = 0.65f)
-                        selected -> Color(0xFFAF52DE).copy(alpha = 0.5f)
-                        else -> Color.White.copy(alpha = 0.08f)
+                        placed -> c.green
+                        selected -> c.primary
+                        else -> c.card
                     }
                     val tileBorder = when {
                         placed -> c.green.copy(alpha = 0.85f)
