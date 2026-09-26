@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/preview_root"
+    android:background="#FF0F172A"
+    android:fillViewport="true"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="40dp">
+
+        <include layout="@layout/preview_battle_header" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/preview_battle_timer_active"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YOU" android:textColor="#FFCBD5E1" android:textSize="11sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2:31" android:textColor="#FFFFFFFF" android:textSize="22sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="▶ TURN" android:textColor="#FFFDE047" android:textSize="9sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/preview_battle_timer_idle"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="OPPONENT" android:textColor="#FFCBD5E1" android:textSize="11sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2:58" android:textColor="#FFCBD5E1" android:textSize="22sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="WAITING" android:textColor="#FF94A3B8" android:textSize="9sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/preview_battle_status"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚡ YOUR TURN — FIRE!" android:textColor="#FF22C55E" android:textSize="15sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Hit a ship to shoot again" android:textColor="#9986EFAC" android:textSize="10sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/preview_battle_panel"
+                android:gravity="center"
+                android:text="🏳️"
+                android:textColor="#FFEF4444"
+                android:textSize="17sp" />
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/preview_battle_panel"
+                android:gravity="center"
+                android:text="💣"
+                android:textColor="#FFF97316"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/preview_battle_panel"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="9dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YOUR HITS" android:textColor="#FF22C55E" android:textSize="10sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="● ● ○ ○ ○" android:textColor="#FFF97316" android:textSize="10sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginHorizontal="12dp" android:text="│" android:textColor="#4D94A3B8" android:textSize="12sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● ○ ○ ○ ○" android:textColor="#FFEF4444" android:textSize="10sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="THEIR HITS" android:textColor="#FFEF4444" android:textSize="10sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/preview_battle_panel"
+            android:orientation="vertical"
+            android:padding="12dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="5dp" android:text="🎯 ENEMY WATERS — OPPONENT" android:textColor="#FFFFFFFF" android:textSize="13sp" android:textStyle="bold" />
+            <include layout="@layout/preview_battle_enemy_grid" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:gravity="center" android:orientation="horizontal">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="■ Water     ■ Hit     ■ Miss     ■ Sunk" android:textColor="#FF94A3B8" android:textSize="9sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/preview_battle_panel"
+            android:orientation="vertical"
+            android:padding="12dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="5dp" android:text="🚥 YOUR FLEET" android:textColor="#FFFFFFFF" android:textSize="13sp" android:textStyle="bold" />
+            <include layout="@layout/preview_battle_fleet_grid" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:gravity="center" android:orientation="horizontal">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="■ Water     ■ Ship     ■ Hit     ■ Miss     ■ Sunk" android:textColor="#FF94A3B8" android:textSize="9sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

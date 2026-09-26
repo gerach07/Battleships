@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="52dp"
+    android:paddingHorizontal="4dp">
+
+    <Spinner
+        android:layout_width="72dp"
+        android:layout_height="36dp"
+        android:layout_gravity="start|center_vertical"
+        android:background="@drawable/preview_battle_language_picker"
+        android:dropDownWidth="wrap_content"
+        android:dropDownVerticalOffset="2dp"
+        android:entries="@array/preview_battle_languages"
+        android:paddingStart="5dp"
+        android:paddingEnd="2dp"
+        android:popupBackground="#FF1E293B"
+        android:spinnerMode="dropdown" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="⚓ Kuģu kaujas"
+        android:textColor="#CCFFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end|center_vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/preview_battle_header_control"
+            android:gravity="center"
+            android:text="🔇"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/preview_battle_header_control"
+            android:gravity="center"
+            android:text="🔕"
+            android:textSize="16sp" />
+    </LinearLayout>
+</FrameLayout>

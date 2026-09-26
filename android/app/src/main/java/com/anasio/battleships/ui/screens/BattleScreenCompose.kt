@@ -28,7 +28,7 @@ import com.anasio.battleships.ui.components.bounceClick
 import com.anasio.battleships.viewmodel.GameViewModel
 
 @Composable
-fun BattleScreen(viewModel: GameViewModel) {
+fun BattleScreenCompose(viewModel: GameViewModel) {
     val playerBoard by viewModel.playerBoard.collectAsState()
     val opponentBoard by viewModel.opponentBoard.collectAsState()
     val currentTurn by viewModel.currentTurn.collectAsState()
@@ -156,7 +156,7 @@ fun BattleScreen(viewModel: GameViewModel) {
         } else {
             if (bombMode) {
                 Text(
-                    "🎯 Select target cell for BOMB",
+                    "🎯 ${s.bombTargetHint}",
                     fontSize = 12.sp, fontWeight = FontWeight.Bold, color = c.orange,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -218,7 +218,7 @@ fun BattleScreen(viewModel: GameViewModel) {
                         modifier = Modifier.height(44.dp),
                         shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, bombColor.copy(alpha = 0.5f))
-                    ) { Text("💣 BOMB", fontSize = 12.sp) }
+                    ) { Text("💣 ${s.bomb}", fontSize = 12.sp) }
 
                     OutlinedButton(
                         onClick = viewModel::requestForfeit,

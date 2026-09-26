@@ -558,6 +558,8 @@ final class GameViewModel: ObservableObject {
         chatUnread = 0
         mySunkCount = 0
         theirSunkCount = 0
+        bombUsed = false
+        bombMode = false
         opponentSunkOverlay = []
         playerSunkOverlay = []
         shotKeys = []

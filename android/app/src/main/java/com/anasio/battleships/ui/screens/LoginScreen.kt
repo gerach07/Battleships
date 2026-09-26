@@ -253,17 +253,32 @@ private fun MenuView(viewModel: GameViewModel) {
     AuthSection(viewModel)
     Spacer(Modifier.height(8.dp))
 
-    GradientButton("🎮  ${s.createGame}", c.primaryDark, c.primary) {
-        viewModel.setLoginView("create")
-    }
+    MenuButton(
+        icon = "⚔️",
+        title = s.createRoom,
+        subtitle = s.createNewGame,
+        startColor = c.green,
+        endColor = c.green.copy(alpha = 0.8f),
+        onClick = { viewModel.setLoginView("create") }
+    )
     Spacer(Modifier.height(12.dp))
-    GradientButton("🚀  ${s.joinGame}", c.accent, Color(0xFF7C3AED)) {
-        viewModel.setLoginView("join"); viewModel.fetchRooms()
-    }
+    MenuButton(
+        icon = "⛵",
+        title = s.joinRoom,
+        subtitle = s.joinGameTitle,
+        startColor = Color(0xFF3B82F6),
+        endColor = Color(0xFF4F46E5),
+        onClick = { viewModel.setLoginView("join"); viewModel.fetchRooms() }
+    )
     Spacer(Modifier.height(12.dp))
-    GradientButton("🏆  ${s.leaderboard}", c.surface.copy(alpha=0.5f), c.surface) {
-        showLeaderboard = true
-    }
+    MenuButton(
+        icon = "🏆",
+        title = s.leaderboard,
+        subtitle = s.topPlayers,
+        startColor = c.orange,
+        endColor = c.yellow,
+        onClick = { showLeaderboard = true }
+    )
 
     Spacer(Modifier.height(16.dp))
 
@@ -672,6 +687,43 @@ fun GradientButton(text: String, start: Color, end: Color, onClick: () -> Unit) 
         ) {
             Text(text, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
         }
+    }
+}
+
+@Composable
+fun MenuButton(
+    icon: String,
+    title: String,
+    subtitle: String,
+    startColor: Color,
+    endColor: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Brush.linearGradient(listOf(startColor, endColor))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(icon, fontSize = 24.sp)
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+            Text(subtitle, fontSize = 12.sp, color = Color.Gray)
+        }
+        Text("›", fontSize = 24.sp, color = Color.Gray)
     }
 }
 

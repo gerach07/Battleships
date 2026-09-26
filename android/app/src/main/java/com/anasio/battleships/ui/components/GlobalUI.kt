@@ -84,6 +84,7 @@ fun GlobalHeader(viewModel: GameViewModel) {
                     Language.RU -> "🇷🇺 ${language.name}"
                 },
                 fontSize = 18.sp,
+                color = Color.White,
                 modifier = Modifier
                     .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
                     .clickable { expandedMenu = true }

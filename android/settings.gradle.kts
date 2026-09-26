@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Battleships"
 include(":app")
+include(":battle-preview")
  

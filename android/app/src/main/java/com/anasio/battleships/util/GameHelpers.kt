@@ -108,6 +108,59 @@ fun parseBoardFromJson(json: JSONArray): Board {
     }
 }
 
+fun restorePlacementsFromBoard(board: Board): List<PlacedShip> {
+    val remaining = mutableSetOf<Pair<Int, Int>>()
+    for (row in 0 until GRID_SIZE) {
+        for (col in 0 until GRID_SIZE) {
+            if (board.getOrNull(row)?.getOrNull(col) == CellState.SHIP) {
+                remaining.add(row to col)
+            }
+        }
+    }
+
+    val restored = mutableListOf<PlacedShip>()
+    val usedShipIds = mutableSetOf<Int>()
+    val directions = listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
+
+    while (remaining.isNotEmpty()) {
+        val start = remaining.minWith(compareBy<Pair<Int, Int>> { it.first }.thenBy { it.second })
+        val queue = java.util.ArrayDeque<Pair<Int, Int>>()
+        val component = mutableListOf<Pair<Int, Int>>()
+        queue.add(start)
+        remaining.remove(start)
+
+        while (queue.isNotEmpty()) {
+            val cell = queue.removeFirst()
+            component.add(cell)
+            for ((rowDelta, colDelta) in directions) {
+                val neighbor = cell.first + rowDelta to cell.second + colDelta
+                if (remaining.remove(neighbor)) queue.add(neighbor)
+            }
+        }
+
+        val horizontal = component.all { it.first == component.first().first }
+        val vertical = component.all { it.second == component.first().second }
+        if (!horizontal && !vertical) continue
+
+        val ship = SHIPS.firstOrNull { it.length == component.size && it.id !in usedShipIds } ?: continue
+        val cells = if (horizontal) component.sortedBy { it.second } else component.sortedBy { it.first }
+        val first = cells.first()
+        restored.add(
+            PlacedShip(
+                shipId = ship.id,
+                row = first.first,
+                col = first.second,
+                length = ship.length,
+                direction = if (horizontal) "horizontal" else "vertical",
+                cells = cells,
+            )
+        )
+        usedShipIds.add(ship.id)
+    }
+
+    return restored
+}
+
 fun parseTimeLeft(json: JSONObject): Map<String, Double> {
     val map = mutableMapOf<String, Double>()
     val keys = json.keys()

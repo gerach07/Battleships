@@ -913,14 +913,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     iShot -> s.missOpponentTurn.fmt(oppName)
                     else -> s.theyMissedYourTurn
                 }
-                _message.value = msg
-                _messageType.value =
-                    when {
-                        isHit && iShot -> "success"
-                        isHit -> "error"
-                        iShot -> "info"
-                        else -> "success"
-                    }
+                val messageType = when {
+                    isHit && iShot -> "success"
+                    isHit -> "error"
+                    iShot -> "info"
+                    else -> "success"
+                }
+                setMessage(msg, messageType)
 
                 if (gameWon) {
                     _phase.value = "gameOver"
@@ -1015,8 +1014,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _playerBoard.value = overlayBoard(rawP, playerSunk)
                 _opponentBoard.value = overlayBoard(rawO, opponentSunk)
 
-                _message.value = if (iShot) "💣 BOMB used!" else "💣 Opponent used BOMB!"
-                _messageType.value = "info"
+                setMessage(if (iShot) "💣 ${s.bombUsed}" else "💣 ${s.opponentUsedBomb}", "info")
 
                 if (data.optBoolean("gameWon", false)) {
                     _phase.value = "gameOver"
@@ -1100,8 +1098,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _phase.value = "gameOver"
             if (iForfeited) SoundManager.playDefeat() else SoundManager.playVictory()
             val name = data.optString("forfeiterName", "").ifEmpty { _opponentName.value }
-            _message.value = if (iForfeited) s.youSurrendered else s.opponentSurrendered.fmt(name)
-            _messageType.value = if (iForfeited) "info" else "success"
+            setMessage(
+                if (iForfeited) s.youSurrendered else s.opponentSurrendered.fmt(name),
+                if (iForfeited) "info" else "success",
+            )
         }
 
         reg("playAgainRequested") { args ->
@@ -1170,7 +1170,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _bombMode.value = false
                 _winner.value = data.optString("winner").ifEmpty { null }
                 _opponentName.value = data.optString("opponentName", "").ifEmpty { "" }
-                if (data.optBoolean("shipsPlaced", false)) _isReady.value = true
+                val shipsPlaced = data.optBoolean("shipsPlaced", false)
+                _isReady.value = shipsPlaced
 
                 // Restore chat history
                 data.optJSONArray("chatHistory")?.let { arr ->
@@ -1194,7 +1195,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 // Restore phase from server state
                 when (data.optString("state")) {
                     "BATTLE_PHASE" -> _phase.value = "battle"
-                    "PLACEMENT_PHASE" -> _phase.value = "placement"
+                    "PLACEMENT_PHASE" -> {
+                        val restoredPlacements = restorePlacementsFromBoard(_playerBoard.value)
+                        _clientPlacements.value = restoredPlacements
+                        _shipsPlaced.value = restoredPlacements.size
+                        _placementKey.value += 1
+                        _phase.value = "placement"
+                    }
                     "GAME_OVER" -> _phase.value = "gameOver"
                     "WAITING_FOR_PLAYERS" -> _phase.value = "waiting"
                 }
@@ -1363,8 +1370,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             _phase.value = "gameOver"
             _winner.value = data.optString("winner").ifEmpty { null }
             val iLost = data.optString("loser") == playerIdRef
-            _message.value = if (iLost) s.yourClockRanOut else s.opponentClockRanOut.fmt(_opponentName.value)
-            _messageType.value = if (iLost) "error" else "success"
+            setMessage(
+                if (iLost) s.yourClockRanOut else s.opponentClockRanOut.fmt(_opponentName.value),
+                if (iLost) "error" else "success",
+            )
             if (SoundManager.enabled) {
                 if (data.optString("winner") == playerIdRef) SoundManager.playVictory() else SoundManager.playDefeat()
             }

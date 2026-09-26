@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anasio.battleships.i18n.LocalI18n
@@ -83,13 +84,23 @@ fun GameTimer(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .height(68.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(bgBrush)
                     .border(1.dp, borderColor, RoundedCornerShape(8.dp))
                     .padding(vertical = 8.dp, horizontal = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(label, fontSize = 11.sp, color = c.textDim, fontWeight = FontWeight.Medium)
+                Text(
+                    label,
+                    modifier = Modifier.fillMaxWidth(),
+                    fontSize = 13.sp,
+                    color = c.textDim,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text(
                     formatTime(live),
                     fontSize = 22.sp,
@@ -101,9 +112,6 @@ fun GameTimer(
                     },
                     textAlign = TextAlign.Center,
                 )
-                if (isActive) {
-                    Text("▶ ${s.ticking}", fontSize = 9.sp, color = c.yellow.copy(alpha = .7f))
-                }
             }
         }
     }

@@ -37,6 +37,7 @@ fun GameBoard(
     label: String? = null,
     interactive: Boolean = false,
     showShips: Boolean = true,
+    showCombatLegend: Boolean = true,
     previewCells: Set<String> = emptySet(),
     previewValid: Boolean = true,
     lastShotKey: String? = null,
@@ -158,9 +159,11 @@ fun GameBoard(
         ) {
             LegendItem(color = c.cellWater, label = s.boardWater)
             if (showShips) LegendItem(color = c.cellShip, label = s.boardShip)
-            LegendItem(color = c.cellHit, label = s.boardHit)
-            LegendItem(color = c.cellMiss, label = s.boardMiss)
-            LegendItem(color = c.cellSunk, label = s.boardSunk)
+            if (showCombatLegend) {
+                LegendItem(color = c.cellHit, label = s.boardHit)
+                LegendItem(color = c.cellMiss, label = s.boardMiss)
+                LegendItem(color = c.cellSunk, label = s.boardSunk)
+            }
         }
     }
 }

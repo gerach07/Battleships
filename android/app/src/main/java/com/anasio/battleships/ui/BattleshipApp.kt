@@ -71,7 +71,7 @@ fun BattleshipApp(viewModel: GameViewModel) {
                         "login" -> LoginScreen(viewModel)
                         "waiting" -> WaitingRoomScreen(viewModel)
                         "placement" -> PlacementScreen(viewModel)
-                        "battle" -> BattleScreen(viewModel)
+                        "battle" -> JavaBattleScreen(viewModel)
                         "gameOver" -> GameOverScreen(viewModel)
                     }
                 }

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/battle_preview_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF0F172A"
+    android:fillViewport="true"
+    tools:context=".BattleActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="40dp">
+
+        <include layout="@layout/preview_battle_header" />
+
+        <!-- timers -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/timer_you"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/preview_battle_timer_active"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TU" android:textColor="#FFCBD5E1" android:textSize="11sp" />
+                <TextView android:id="@+id/timer_you_value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2:31" android:textColor="#FFFFFFFF" android:textSize="22sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="▶ GĀJIENS" android:textColor="#FFFDE047" android:textSize="9sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/timer_opponent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/preview_battle_timer_idle"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="8dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PRETINIEKS" android:textColor="#FFCBD5E1" android:textSize="11sp" />
+                <TextView android:id="@+id/timer_opponent_value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2:58" android:textColor="#FFCBD5E1" android:textSize="22sp" android:textStyle="bold" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GAIDA" android:textColor="#FF94A3B8" android:textSize="9sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- turn status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/preview_battle_status"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView android:id="@+id/status_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚡ TAVS GĀJIENS — ŠAUJ!" android:textColor="#FF22C55E" android:textSize="15sp" android:textStyle="bold" />
+                <TextView android:id="@+id/status_subtitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="Trāpot kuģim, šauj vēlreiz" android:textColor="#9986EFAC" android:textSize="10sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btn_surrender"
+                android:layout_width="40dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/preview_battle_panel"
+                android:gravity="center"
+                android:text="🏳️"
+                android:textColor="#FFEF4444"
+                android:textSize="17sp" />
+            <TextView
+                android:id="@+id/btn_special_shot"
+                android:layout_width="40dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/preview_battle_panel"
+                android:gravity="center"
+                android:text="💣"
+                android:textColor="#FFF97316"
+                android:textSize="17sp" />
+        </LinearLayout>
+
+        <!-- hit counters -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/preview_battle_panel"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="9dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TAVI TRĀPĪJUMI" android:textColor="#FF22C55E" android:textSize="10sp" android:textStyle="bold" />
+            <TextView android:id="@+id/your_hits_dots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="● ● ○ ○ ○" android:textColor="#FFF97316" android:textSize="10sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginHorizontal="12dp" android:text="│" android:textColor="#4D94A3B8" android:textSize="12sp" />
+            <TextView android:id="@+id/their_hits_dots" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● ○ ○ ○ ○" android:textColor="#FFEF4444" android:textSize="10sp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="VIŅU TRĀPĪJUMI" android:textColor="#FFEF4444" android:textSize="10sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- enemy board -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginBottom="5dp" android:text="🎯 PRETINIEKA ŪDEŅI" android:textColor="#FFFFFFFF" android:textSize="13sp" android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/preview_battle_panel"
+                android:orientation="vertical"
+                android:padding="12dp">
+                <LinearLayout
+                    android:id="@+id/enemy_board_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:orientation="vertical" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:gravity="center" android:orientation="horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="■ Ūdens   ■ Trāpījums   ■ Gaŗām   ■ Nogremdēts" android:textColor="#FF94A3B8" android:textSize="9sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- your fleet -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginBottom="5dp" android:text="🚥 TAVA FLOTE" android:textColor="#FFFFFFFF" android:textSize="13sp" android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/preview_battle_panel"
+                android:orientation="vertical"
+                android:padding="12dp">
+                <LinearLayout
+                    android:id="@+id/fleet_board_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:orientation="vertical" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:gravity="center" android:orientation="horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="■ Ūdens   ■ Kuģis   ■ Trāpījums   ■ Gaŗām   ■ Nogremdēts" android:textColor="#FF94A3B8" android:textSize="9sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
