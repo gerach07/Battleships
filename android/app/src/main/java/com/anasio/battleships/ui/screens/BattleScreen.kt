@@ -43,6 +43,8 @@ fun BattleScreen(viewModel: GameViewModel) {
     val playerTimeLeft by viewModel.playerTimeLeft.collectAsState()
     val turnStartedAt by viewModel.turnStartedAt.collectAsState()
     val showSurrenderDialog by viewModel.showSurrenderDialog.collectAsState()
+    val bombUsed by viewModel.bombUsed.collectAsState()
+    val bombMode by viewModel.bombMode.collectAsState()
 
     val s = LocalI18n.current
     val c = LocalColorPalette.current
@@ -152,6 +154,16 @@ fun BattleScreen(viewModel: GameViewModel) {
                 Spacer(Modifier.height(8.dp))
             }
         } else {
+            if (bombMode) {
+                Text(
+                    "🎯 Select target cell for BOMB",
+                    fontSize = 12.sp, fontWeight = FontWeight.Bold, color = c.orange,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp)
+                )
+            }
             // Enemy waters (interactive)
             val enemyLabel = "🎯 ${s.enemyWaters.fmt(opponentName)}"
             GameBoard(
@@ -163,7 +175,10 @@ fun BattleScreen(viewModel: GameViewModel) {
                 explosionKeys = opponentExplosionKeys,
                 onCellClick = { r, col ->
                     val cell = opponentBoard[r][col]
-                    if (cell == CellState.WATER) viewModel.handleShoot(r, col)
+                    if (cell == CellState.WATER) {
+                        if (bombMode) viewModel.handleUseBomb(r, col)
+                        else viewModel.handleShoot(r, col)
+                    }
                 },
             )
             Spacer(Modifier.height(8.dp))
@@ -191,12 +206,27 @@ fun BattleScreen(viewModel: GameViewModel) {
             } else Spacer(Modifier.width(1.dp))
 
             if (!isSpectator) {
-                OutlinedButton(
-                    onClick = viewModel::requestForfeit,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = c.red),
-                    modifier = Modifier.height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
-                ) { Text("🏳 ${s.surrender}", fontSize = 12.sp) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val bombColor = if (bombMode) c.orange else if (bombUsed || !isMyTurn) c.textDim else c.textPrimary
+                    OutlinedButton(
+                        onClick = viewModel::toggleBombMode,
+                        enabled = isMyTurn && !bombUsed,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = bombColor,
+                            disabledContentColor = c.textDim
+                        ),
+                        modifier = Modifier.height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, bombColor.copy(alpha = 0.5f))
+                    ) { Text("💣 BOMB", fontSize = 12.sp) }
+
+                    OutlinedButton(
+                        onClick = viewModel::requestForfeit,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = c.red),
+                        modifier = Modifier.height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) { Text("🏳 ${s.surrender}", fontSize = 12.sp) }
+                }
             } else {
                 OutlinedButton(
                     onClick = viewModel::handleBackToMenu,

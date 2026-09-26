@@ -133,6 +133,7 @@ const SOCKET_EVENTS = [
   'spectatorUpdate', 'timeUp', 'gameStartedByHost', 'kicked', 'playerKicked',
   'connect', 'rejoinSuccess', 'rejoinFailed',
   'opponentReconnecting', 'opponentReconnected', 'opponentReconnectFailed', 'roomClosed',
+  'bombResult', 'spectatorBombResult',
 ];
 function formatUptime(seconds) {
   if (!seconds && seconds !== 0) return '—';
@@ -190,11 +191,14 @@ function App() {
   const [firebaseAuthToken, setFirebaseAuthToken] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [bombUsed, setBombUsed] = useState(false);
+  const [bombMode, setBombMode] = useState(false);
   
   // Listen for Firebase Auth state changes
   useEffect(() => {
+    let unsubscribe = NOOP;
     import('./firebase').then(({ auth }) => {
-      auth.onAuthStateChanged(async (firebaseUser) => {
+      unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
         if (firebaseUser) {
           const token = await firebaseUser.getIdToken();
           setFirebaseAuthToken(token);
@@ -242,6 +246,7 @@ function App() {
         }
       });
     });
+    return () => unsubscribe();
   }, [serverUrl]);
 
   const [theme, setTheme] = useState(() => localStorage.getItem('battleships-theme') || 'dark');
@@ -250,7 +255,7 @@ function App() {
     if (val === null) return false; // Default: disabled until user enables
     return val === 'on';
   });
-  const [musicEnabled, setMusicEnabled_] = useState(() => {
+  const [musicEnabled, setMusicPref] = useState(() => {
     const val = localStorage.getItem('battleships-music');
     if (val === null) return false; // Default: disabled until user enables
     return val === 'on';
@@ -290,6 +295,7 @@ function App() {
   const opponentSunk = useRef(new Set());
   const hasConnectedOnceRef = useRef(false);
   const playerIdRef = useRef(null);
+  const sessionTokenRef = useRef(null);
   const soundRef = useRef(soundEnabled);
   const chatOpenRef = useRef(false);
   const phaseRef = useRef('login');
@@ -299,6 +305,15 @@ function App() {
   const explosionTimersRef = useRef([]);
   const shootPendingRef = useRef(false);
   const shootTimeoutRef = useRef(null);
+
+  // Clear shoot timeout on unmount to prevent setting state on unmounted component
+  useEffect(() => {
+    return () => {
+      if (shootTimeoutRef.current) {
+        clearTimeout(shootTimeoutRef.current);
+      }
+    };
+  }, []);
   const lastShotTimerRef = useRef(null);
   /** Per-player sunk-cell sets for spectator overlay (💀 + red bg) */
   const spectatorSunkMap = useRef(new Map());
@@ -420,23 +435,45 @@ function App() {
     return () => ac.abort();
   }, [serverUrl]);
 
-  // If opened via a URL room link, check up-front whether the room exists
+  // If opened via a URL room link, check up-front whether the room exists (and validate PIN if included)
   useEffect(() => {
     if (!urlInfo.roomCode || !serverUrl) return;
     const ac = new AbortController();
     fetch(`${serverUrl}/rooms/${urlInfo.roomCode}`, { signal: ac.signal })
       .then(r => r.json().catch(() => ({ exists: false })))
-      .then(data => { 
+      .then(async data => {
         if (!data.exists) {
-          setRoomNotFound(true); 
+          setRoomNotFound(true);
         } else {
           setRoomHasPassword(data.hasPassword || false);
+
+          // If the URL included a PIN, validate it immediately
+          if (data.hasPassword && urlInfo.password) {
+            try {
+              const res = await fetch(`${serverUrl}/rooms/${urlInfo.roomCode}/check-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: urlInfo.password }),
+                signal: ac.signal,
+              });
+              const pinData = await res.json();
+              if (!pinData.valid) {
+                // Wrong PIN in URL — clear it so the input field appears
+                setRoomPassword('');
+                setMessageWithTimeout('❌ Incorrect PIN in link — please enter the correct PIN', 'error', 5000);
+              }
+              // If valid, roomPassword is already set from urlInfo, nothing to do
+            } catch {
+              // On network error just leave the PIN as-is
+            }
+          }
+
           if (data.playerCount >= 2) {
             setRoomIsFull(true);
             // If room is full and no password is required, automatically join as spectator
             if (!data.hasPassword) {
-              setPendingJoin({ roomId: urlInfo.roomCode, password: null, isSpectating: true });
-              setLoginView('enterName');
+              // Use pendingJoin so the socket-ready effect handles the emit when socket connects
+              setPendingJoin({ roomId: urlInfo.roomCode, password: null, isSpectating: true, autoJoin: true });
             }
           }
         }
@@ -445,6 +482,24 @@ function App() {
     return () => ac.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serverUrl]);
+
+  // Auto-emit joinGame for spectators once socket is ready (avoids race condition on page load)
+  useEffect(() => {
+    if (!pendingJoin?.autoJoin || !socket || joiningGameRef.current) return;
+    joiningGameRef.current = true;
+    setIsJoining(true);
+    setGameId(pendingJoin.roomId);
+    socket.emit('joinGame', {
+      gameId: pendingJoin.roomId,
+      playerName: 'Spectator',
+      password: pendingJoin.password || null,
+      isCreating: false,
+      isSpectating: true,
+      timeLimit: gameTimeLimit,
+      authToken: firebaseAuthToken,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingJoin, socket]);
 
   const resetSunk = useCallback(() => {
     playerSunk.current = new Set();
@@ -466,6 +521,31 @@ function App() {
     );
   }, []);
 
+  const handleBackToMenu = useCallback(() => {
+    if (playerLeftTimerRef.current) { clearTimeout(playerLeftTimerRef.current); playerLeftTimerRef.current = null; }
+    joiningGameRef.current = false;
+    setIsJoining(false);
+    shootPendingRef.current = false;
+    sessionTokenRef.current = null; // Clear stale session token
+    setBombUsed(false); setBombMode(false);
+    // Clear pending explosion timers to prevent stale state updates
+    explosionTimersRef.current.forEach(clearTimeout);
+    explosionTimersRef.current = [];
+    setExplosionCells([]);
+    socket?.emit('leaveRoom');
+    stopAllMusic();
+    setPhase('login'); setGameId(''); resetSunk();
+    setLoginView('menu'); setRoomPassword(''); setCreatePassword('');
+    setPendingJoin(null); // Clear stale pending join state
+    setURLRoom(null);
+    setOpponentName(''); setOpponentSocketId(null); setIsHost(false);
+    setIsSpectator(false); setSpectatorCount(0); setSpectatorBoards([]); spectatorSunkMap.current.clear();
+    setChatMessages([]); setChatOpen(false); setChatUnread(0);
+    setTurnStartedAt(null); setPlayerTimeLeft({});
+    setIsReady(false); setOpponentReady(false); // Prevent stale ready state on next join
+    setPlayAgainPending(false); setOpponentWantsPlayAgain(false);
+  }, [socket, resetSunk]);
+
   // Socket Handlers
   useEffect(() => {
     if (!socket) return;
@@ -476,7 +556,9 @@ function App() {
       setPendingJoin(null); // clear stale pendingJoin
       setPlayerId(data.playerId);
       playerIdRef.current = data.playerId;
+      sessionTokenRef.current = data.sessionToken || null;
       setIsHost(data.isHost || false);
+      setBombUsed(data.bombUsed || false); setBombMode(false);
       // Cancel any pending playerLeft timer from a previous session
       if (playerLeftTimerRef.current) { clearTimeout(playerLeftTimerRef.current); playerLeftTimerRef.current = null; }
       const roomCode = data.roomId || '';
@@ -644,6 +726,7 @@ function App() {
           : (iShot ? tRef.current('msg.miss', oppName) : tRef.current('msg.theyMissed'));
       setMessageWithTimeout(msg, data.isHit ? (iShot ? 'success' : 'error') : (iShot ? 'info' : 'success'), 5000);
       if (data.gameWon) {
+        setBombMode(false);
         setPhase('gameOver');
         setWinner(data.winner);
         if (soundRef.current) playSound(data.winner === playerIdRef.current ? 'victory' : 'defeat');
@@ -652,6 +735,7 @@ function App() {
 
     socket.on('gameReset', (data) => {
       shootPendingRef.current = false;
+      setBombUsed(false); setBombMode(false);
       // Clear pending explosion timers to prevent stale updates  
       explosionTimersRef.current.forEach(clearTimeout);
       explosionTimersRef.current = [];
@@ -721,13 +805,7 @@ function App() {
       setPlayerBoard(createEmptyBoard());
       resetSunk();
       setWinner(null);
-      setTurnStartedAt(null);
-      setPlayerTimeLeft({});
-      setGameId('');
-      setRoomPassword('');
-      setChatMessages([]);
-      setPhase('login');
-      setLoginView('menu');
+      handleBackToMenu();
       setMessageWithTimeout(
         tRef.current('msg.opLeft', data.playerName || opponentNameRef.current),
         'info', 4000
@@ -784,6 +862,12 @@ function App() {
     });
 
     socket.on('spectatorJoined', (data) => {
+      joiningGameRef.current = false;
+      setIsJoining(false);
+      setPendingJoin(null);
+      const roomCode = data.roomId || '';
+      setGameId(roomCode);
+      setURLRoom(roomCode, null); // Spectator links usually shouldn't include password
       setIsSpectator(true);
       setSpectatorBoards(data.boards || []);
       setGameTimeLimit(data.timeLimit || 300);
@@ -858,6 +942,110 @@ function App() {
       if (data.gameWon) { setPhase('gameOver'); setWinner(data.winner); }
     });
 
+    // ── Bomb result handlers ──
+    socket.on('bombResult', (data) => {
+      shootPendingRef.current = false;
+      if (shootTimeoutRef.current) { clearTimeout(shootTimeoutRef.current); shootTimeoutRef.current = null; }
+      setCurrentTurn(data.currentTurn);
+      if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
+      const iShot = data.shooterId === playerIdRef.current;
+      if (iShot) { setBombUsed(true); setBombMode(false); }
+
+      // Sound effects
+      if (soundRef.current) {
+        const anyHit = data.cells?.some(c => c.isHit);
+        const anySunk = data.cells?.some(c => c.shipSunk);
+        if (anySunk) playSound('sunk');
+        else if (anyHit) playSound('hit');
+        else playSound('miss');
+        if (!iShot && data.currentTurn === playerIdRef.current) {
+          setTimeout(() => playSound('turn'), 400);
+        }
+      }
+
+      // Haptics for opponent's bomb
+      if (!iShot) {
+        const anyHit = data.cells?.some(c => c.isHit);
+        if (anyHit) navigator.vibrate?.([100, 50, 100, 50, 200]);
+      }
+
+      // Process each cell for sunk ship overlays and explosions
+      if (data.cells) {
+        for (const cell of data.cells) {
+          if (cell.shipSunk && cell.sunkShipCells?.length > 0) {
+            const ref = iShot ? opponentSunk : playerSunk;
+            cell.sunkShipCells.forEach(c => ref.current.add(`${c.row},${c.col}`));
+            getSurroundingKeys(cell.sunkShipCells).forEach(k => ref.current.add(k + '_safe'));
+            setSunkVersion(v => v + 1);
+            if (iShot) setMyShipsSunk(c => c + 1);
+            else setTheirShipsSunk(c => c + 1);
+
+            const boardType = iShot ? 'opponent' : 'player';
+            const newExplosions = cell.sunkShipCells.map(c => ({
+              row: c.row, col: c.col, board: boardType,
+              id: `${boardType}-${c.row}-${c.col}-${Date.now()}`
+            }));
+            setExplosionCells(prev => [...prev, ...newExplosions]);
+            const explosionTimer = setTimeout(() => {
+              setExplosionCells(prev => prev.filter(e => !newExplosions.some(n => n.id === e.id)));
+            }, 1500);
+            explosionTimersRef.current.push(explosionTimer);
+          }
+        }
+      }
+
+      const raw_p = data.playerBoard || createEmptyBoard();
+      const raw_o = data.opponentBoard || createEmptyBoard();
+      setPlayerBoard(overlay(raw_p, playerSunk.current));
+      setOpponentBoard(overlay(raw_o, opponentSunk.current));
+
+      // Message
+      const hitCount = data.cells?.filter(c => c.isHit).length || 0;
+      const sunkCount = data.cells?.filter(c => c.shipSunk).length || 0;
+      let msg;
+      if (iShot) {
+        msg = sunkCount > 0 ? `💣 Bomb hit! ${hitCount} hits, ${sunkCount} ship(s) sunk!` : hitCount > 0 ? `💣 Bomb hit! ${hitCount} cell(s) hit!` : '💣 Bomb missed everything!';
+      } else {
+        msg = sunkCount > 0 ? `💣 ${opponentNameRef.current} used a bomb! ${hitCount} hits, ${sunkCount} ship(s) sunk!` : hitCount > 0 ? `💣 ${opponentNameRef.current} used a bomb! ${hitCount} cell(s) hit!` : `💣 ${opponentNameRef.current} used a bomb, but missed!`;
+      }
+      setMessageWithTimeout(msg, hitCount > 0 ? (iShot ? 'success' : 'error') : 'info', 5000);
+
+      if (data.gameWon) {
+        setBombMode(false);
+        setPhase('gameOver');
+        setWinner(data.winner);
+        if (soundRef.current) playSound(data.winner === playerIdRef.current ? 'victory' : 'defeat');
+      }
+    });
+
+    socket.on('spectatorBombResult', (data) => {
+      setSpectatorBoards(data.boards || []);
+      setCurrentTurn(data.currentTurn);
+      if (data.playerTimeLeft) setPlayerTimeLeft(data.playerTimeLeft);
+      if (data.turnStartedAt) setTurnStartedAt(data.serverNow ? Date.now() - (data.serverNow - data.turnStartedAt) : data.turnStartedAt);
+
+      if (data.cells) {
+        const boards = data.boards || [];
+        for (const cell of data.cells) {
+          if (cell.shipSunk && cell.sunkShipCells?.length > 0) {
+            const targetPlayerId = boards.find(b => b.playerId !== data.shooterId)?.playerId;
+            if (targetPlayerId) {
+              if (!spectatorSunkMap.current.has(targetPlayerId)) {
+                spectatorSunkMap.current.set(targetPlayerId, new Set());
+              }
+              const sunkSet = spectatorSunkMap.current.get(targetPlayerId);
+              cell.sunkShipCells.forEach(c => sunkSet.add(`${c.row},${c.col}`));
+              getSurroundingKeys(cell.sunkShipCells).forEach(k => sunkSet.add(k + '_safe'));
+              setSunkVersion(v => v + 1);
+            }
+          }
+        }
+      }
+
+      if (data.gameWon) { setPhase('gameOver'); setWinner(data.winner); }
+    });
+
     socket.on('spectatorBattleStarted', (data) => {
       spectatorSunkMap.current.clear();
       setPhase('battle');
@@ -925,6 +1113,7 @@ function App() {
           gameId: gId,
           playerName: pName,
           password: roomPasswordRef.current || null,
+          sessionToken: sessionTokenRef.current || null,
         });
       }
     });
@@ -936,6 +1125,7 @@ function App() {
       setPlayerId(data.playerId);
       playerIdRef.current = data.playerId;
       setIsHost(data.isHost || false);
+      setBombUsed(data.bombUsed || false); setBombMode(false);
       setGameId(data.roomId);
       if (data.board) setPlayerBoard(data.board);
       if (data.opponentBoard) setOpponentBoard(data.opponentBoard);
@@ -990,11 +1180,7 @@ function App() {
 
     socket.on('roomClosed', (data) => {
       setMessageWithTimeout(`⚠️ ${data?.reason || 'Room was closed'}`, 'error', 5000);
-      setPhase('login');
-      setGameId('');
-      setRoomPassword('');
-      resetSunk();
-      setURLRoom(null);
+      handleBackToMenu();
     });
 
     return () => {
@@ -1075,6 +1261,20 @@ function App() {
         setPendingJoin({ roomId: id, needsPassword: true, isSpectating });
         setJoinRoomPin('');
         setLoginView('enterPin');
+      } else if (isSpectating) {
+        // Spectators don't need a name — join immediately
+        joiningGameRef.current = true;
+        setIsJoining(true);
+        setGameId(id);
+        socket?.emit('joinGame', {
+          gameId: id,
+          playerName: 'Spectator',
+          password: null,
+          isCreating: false,
+          isSpectating: true,
+          timeLimit: gameTimeLimit,
+          authToken: firebaseAuthToken,
+        });
       } else {
         setPendingJoin({ roomId: id, password: null, isSpectating });
         setLoginView('enterName');
@@ -1109,11 +1309,37 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, pendingJoin, socket, gameTimeLimit, firebaseAuthToken]);
 
+  // Immediately join as anonymous spectator — no name required
+  const handleJoinAsSpectator = useCallback((roomId, password = null) => {
+    if (joiningGameRef.current) return;
+    joiningGameRef.current = true;
+    setIsJoining(true);
+    setGameId(roomId);
+    if (!socket) {
+      // Socket not ready yet — store as pendingJoin so it fires on connect
+      setPendingJoin({ roomId, password: password || null, isSpectating: true, autoJoin: true });
+      joiningGameRef.current = false;
+      setIsJoining(false);
+      return;
+    }
+    socket.emit('joinGame', {
+      gameId: roomId,
+      playerName: 'Spectator',
+      password: password || null,
+      isCreating: false,
+      isSpectating: true,
+      timeLimit: gameTimeLimit,
+      authToken: firebaseAuthToken,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, gameTimeLimit, firebaseAuthToken]);
+
   const handleFinalJoin = useCallback(() => {
     // For logged-in users, use their profile name (or 'Player' if still loading); for guests, use typed name
-    const rawName = firebaseAuthToken ? (user?.name || 'Player') : playerName;
+    const isSpectating = pendingJoin?.isSpectating || false;
+    const rawName = isSpectating ? 'Spectator' : (firebaseAuthToken ? (user?.name || 'Player') : playerName);
     const name = rawName.trim();
-    if (!name) { setMessageWithTimeout(tRef.current('msg.nameRequired'), 'error', 4000); return; }
+    if (!isSpectating && !name) { setMessageWithTimeout(tRef.current('msg.nameRequired'), 'error', 4000); return; }
     if (!pendingJoin) return;
     if (joiningGameRef.current) return; // prevent double-submission
     joiningGameRef.current = true;
@@ -1158,6 +1384,23 @@ function App() {
     }
   }, [socket, currentTurn, playerId]);
 
+  const handleUseBomb = useCallback((r, c) => {
+    if (shootPendingRef.current || bombUsed) return;
+    if (socket && currentTurn === playerId) {
+      shootPendingRef.current = true;
+      setBombMode(false);
+      socket.emit('useBomb', { row: r, col: c });
+      if (shootTimeoutRef.current) clearTimeout(shootTimeoutRef.current);
+      shootTimeoutRef.current = setTimeout(() => { shootPendingRef.current = false; }, 10000);
+    }
+  }, [socket, currentTurn, playerId, bombUsed]);
+
+  const toggleBombMode = useCallback(() => {
+    if (!bombUsed && currentTurn === playerId) {
+      setBombMode(prev => !prev);
+    }
+  }, [bombUsed, currentTurn, playerId]);
+
   const handlePlayAgain = useCallback(() => {
     setPlayAgainPending(true);
     socket?.emit('requestPlayAgain');
@@ -1191,28 +1434,7 @@ function App() {
     setPhase('waiting');
   }, [resetSunk]);
 
-  const handleBackToMenu = useCallback(() => {
-    if (playerLeftTimerRef.current) { clearTimeout(playerLeftTimerRef.current); playerLeftTimerRef.current = null; }
-    joiningGameRef.current = false;
-    setIsJoining(false);
-    shootPendingRef.current = false;
-    // Clear pending explosion timers to prevent stale state updates
-    explosionTimersRef.current.forEach(clearTimeout);
-    explosionTimersRef.current = [];
-    setExplosionCells([]);
-    socket?.emit('leaveRoom');
-    stopAllMusic();
-    setPhase('login'); setGameId(''); resetSunk();
-    setLoginView('menu'); setRoomPassword(''); setCreatePassword('');
-    setPendingJoin(null); // Clear stale pending join state
-    setURLRoom(null);
-    setOpponentName(''); setOpponentSocketId(null); setIsHost(false);
-    setIsSpectator(false); setSpectatorCount(0); setSpectatorBoards([]); spectatorSunkMap.current.clear();
-    setChatMessages([]); setChatOpen(false); setChatUnread(0);
-    setTurnStartedAt(null); setPlayerTimeLeft({});
-    setIsReady(false); setOpponentReady(false); // Prevent stale ready state on next join
-    setPlayAgainPending(false); setOpponentWantsPlayAgain(false);
-  }, [socket, resetSunk]);
+
 
   const sendChat = useCallback((text, isImportant = false) => {
     if (!text.trim() || !socket) return;
@@ -1235,7 +1457,7 @@ function App() {
   }, []);
 
   const toggleMusic = useCallback(() => {
-    setMusicEnabled_(m => !m);
+    setMusicPref(m => !m);
   }, []);
 
   const handleDeclinePlayAgain = useCallback(() => {
@@ -1245,7 +1467,6 @@ function App() {
   }, [socket]);
 
   // Use module-level NOOP to avoid re-creating on every render
-  const noop = NOOP;
 
   const isMyTurn = currentTurn === playerId;
   const msgClass = useMemo(() => ({
@@ -1461,6 +1682,7 @@ function App() {
             availableRooms={availableRooms} loadingRooms={loadingRooms} fetchRooms={fetchRooms}
             selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom}
             handleJoinGame={handleJoinGame} handleFinalJoin={handleFinalJoin}
+            handleJoinAsSpectator={handleJoinAsSpectator}
             pendingJoin={pendingJoin} setPendingJoin={setPendingJoin}
             setMessageWithTimeout={setMessageWithTimeout}
             SOCKET_URL={serverUrl} setURLRoom={setURLRoom}
@@ -1536,18 +1758,21 @@ function App() {
         {phase === 'battle' && (
           <Suspense fallback={<div className="text-center py-12 text-slate-500">Loading…</div>}>
           <BattleField
-            isMyTurn={isMyTurn} opponentName={opponentName} handleForfeit={isSpectator ? noop : handleForfeit}
+            isMyTurn={isMyTurn} opponentName={opponentName} handleForfeit={isSpectator ? NOOP : handleForfeit}
             dispPlayer={isSpectator ? (dispSpectatorBoards[0]?.board || dispPlayer) : dispPlayer}
             dispOpponent={isSpectator ? (dispSpectatorBoards[1]?.board || dispOpponent) : dispOpponent}
             spectatorPlayerNames={isSpectator ? [dispSpectatorBoards[0]?.playerName, dispSpectatorBoards[1]?.playerName] : []}
+            spectatorBoards={isSpectator ? dispSpectatorBoards : []}
             playerName={playerName}
-            handleShoot={isSpectator ? noop : handleShoot}
-            explosionCells={explosionCells} noop={noop}
+            handleShoot={isSpectator ? NOOP : handleShoot}
+            explosionCells={explosionCells}
             playerTimeLeft={playerTimeLeft} turnStartedAt={turnStartedAt}
             myId={isSpectator ? null : playerId} currentTurn={currentTurn}
             spectatorCount={spectatorCount} isSpectator={isSpectator}
             lastShot={lastShot} handleLeave={handleBackToMenu}
             mySunkCount={myShipsSunk} theirSunkCount={theirShipsSunk}
+            bombUsed={bombUsed} bombMode={bombMode}
+            toggleBombMode={toggleBombMode} handleUseBomb={handleUseBomb}
           />
           </Suspense>
         )}

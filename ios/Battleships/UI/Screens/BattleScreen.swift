@@ -104,6 +104,22 @@ struct BattleScreen: View {
                         .foregroundColor(.red.opacity(0.8))
                         .cornerRadius(8)
                 }
+                
+                if !vm.isSpectator {
+                    Button {
+                        vm.toggleBombMode()
+                    } label: {
+                        Text("💣")
+                            .font(.caption.bold())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(vm.bombMode ? Color.orange.opacity(0.2) : Color.clear)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(vm.bombMode ? Color.orange : (vm.bombUsed || !vm.isMyTurn ? Color.gray.opacity(0.3) : Color.orange.opacity(0.3))))
+                            .foregroundColor(vm.bombUsed || !vm.isMyTurn ? .gray : .orange)
+                            .cornerRadius(8)
+                    }
+                    .disabled(vm.bombUsed || !vm.isMyTurn)
+                }
             }
         }
         .padding(14)
@@ -155,6 +171,13 @@ struct BattleScreen: View {
     // MARK: - Normal Boards
     private var normalBoards: some View {
         VStack(spacing: 14) {
+            if vm.bombMode {
+                Text("🎯 Tap target cell to use Bomb")
+                    .font(.caption.bold())
+                    .foregroundColor(.orange)
+                    .padding(.bottom, -6)
+            }
+            
             // Enemy waters
             let enemyLabel = s.enemyWaters.fmt(vm.opponentName)
             boardCard(label: enemyLabel, isHighlighted: vm.isMyTurn, showShipLegend: false) {
@@ -165,7 +188,11 @@ struct BattleScreen: View {
                     shotKeys: vm.shotKeys,
                     explosionKeys: vm.explosionKeys
                 ) { row, col in
-                    vm.shoot(row: row, col: col)
+                    if vm.bombMode {
+                        vm.useBomb(row: row, col: col)
+                    } else {
+                        vm.shoot(row: row, col: col)
+                    }
                 }
             }
 

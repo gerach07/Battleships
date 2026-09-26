@@ -11,6 +11,7 @@ const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 require('dotenv').config();
 
 // Models & Utils
@@ -355,11 +356,14 @@ io.on('connection', (socket) => {
 
       if (room.addPlayer(socket.id, name, firebaseUid)) {
         playerToRoom[socket.id] = roomId;
+        const sessionToken = crypto.randomUUID();
+        room.players[socket.id].sessionToken = sessionToken;
         socket.join(roomId);
 
         socket.emit('gameJoined', {
           playerId: socket.id,
           roomId: room.roomId,
+          sessionToken,
           password: isCreating ? pwd : undefined,
           players: room.getPlayerList(),
           board: room.getPlayerBoard(socket.id),
@@ -368,6 +372,7 @@ io.on('connection', (socket) => {
           hostId: room.hostId,
           isHost: room.isHost(socket.id),
           chatHistory: room.chatMessages || [],
+          bombUsed: room.bombUsed[socket.id] || false,
         });
 
         socket.to(roomId).emit('playerJoined', {
@@ -386,9 +391,10 @@ io.on('connection', (socket) => {
   // ── Rejoin after brief disconnect ──
   socket.on('rejoinGame', async (payload) => {
     if (!payload || typeof payload !== 'object') return;
-    const { gameId, playerName, password } = payload;
+    const { gameId, playerName, password, sessionToken } = payload;
     if (typeof gameId !== 'string' || typeof playerName !== 'string') return;
     if (password !== undefined && password !== null && typeof password !== 'string') return;
+    if (sessionToken !== undefined && sessionToken !== null && typeof sessionToken !== 'string') return;
     const roomId = sanitizeInput(gameId, 50).toUpperCase();
     const name = sanitizeInput(playerName, 50) || 'Anonymous';
     const pwd = password ? sanitizeInput(password, 3) : null;
@@ -427,6 +433,10 @@ io.on('connection', (socket) => {
         return;
       }
       return socket.emit('rejoinFailed', { reason: 'Session expired' });
+    }
+
+    if (pending.sessionToken && pending.sessionToken !== sessionToken) {
+      return socket.emit('rejoinFailed', { reason: 'Invalid or missing session token. Cannot hijack session.' });
     }
 
     // Cancel the grace timer — player made it back in time
@@ -501,6 +511,7 @@ io.on('connection', (socket) => {
         opponentName: opponent?.name || null,
         shipsPlaced: freshRoom.players[socket.id]?.shipsPlaced || false,
         serverNow: Date.now(),
+        bombUsed: freshRoom.bombUsed[socket.id] || false,
       });
 
       // Notify opponent the player is back
@@ -733,6 +744,7 @@ io.on('connection', (socket) => {
         room.players[pid].shipsPlaced = false;
         room.players[pid].totalHitsReceived = 0;
       });
+      room.bombUsed = {}; // reset bombs for fresh game
       io.to(roomId).emit('gameReset', { timeLimit: room.timeLimit });
     }
     room.touch();
@@ -794,6 +806,74 @@ io.on('connection', (socket) => {
   socket.on('leaveRoom', async () => {
     await handlePlayerLeave(socket.id, io);
     socket.emit('leftRoom');
+  });
+
+  socket.on('useBomb', async (payload) => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return;
+    const row = payload.row;
+    const col = payload.col;
+
+    const roomId = playerToRoom[socket.id];
+    if (!roomId || !rooms[roomId]) return;
+
+    const release = await acquireRoomLock(roomId);
+    try {
+      const room = rooms[roomId];
+      if (!room || room.state !== GameState.BATTLE_PHASE) return;
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return;
+      if (row < 0 || row >= 10 || col < 0 || col >= 10) return;
+
+      const bomb = room.processBomb(socket.id, row, col);
+      if (!bomb.success) {
+        return socket.emit('error', { error: bomb.error });
+      }
+
+      if (bomb.result.gameWon && room.winner) {
+        const winnerUid = room.players[room.winner]?.firebaseUid || null;
+        const loserId = room.getOpponentId(room.winner);
+        const loserUid = room.players[loserId]?.firebaseUid || null;
+        const winnerName = winnerUid ? null : (room.players[room.winner]?.name || null);
+        const loserName = loserUid ? null : (room.players[loserId]?.name || null);
+        recordGameResult(winnerUid, loserUid, winnerName, loserName).catch(err =>
+          console.error('recordGameResult (bomb):', err.message)
+        );
+      }
+
+      const opponentId = room.getOpponentId(socket.id);
+      const result = bomb.result;
+      const serverNow = Date.now();
+      const bombPayloadBase = {
+        ...result,
+        winner: result.gameWon ? room.winner : undefined,
+        shooterId: socket.id,
+        serverNow,
+      };
+
+      io.to(socket.id).emit('bombResult', {
+        ...bombPayloadBase,
+        playerBoard: room.getPlayerBoard(socket.id),
+        opponentBoard: room.getOpponentViewBoard(socket.id),
+      });
+
+      if (opponentId) {
+        io.to(opponentId).emit('bombResult', {
+          ...bombPayloadBase,
+          playerBoard: room.getPlayerBoard(opponentId),
+          opponentBoard: room.getOpponentViewBoard(opponentId),
+        });
+      }
+
+      room.spectators.forEach(sid => {
+        io.to(sid).emit('spectatorBombResult', {
+          ...bombPayloadBase,
+          boards: room.getSpectatorBoards(),
+        });
+      });
+
+      room.touch();
+    } finally {
+      release();
+    }
   });
 
   socket.on('hostStartGame', async () => {
@@ -918,6 +998,7 @@ io.on('connection', (socket) => {
       }
 
       const playerName = room.players[socket.id].name;
+      const sessionToken = room.players[socket.id].sessionToken;
       const key = `${roomId}:${playerName}`;
       console.log(`Disconnect (grace period ${DISCONNECT_GRACE_MS}ms): ${socket.id} from room ${roomId}`);
 
@@ -947,7 +1028,7 @@ io.on('connection', (socket) => {
         console.log(`Grace period expired — removed ${oldSocketId} from room ${roomId}`);
       }, DISCONNECT_GRACE_MS);
 
-      pendingDisconnects.set(key, { timer, oldSocketId, roomId });
+      pendingDisconnects.set(key, { timer, oldSocketId, roomId, sessionToken });
 
       // Cap pendingDisconnects to prevent unbounded growth
       if (pendingDisconnects.size > 1000) {

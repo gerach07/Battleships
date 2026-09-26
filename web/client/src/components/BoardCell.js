@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import { CELL } from '../constants';
 
-const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, showExplosion, isFocused, isLastShot }) => {
+const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, showExplosion, isFocused, isLastShot, isBombHighlighted = false, bombMode = false, onHover }) => {
     const clickable =
         !isYourBoard &&
         isYourTurn &&
@@ -13,6 +13,10 @@ const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, 
     const handleClick = useCallback(() => {
         if (clickable) onCellClick(row, col);
     }, [row, col, clickable, onCellClick]);
+
+    const handleMouseEnter = useCallback(() => {
+        if (onHover) onHover(row, col);
+    }, [row, col, onHover]);
 
     let bg, extraClass = '', label;
     switch (cell) {
@@ -49,6 +53,7 @@ const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, 
         <button
             type="button"
             onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
             disabled={!clickable}
             className={`
         aspect-square w-full flex items-center justify-center relative overflow-hidden
@@ -56,10 +61,11 @@ const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, 
         text-[clamp(1rem,4vw,2rem)]
         ${bg}
         ${extraClass}
-        ${clickable ? 'cursor-crosshair cell-target-hover hover:scale-110 hover:z-10 hover:border-cyan-400/60' : 'cursor-default'}
+        ${clickable ? (bombMode ? 'cursor-crosshair cell-target-hover hover:scale-110 hover:z-10 hover:border-amber-400/60' : 'cursor-crosshair cell-target-hover hover:scale-110 hover:z-10 hover:border-cyan-400/60') : 'cursor-default'}
         ${cell === CELL.MISS ? 'after:content-["·"] after:text-slate-400 after:font-black after:text-2xl' : ''}
         ${isFocused ? 'cell-focus-ring' : ''}
         ${isLastShot ? 'animate-shot-pop' : ''}
+        ${isBombHighlighted ? 'ring-2 ring-amber-400/80 z-10 scale-110 bg-gradient-to-br from-amber-500/40 to-orange-500/30 border-amber-400/60' : ''}
       `}
             aria-label={`${String.fromCharCode(65 + col)}${row + 1}`}
         >
@@ -70,7 +76,7 @@ const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, 
                     className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
                 />
             )}
-            {label}
+            {isBombHighlighted && !label ? '💣' : label}
         </button>
     );
 }, (prev, next) =>
@@ -80,7 +86,10 @@ const BoardCell = memo(({ row, col, cell, isYourBoard, isYourTurn, onCellClick, 
     prev.onCellClick === next.onCellClick &&
     prev.showExplosion === next.showExplosion &&
     prev.isFocused === next.isFocused &&
-    prev.isLastShot === next.isLastShot
+    prev.isLastShot === next.isLastShot &&
+    prev.isBombHighlighted === next.isBombHighlighted &&
+    prev.bombMode === next.bombMode &&
+    prev.onHover === next.onHover
 );
 
 BoardCell.displayName = 'BoardCell';

@@ -1,17 +1,19 @@
 import React, { memo, useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import BoardCell from './BoardCell';
-import { GRID_SIZE } from '../constants';
+import { GRID_SIZE, CELL } from '../constants';
 import { useI18n } from '../i18n/I18nContext';
 
 // Module-level constant to avoid re-creating on each render
 const COL_HEADERS = Array.from({ length: GRID_SIZE }, (_, i) => String.fromCharCode(65 + i));
 const NOOP = () => {};
 
-const GameBoard = memo(({ board, isYourBoard, onCellClick, isYourTurn = false, label, explosionCells = [], lastShot = null }) => {
+const GameBoard = memo(({ board, isYourBoard, onCellClick, isYourTurn = false, label, explosionCells = [], lastShot = null, bombMode = false }) => {
     const { t } = useI18n();
     const [focusRow, setFocusRow] = useState(0);
     const [focusCol, setFocusCol] = useState(0);
     const [kbActive, setKbActive] = useState(false);
+    const [hoverRow, setHoverRow] = useState(-1);
+    const [hoverCol, setHoverCol] = useState(-1);
     const focusRef = useRef({ row: 0, col: 0 });
 
     useEffect(() => { focusRef.current = { row: focusRow, col: focusCol }; }, [focusRow, focusCol]);
@@ -40,6 +42,41 @@ const GameBoard = memo(({ board, isYourBoard, onCellClick, isYourTurn = false, l
         return set;
     }, [explosionCells]);
 
+    // Compute bomb highlight cells (cross/plus pattern around hovered cell)
+    const bombHighlightSet = useMemo(() => {
+        if (!bombMode || hoverRow < 0 || hoverCol < 0) return new Set();
+        const set = new Set();
+        const coords = [
+            { r: hoverRow, c: hoverCol },
+            { r: hoverRow - 1, c: hoverCol },
+            { r: hoverRow + 1, c: hoverCol },
+            { r: hoverRow, c: hoverCol - 1 },
+            { r: hoverRow, c: hoverCol + 1 },
+        ];
+        for (const { r, c } of coords) {
+            if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+                const cell = board[r]?.[c];
+                // Only highlight cells that are still targetable (not already HIT/MISS/SUNK/SAFE)
+                if (cell !== CELL.HIT && cell !== CELL.MISS && cell !== CELL.SUNK && cell !== CELL.SAFE) {
+                    set.add(`${r},${c}`);
+                }
+            }
+        }
+        return set;
+    }, [bombMode, hoverRow, hoverCol, board]);
+
+    const handleCellHover = useCallback((r, c) => {
+        if (bombMode) {
+            setHoverRow(r);
+            setHoverCol(c);
+        }
+    }, [bombMode]);
+
+    const handleBoardLeave = useCallback(() => {
+        setHoverRow(-1);
+        setHoverCol(-1);
+    }, []);
+
     return (
         <div className="w-full space-y-2">
             {label && <h3 className="font-bold text-sm sm:text-base text-white">{label}</h3>}
@@ -50,6 +87,7 @@ const GameBoard = memo(({ board, isYourBoard, onCellClick, isYourTurn = false, l
                     tabIndex={canKeyboard ? 0 : -1}
                     onKeyDown={handleKeyDown}
                     onBlur={() => setKbActive(false)}
+                    onMouseLeave={handleBoardLeave}
                     role={canKeyboard ? 'grid' : undefined}
                     aria-label={label}
                 >
@@ -76,6 +114,9 @@ const GameBoard = memo(({ board, isYourBoard, onCellClick, isYourTurn = false, l
                                     showExplosion={explosionSet.has(`${ri},${ci}`)}
                                     isFocused={kbActive && canKeyboard && focusRow === ri && focusCol === ci}
                                     isLastShot={lastShot && lastShot.row === ri && lastShot.col === ci}
+                                    isBombHighlighted={bombHighlightSet.has(`${ri},${ci}`)}
+                                    bombMode={bombMode}
+                                    onHover={handleCellHover}
                                 />
                             ))}
                         </React.Fragment>

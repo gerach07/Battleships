@@ -59,6 +59,10 @@ final class GameViewModel: ObservableObject {
     @Published var playerShotKeys: Set<String> = []    // for player board
     @Published var playerExplosionKeys: Set<String> = [] // for player board
 
+    // MARK: - Bomb
+    @Published var bombUsed = false
+    @Published var bombMode = false
+
     // MARK: - Timer
     @Published var turnStartedAt: Double?
     @Published var playerTimeLeft: [String: Double] = [:]
@@ -336,6 +340,23 @@ final class GameViewModel: ObservableObject {
         shootPending = true
         socketManager.emit("shoot", ["row": row, "col": col])
         // Auto-reset if server never responds (e.g. connection lost mid-shot)
+        shootTimeoutWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.shootPending = false }
+        shootTimeoutWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: work)
+    }
+
+    func toggleBombMode() {
+        if isMyTurn && !bombUsed && phase == "battle" {
+            bombMode.toggle()
+        }
+    }
+
+    func useBomb(row: Int, col: Int) {
+        guard phase == "battle", isMyTurn, !shootPending, !isSpectator, bombMode, !bombUsed else { return }
+        shootPending = true
+        bombMode = false
+        socketManager.emit("useBomb", ["row": row, "col": col])
         shootTimeoutWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.shootPending = false }
         shootTimeoutWork = work
@@ -621,6 +642,8 @@ final class GameViewModel: ObservableObject {
                     }.suffix(100))
                 }
                 self.chatUnread = 0
+                self.bombUsed = data["bombUsed"] as? Bool ?? false
+                self.bombMode = false
                 if data["spectator"] as? Bool == true {
                     self.isSpectator = true
                     // spectator might join mid-battle
@@ -807,6 +830,131 @@ final class GameViewModel: ObservableObject {
                 } else {
                     let shotType = shipSunk ? "sunk" : (isHit ? "hit" : "miss")
                     self.updateLiveActivity(lastShot: shotType)
+                }
+            }
+        }
+
+        sm.on("bombResult") { [weak self] args in
+            guard let self, let data = args.first as? [String: Any] else { return }
+            DispatchQueue.main.async {
+                self.shootPending = false
+                self.shootTimeoutWork?.cancel()
+                
+                let shooterId = data["shooterId"] as? String ?? ""
+                let iShot = shooterId == self.playerIdRef
+                
+                if iShot {
+                    self.bombUsed = true
+                    self.bombMode = false
+                }
+                
+                // Sound & Haptics
+                let cells = data["cells"] as? [[String: Any]] ?? []
+                let anyHit = cells.contains { $0["isHit"] as? Bool == true }
+                let anySunk = cells.contains { $0["shipSunk"] as? Bool == true }
+                
+                if anySunk {
+                    SoundManager.shared.playSunk()
+                } else if anyHit {
+                    SoundManager.shared.playHit()
+                } else {
+                    SoundManager.shared.playMiss()
+                }
+                
+                if !iShot {
+                    if anyHit {
+                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                    }
+                }
+                
+                // Process each cell for sunk overlay & explosions
+                for cell in cells {
+                    let r = cell["row"] as? Int ?? -1
+                    let c = cell["col"] as? Int ?? -1
+                    if r >= 0 && c >= 0 {
+                        let shipSunk = cell["shipSunk"] as? Bool ?? false
+                        if shipSunk, let sunkCells = cell["sunkShipCells"] as? [[String: Any]] {
+                            if iShot { self.theirSunkCount += 1 }
+                            else { self.mySunkCount += 1 }
+                            
+                            let sunkTuples = sunkCells.compactMap { d -> (Int,Int)? in
+                                guard let sr = d["row"] as? Int, let sc = d["col"] as? Int else { return nil }
+                                return (sr, sc)
+                            }
+                            let sunkKeys = Set(sunkTuples.map { "\($0.0),\($0.1)" })
+                            let safeKeys = Set(getSurroundingKeys(shipCells: sunkTuples).map { $0 + "_safe" })
+                            
+                            if iShot {
+                                self.opponentSunkOverlay.formUnion(sunkKeys)
+                                self.opponentSunkOverlay.formUnion(safeKeys)
+                            } else {
+                                self.playerSunkOverlay.formUnion(sunkKeys)
+                                self.playerSunkOverlay.formUnion(safeKeys)
+                            }
+                            
+                            for (sr, sc) in sunkTuples {
+                                let key = "\(sr),\(sc)"
+                                if iShot {
+                                    self.explosionKeys.insert(key)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.explosionKeys.remove(key) }
+                                } else {
+                                    self.playerExplosionKeys.insert(key)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.playerExplosionKeys.remove(key) }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if let rawPlayer = data["playerBoard"] as? [[Any]] {
+                    self.playerBoard = overlayBoard(parseBoardFromJson(rawPlayer), sunkSet: self.playerSunkOverlay)
+                }
+                if let rawOpponent = data["opponentBoard"] as? [[Any]] {
+                    self.opponentBoard = overlayBoard(parseBoardFromJson(rawOpponent), sunkSet: self.opponentSunkOverlay)
+                }
+                
+                let hitCount = cells.filter { $0["isHit"] as? Bool == true }.count
+                let msg: String
+                if iShot {
+                    msg = "💣 BOMB used! \(hitCount) hit(s)."
+                } else {
+                    msg = "💣 \(self.opponentName) used a BOMB! \(hitCount) hit(s)."
+                }
+                self.setMessage(msg, hitCount > 0 ? (iShot ? "success" : "error") : "info")
+
+                self.currentTurn = data["currentTurn"] as? String
+                if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
+                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = self.localizeTs(data, ts) }
+                
+                if !iShot && self.isMyTurn {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        SoundManager.shared.playTurn()
+                    }
+                }
+
+                if let w = data["winner"] as? String {
+                    self.winner = w
+                    self.phase = "gameOver"
+                    self.bombMode = false
+                    if w == self.playerIdRef { SoundManager.shared.playVictory() }
+                    else { SoundManager.shared.playDefeat() }
+                    self.endLiveActivity(showResult: true)
+                }
+            }
+        }
+        
+        sm.on("spectatorBombResult") { [weak self] args in
+            guard let self, let data = args.first as? [String: Any] else { return }
+            DispatchQueue.main.async {
+                if let boards = data["boards"] as? [[String: Any]] {
+                    self.spectatorBoards = boards.compactMap { parseSpectatorBoard($0) }
+                }
+                self.currentTurn = data["currentTurn"] as? String
+                if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
+                if let ts = data["turnStartedAt"] as? Double { self.turnStartedAt = self.localizeTs(data, ts) }
+                if let w = data["winner"] as? String {
+                    self.winner = w
+                    self.phase = "gameOver"
                 }
             }
         }

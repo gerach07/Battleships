@@ -23,6 +23,7 @@ const LoginView = memo(({
     setSelectedRoom,
     handleJoinGame,
     handleFinalJoin,
+    handleJoinAsSpectator,
     pendingJoin,
     setPendingJoin,
     setMessageWithTimeout,
@@ -39,6 +40,9 @@ const LoginView = memo(({
 }) => {
     const { t } = useI18n();
     const [isCheckingRoom, setIsCheckingRoom] = useState(false);
+    // Local PIN input for the URL join card — kept separate from roomPassword
+    // so the field doesn't unmount as soon as the first digit is typed
+    const [urlPinInput, setUrlPinInput] = useState('');
 
     // Shared password-check helper to avoid duplication
     const checkPassword = async (roomId, pin) => {
@@ -174,8 +178,8 @@ const LoginView = memo(({
                                 <input
                                     type="text"
                                     inputMode="numeric"
-                                    value={roomPassword || ''}
-                                    onChange={e => setRoomPassword(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                                    value={urlPinInput}
+                                    onChange={e => setUrlPinInput(e.target.value.replace(/\D/g, '').slice(0, 3))}
                                     maxLength={3}
                                     placeholder="• • •"
                                     autoFocus
@@ -186,14 +190,15 @@ const LoginView = memo(({
                         {!roomIsFull && (
                             <button
                                 onClick={async () => {
-                                    if (roomHasPassword && !roomPassword) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
-                                    if (roomHasPassword && roomPassword) {
-                                        const valid = await checkPassword(gameId, roomPassword);
+                                    const pin = roomPassword || urlPinInput;
+                                    if (roomHasPassword && !pin) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
+                                    if (roomHasPassword && pin) {
+                                        const valid = await checkPassword(gameId, pin);
                                         if (!valid) return;
                                     }
-                                    setPendingJoin({ roomId: gameId, password: roomPassword || null }); setLoginView('enterName');
+                                    setPendingJoin({ roomId: gameId, password: pin || null }); setLoginView('enterName');
                                 }}
-                                disabled={roomHasPassword && !roomPassword}
+                                disabled={roomHasPassword && !roomPassword && urlPinInput.length < 3}
                                 className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-blue-900/30 text-base"
                             >
                                 {t('login.joinGameBtn')}
@@ -201,14 +206,15 @@ const LoginView = memo(({
                         )}
                         <button
                             onClick={async () => {
-                                if (roomHasPassword && !roomPassword) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
-                                if (roomHasPassword && roomPassword) {
-                                    const valid = await checkPassword(gameId, roomPassword);
+                                const pin = roomPassword || urlPinInput;
+                                if (roomHasPassword && !pin) { setMessageWithTimeout(t('login.pinRequired'), 'error', 4000); return; }
+                                if (roomHasPassword && pin) {
+                                    const valid = await checkPassword(gameId, pin);
                                     if (!valid) return;
                                 }
-                                setPendingJoin({ roomId: gameId, password: roomPassword || null, isSpectating: true }); setLoginView('enterName');
+                                handleJoinAsSpectator(gameId, pin || null);
                             }}
-                            disabled={roomHasPassword && !roomPassword}
+                            disabled={roomHasPassword && !roomPassword && urlPinInput.length < 3}
                             className={roomIsFull 
                                 ? "w-full py-3.5 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-lg shadow-purple-900/30 text-base"
                                 : "w-full py-3 border border-purple-500/40 text-purple-300 hover:bg-purple-500/15 font-bold rounded-2xl transition-all hover:scale-[1.01] text-sm"}
@@ -420,8 +426,7 @@ const LoginView = memo(({
                                                                 const valid = await checkPassword(room.roomId, joinRoomPin);
                                                                 if (!valid) return;
                                                             }
-                                                            setPendingJoin({ roomId: room.roomId, password: room.hasPassword ? joinRoomPin : null, isSpectating: true });
-                                                            setLoginView('enterName');
+                                                            handleJoinAsSpectator(room.roomId, room.hasPassword ? joinRoomPin : null);
                                                         }}
                                                         disabled={room.hasPassword && joinRoomPin.length !== 3}
                                                         className="flex-1 py-2 border border-purple-500/40 text-purple-300 hover:bg-purple-500/15 disabled:opacity-40 disabled:cursor-not-allowed font-bold rounded-lg transition text-sm"
@@ -516,8 +521,12 @@ const LoginView = memo(({
                             if (joinRoomPin.length !== 3) { setMessageWithTimeout(t('login.pinError3'), 'error', 4000); return; }
                             const valid = await checkPassword(pendingJoin.roomId, joinRoomPin);
                             if (!valid) return;
-                            setPendingJoin({ ...pendingJoin, password: joinRoomPin, needsPassword: false });
-                            setLoginView('enterName');
+                            if (pendingJoin.isSpectating) {
+                                handleJoinAsSpectator(pendingJoin.roomId, joinRoomPin);
+                            } else {
+                                setPendingJoin({ ...pendingJoin, password: joinRoomPin, needsPassword: false });
+                                setLoginView('enterName');
+                            }
                         }}
                         disabled={joinRoomPin.length !== 3}
                         className={`w-full py-3.5 font-bold rounded-2xl transition-all text-base shadow-lg ${

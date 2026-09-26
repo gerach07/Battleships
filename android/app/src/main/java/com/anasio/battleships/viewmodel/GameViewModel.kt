@@ -128,6 +128,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _showSurrenderDialog = MutableStateFlow(false)
     val showSurrenderDialog: StateFlow<Boolean> = _showSurrenderDialog
 
+    // ── Bomb Powerup ──
+    private val _bombUsed = MutableStateFlow(false)
+    val bombUsed: StateFlow<Boolean> = _bombUsed
+    private val _bombMode = MutableStateFlow(false)
+    val bombMode: StateFlow<Boolean> = _bombMode
+
     // ── Rooms ──
     private val _availableRooms = MutableStateFlow<List<RoomInfo>>(emptyList())
     val availableRooms: StateFlow<List<RoomInfo>> = _availableRooms
@@ -502,6 +508,25 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun toggleBombMode() {
+        if (_currentTurn.value == playerIdRef && !_bombUsed.value) {
+            _bombMode.value = !_bombMode.value
+        }
+    }
+
+    fun handleUseBomb(row: Int, col: Int) {
+        if (_bombMode.value && _currentTurn.value == playerIdRef && !_bombUsed.value) {
+            if (!shootPending.compareAndSet(false, true)) return
+            _bombMode.value = false
+            emitIfConnected("useBomb", JSONObject().put("row", row).put("col", col))
+            shootTimeoutJob?.cancel()
+            shootTimeoutJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(10_000)
+                shootPending.set(false)
+            }
+        }
+    }
+
     fun handlePlayAgain() {
         _playAgainPending.value = true
         emitIfConnected("requestPlayAgain")
@@ -593,6 +618,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _chatUnread.value = 0
         _mySunkCount.value = 0
         _theirSunkCount.value = 0
+        _bombUsed.value = false
+        _bombMode.value = false
         resetSunk()
     }
 
@@ -667,6 +694,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _mySunkCount.value = 0; _theirSunkCount.value = 0
                 _playerBoard.value = data.optJSONArray("board")?.let { parseBoardFromJson(it) } ?: createEmptyBoard()
                 data.optInt("timeLimit", 0).takeIf { it > 0 }?.let { _gameTimeLimit.value = it }
+                _bombUsed.value = data.optBoolean("bombUsed", false)
+                _bombMode.value = false
                 _isSpectator.value = false
                 _isHost.value = data.optBoolean("isHost", false)
 
@@ -913,6 +942,110 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             setMessage(s.newGamePlaceShips, "info")
         }
 
+        reg("bombResult") { args ->
+            val data = args.getOrNull(0) as? JSONObject ?: return@reg
+            shootPending.set(false)
+            shootTimeoutJob?.cancel()
+            try {
+                val shooterId = data.optString("shooterId", "")
+                val iShot = shooterId == playerIdRef
+                _currentTurn.value = data.optString("currentTurn").ifEmpty { null }
+                data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
+                data.optLong("turnStartedAt", 0L).takeIf { it > 0 }?.let { _turnStartedAt.value = localizeTs(data, it) }
+
+                if (iShot) {
+                    _bombUsed.value = true
+                }
+
+                if (SoundManager.enabled) {
+                    SoundManager.playHit()
+                    if (!iShot && _currentTurn.value == playerIdRef) {
+                        viewModelScope.launch {
+                            kotlinx.coroutines.delay(400)
+                            SoundManager.playTurn()
+                        }
+                    }
+                }
+                if (!iShot) vibratePattern(longArrayOf(0, 100, 50, 200))
+
+                val cellsArr = data.optJSONArray("cells")
+                if (cellsArr != null) {
+                    val expState = if (iShot) _opponentExplosionKeys else _playerExplosionKeys
+                    val expKeys = mutableSetOf<String>()
+
+                    for (i in 0 until cellsArr.length()) {
+                        val c = cellsArr.optJSONObject(i) ?: continue
+                        val row = c.optInt("row", -1)
+                        val col = c.optInt("col", -1)
+                        if (row >= 0 && col >= 0) {
+                            expKeys.add("$row,$col")
+                            val shipSunk = c.optBoolean("shipSunk", false)
+                            if (shipSunk && c.has("sunkShipCells")) {
+                                if (iShot) _mySunkCount.value = _mySunkCount.value + 1
+                                else _theirSunkCount.value = _theirSunkCount.value + 1
+
+                                val sArr = c.optJSONArray("sunkShipCells")
+                                if (sArr != null) {
+                                    val sunkCells = (0 until sArr.length()).mapNotNull { j ->
+                                        val sc = sArr.optJSONObject(j) ?: return@mapNotNull null
+                                        sc.optInt("row", -1) to sc.optInt("col", -1)
+                                    }.filter { it.first >= 0 && it.second >= 0 }
+                                    val ref = if (iShot) opponentSunk else playerSunk
+                                    sunkCells.forEach { ref.add("${it.first},${it.second}") }
+                                    getSurroundingKeys(sunkCells).forEach { ref.add("${it}_safe") }
+                                    
+                                    val sunkExpKeys = sunkCells.map { "${it.first},${it.second}" }.toSet()
+                                    expKeys.addAll(sunkExpKeys)
+                                }
+                            }
+                        }
+                    }
+
+                    if (expKeys.isNotEmpty()) {
+                        expState.value = expState.value + expKeys
+                        viewModelScope.launch {
+                            kotlinx.coroutines.delay(1500)
+                            expState.value = expState.value - expKeys
+                        }
+                    }
+                }
+
+                val rawP = data.optJSONArray("playerBoard")?.let { parseBoardFromJson(it) } ?: createEmptyBoard()
+                val rawO = data.optJSONArray("opponentBoard")?.let { parseBoardFromJson(it) } ?: createEmptyBoard()
+                _playerBoard.value = overlayBoard(rawP, playerSunk)
+                _opponentBoard.value = overlayBoard(rawO, opponentSunk)
+
+                _message.value = if (iShot) "💣 BOMB used!" else "💣 Opponent used BOMB!"
+                _messageType.value = "info"
+
+                if (data.optBoolean("gameWon", false)) {
+                    _phase.value = "gameOver"
+                    _winner.value = data.optString("winner").ifEmpty { null }
+                    if (SoundManager.enabled) {
+                        if (data.optString("winner") == playerIdRef) SoundManager.playVictory() else SoundManager.playDefeat()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        reg("spectatorBombResult") { args ->
+            val data = args.getOrNull(0) as? JSONObject ?: return@reg
+            try {
+                parseSpectatorBoards(data.optJSONArray("boards"))
+                _currentTurn.value = data.optString("currentTurn").ifEmpty { null }
+                data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
+                data.optLong("turnStartedAt", 0L).takeIf { it > 0 }?.let { _turnStartedAt.value = localizeTs(data, it) }
+                if (data.optBoolean("gameWon", false)) {
+                    _phase.value = "gameOver"
+                    _winner.value = data.optString("winner").ifEmpty { null }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         reg("playerLeft") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             val name = data.optString("playerName", "").ifEmpty { _opponentName.value }
@@ -1033,6 +1166,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
                 data.optLong("turnStartedAt", 0L).takeIf { it > 0 }?.let { _turnStartedAt.value = localizeTs(data, it) }
                 data.optInt("timeLimit", 0).takeIf { it > 0 }?.let { _gameTimeLimit.value = it }
+                _bombUsed.value = data.optBoolean("bombUsed", false)
+                _bombMode.value = false
                 _winner.value = data.optString("winner").ifEmpty { null }
                 _opponentName.value = data.optString("opponentName", "").ifEmpty { "" }
                 if (data.optBoolean("shipsPlaced", false)) _isReady.value = true

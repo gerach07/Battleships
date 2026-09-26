@@ -44,6 +44,7 @@ class Room {
         this.playAgainVotes = new Set();
         this.chatMessages = [];
         this._chatIdCounter = 0;
+        this.bombUsed = {}; // tracks per-player bomb usage
     }
 
     touch() {
@@ -173,6 +174,7 @@ class Room {
             this.placementLimiter.removePlayer(remainingPlayerId);
             this.chatLimiter.removePlayer(remainingPlayerId);
         }
+        this.bombUsed = {}; // reset bomb for next game
     }
 
     validateShipPlacement(playerId, row, col, length, direction) {
@@ -418,6 +420,154 @@ class Room {
             success: true,
             error: null,
             result,
+        };
+    }
+
+    /**
+     * Returns true if (row, col) on the given player's board is in the
+     * 1-cell buffer zone (including diagonals) around any already-sunk ship.
+     * Used to prevent bomb from being placed on a known-safe cell.
+     */
+    _isSafeZone(playerId, row, col) {
+        for (const ship of this.players[playerId].ships) {
+            if (!ship.sunk) continue;
+            for (const c of ship.cells) {
+                if (Math.abs(c.row - row) <= 1 && Math.abs(c.col - col) <= 1) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Process a bomb shot — hits a cross/plus of 5 cells (center + N/S/E/W).
+     * Rules:
+     *   - One use per player per game.
+     *   - Center must be untouched (not HIT/MISS) and not a known safe zone.
+     *   - Arms that are out-of-bounds or already shot are silently skipped.
+     *   - Turn always passes to opponent after the bomb (even on hits).
+     */
+    processBomb(shooterId, row, col) {
+        if (this.state !== GameState.BATTLE_PHASE) {
+            return { success: false, error: 'Not in battle phase', result: null };
+        }
+        if (this.currentTurn !== shooterId) {
+            return { success: false, error: 'Not your turn', result: null };
+        }
+        if (this.bombUsed[shooterId]) {
+            return { success: false, error: 'Bomb already used this game', result: null };
+        }
+        if (!isValidCoordinate(row, col)) {
+            return { success: false, error: 'Invalid coordinates', result: null };
+        }
+
+        const opponentId = this.getOpponentId(shooterId);
+        if (!opponentId) return { success: false, error: 'Opponent not found', result: null };
+        const opponentBoard = this.players[opponentId].board;
+
+        // Center must be untouched and not a revealed safe zone
+        const centerCell = opponentBoard[row][col];
+        if (centerCell === CellState.HIT || centerCell === CellState.MISS) {
+            return { success: false, error: 'Cannot bomb an already targeted cell', result: null };
+        }
+        if (this._isSafeZone(opponentId, row, col)) {
+            return { success: false, error: 'Cannot bomb a revealed safe zone', result: null };
+        }
+
+        // Consume elapsed turn time from shooter's clock
+        if (this.timeLimit && this.turnStartedAt) {
+            const elapsed = (Date.now() - this.turnStartedAt) / 1000;
+            this.playerTimeLeft[shooterId] = Math.max(0,
+                (this.playerTimeLeft[shooterId] ?? this.timeLimit) - elapsed
+            );
+            this.turnStartedAt = Date.now();
+            if (this.playerTimeLeft[shooterId] <= 0) {
+                this.winner = opponentId;
+                this._transitionState(GameState.GAME_OVER);
+                return {
+                    success: true, error: null,
+                    result: {
+                        cells: [], gameWon: true, timeOut: true, isBomb: true,
+                        winner: this.winner,
+                        currentTurn: this.currentTurn,
+                        playerTimeLeft: { ...this.playerTimeLeft },
+                        turnStartedAt: this.turnStartedAt,
+                    }
+                };
+            }
+        }
+
+        // Cross/plus pattern: center, N, S, W, E
+        const targets = [
+            { row, col },
+            { row: row - 1, col },
+            { row: row + 1, col },
+            { row, col: col - 1 },
+            { row, col: col + 1 },
+        ].filter(({ row: r, col: c }) => isValidCoordinate(r, c));
+
+        const cells = [];
+        let gameWon = false;
+
+        for (const { row: r, col: c } of targets) {
+            const cell = opponentBoard[r][c];
+            const cellResult = { row: r, col: c, isHit: false, shipSunk: false, shipId: null };
+
+            if (cell === CellState.HIT || cell === CellState.MISS) {
+                cellResult.skipped = true;
+                cells.push(cellResult);
+                continue;
+            }
+
+            if (cell === CellState.SHIP) {
+                opponentBoard[r][c] = CellState.HIT;
+                cellResult.isHit = true;
+                this.players[opponentId].totalHitsReceived++;
+
+                for (const ship of this.players[opponentId].ships) {
+                    const hitIndex = ship.cells.findIndex(sc => sc.row === r && sc.col === c);
+                    if (hitIndex !== -1) {
+                        ship.hitsReceived++;
+                        cellResult.shipId = ship.id;
+                        if (ship.hitsReceived === ship.length) {
+                            ship.sunk = true;
+                            cellResult.shipSunk = true;
+                            cellResult.sunkShipCells = ship.cells;
+                            cellResult.sunkShipName = ship.name || 'Ship';
+                        }
+                        break;
+                    }
+                }
+
+                if (!gameWon && this.players[opponentId].totalHitsReceived === TOTAL_SEGMENTS) {
+                    gameWon = true;
+                    this.winner = shooterId;
+                    this._transitionState(GameState.GAME_OVER);
+                }
+            } else {
+                opponentBoard[r][c] = CellState.MISS;
+            }
+
+            cells.push(cellResult);
+        }
+
+        this.bombUsed[shooterId] = true;
+        // Bomb always passes the turn (no chain-shooting on hits)
+        if (!gameWon) {
+            this.currentTurn = opponentId;
+        }
+
+        return {
+            success: true,
+            error: null,
+            result: {
+                cells,
+                gameWon,
+                winner: gameWon ? this.winner : undefined,
+                currentTurn: this.currentTurn,
+                playerTimeLeft: { ...this.playerTimeLeft },
+                turnStartedAt: this.turnStartedAt,
+                isBomb: true,
+            },
         };
     }
 

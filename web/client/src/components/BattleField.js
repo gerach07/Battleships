@@ -11,6 +11,7 @@ const BattleField = memo(({
     dispPlayer,
     dispOpponent,
     spectatorPlayerNames = [],
+    spectatorBoards = [],
     handleShoot,
     explosionCells,
     noop,
@@ -24,6 +25,10 @@ const BattleField = memo(({
     handleLeave,
     mySunkCount,
     theirSunkCount,
+    bombUsed,
+    bombMode,
+    toggleBombMode,
+    handleUseBomb,
 }) => {
     const { t } = useI18n();
     // Memoize filtered props to avoid breaking child React.memo
@@ -31,6 +36,18 @@ const BattleField = memo(({
     const opponentExplosions = useMemo(() => explosionCells.filter(e => e.board === 'opponent'), [explosionCells]);
     const playerLastShot = useMemo(() => lastShot?.board === 'player' ? lastShot : null, [lastShot]);
     const opponentLastShot = useMemo(() => lastShot?.board === 'opponent' ? lastShot : null, [lastShot]);
+
+    // Build playerId → playerName map so GameTimer shows real names for spectators
+    const playerNamesById = useMemo(() => {
+        if (!isSpectator || spectatorBoards.length === 0) return {};
+        const map = {};
+        spectatorBoards.forEach(sb => {
+            if (sb?.playerId && sb?.playerName) map[sb.playerId] = sb.playerName;
+        });
+        return map;
+    }, [isSpectator, spectatorBoards]);
+
+    const bombDisabled = bombUsed || !isMyTurn || isSpectator;
 
     return (
         <div className="space-y-4 sm:space-y-5 animate-fade-in" role="region" aria-label="Battle phase">
@@ -42,6 +59,7 @@ const BattleField = memo(({
                     myId={myId}
                     opponentName={opponentName}
                     playerName={playerName}
+                    playerNamesById={playerNamesById}
                 />
             )}
 
@@ -71,7 +89,7 @@ const BattleField = memo(({
                         </p>
                         {/* Always render to prevent layout shift; hide via visibility */}
                         <p className={`text-[0.65rem] mt-0.5 font-medium transition-opacity duration-200 ${!isSpectator && isMyTurn ? 'text-emerald-300/70 opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
-                            {t('battle.extraShot')}
+                            {bombMode ? '🎯 Select target cell for BOMB' : t('battle.extraShot')}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -79,6 +97,25 @@ const BattleField = memo(({
                             <span className="px-2.5 py-1.5 bg-purple-900/40 text-purple-300 text-[0.65rem] font-bold rounded-lg border border-purple-700/40 shadow-sm">
                                 👁️ {spectatorCount}
                             </span>
+                        )}
+                        {/* Bomb button */}
+                        {!isSpectator && (
+                            <button
+                                onClick={toggleBombMode}
+                                disabled={bombDisabled}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all active:scale-95 border ${
+                                    bombUsed
+                                        ? 'bg-slate-800/60 text-slate-600 border-slate-700/40 cursor-not-allowed line-through'
+                                        : bombMode
+                                            ? 'bg-gradient-to-r from-amber-500/30 to-orange-500/30 text-amber-300 border-amber-400/60 shadow-md shadow-amber-500/20 animate-pulse'
+                                            : bombDisabled
+                                                ? 'bg-slate-800/60 text-slate-500 border-slate-700/40 cursor-not-allowed'
+                                                : 'bg-amber-900/30 text-amber-400/90 border-amber-500/30 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-400/50 hover:shadow-md hover:shadow-amber-500/10'
+                                }`}
+                                title={bombUsed ? 'Bomb already used' : bombMode ? 'Cancel bomb' : 'Use bomb (1 per game)'}
+                            >
+                                💣{bombUsed ? '' : ' 1'}
+                            </button>
                         )}
                         <button
                             onClick={isSpectator ? handleLeave : handleForfeit}
@@ -130,7 +167,7 @@ const BattleField = memo(({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div className={`glass-card p-3 sm:p-4 transition-all animate-board-entry ${isSpectator ? '' : isMyTurn ? 'border-emerald-500/20 ring-1 ring-emerald-500/10' : ''}`}>
-                    <GameBoard board={dispOpponent} isYourBoard={false} onCellClick={isSpectator ? noop : handleShoot} isYourTurn={!isSpectator && isMyTurn} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[1]) : t('battle.enemyWaters', opponentName)} explosionCells={opponentExplosions} lastShot={opponentLastShot} />
+                    <GameBoard board={dispOpponent} isYourBoard={false} onCellClick={isSpectator ? noop : (bombMode ? handleUseBomb : handleShoot)} isYourTurn={!isSpectator && isMyTurn} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[1]) : t('battle.enemyWaters', opponentName)} explosionCells={opponentExplosions} lastShot={opponentLastShot} bombMode={!isSpectator && bombMode} />
                 </div>
                 <div className={`glass-card p-3 sm:p-4 transition-all animate-board-entry ${isSpectator ? '' : isMyTurn ? '' : 'border-yellow-500/15'}`}>
                     <GameBoard board={dispPlayer} isYourBoard={!isSpectator} onCellClick={noop} isYourTurn={false} label={isSpectator ? t('battle.enemyWaters', spectatorPlayerNames[0]) : t('battle.yourFleet')} explosionCells={playerExplosions} lastShot={playerLastShot} />
