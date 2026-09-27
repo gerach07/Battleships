@@ -124,6 +124,7 @@ struct I18nStrings {
     let namesTurn: String
     let yourTurnFire: String
     let extraShotHint: String
+    let bombTargetHint: String
     let opponentsTurn: String
     let enemyWaters: String
     let yourFleet: String
@@ -322,6 +323,7 @@ let stringsEN = I18nStrings(
     namesTurn: "{0}'s turn",
     yourTurnFire: "Your Turn — Fire!",
     extraShotHint: "Hit a ship for an extra shot!",
+    bombTargetHint: "🎯 Tap a target cell to use the bomb",
     opponentsTurn: "{0}'s Turn",
     enemyWaters: "{0}'s Waters",
     yourFleet: "Your Fleet",
@@ -504,6 +506,7 @@ let stringsLV = I18nStrings(
     namesTurn: "{0} gājiens",
     yourTurnFire: "Jūsu gājiens — šaujiet!",
     extraShotHint: "Trāpiet kuģim, lai šautu vēlreiz!",
+    bombTargetHint: "🎯 Pieskarieties mērķa šūnai, lai izmantotu bumbu",
     opponentsTurn: "{0} gājiens",
     enemyWaters: "{0} ūdeņi",
     yourFleet: "Jūsu flote",
@@ -686,6 +689,7 @@ let stringsRU = I18nStrings(
     namesTurn: "Ход {0}",
     yourTurnFire: "Ваш ход — стреляйте!",
     extraShotHint: "Попадите в корабль для доп. выстрела!",
+    bombTargetHint: "🎯 Нажмите на цель, чтобы применить бомбу",
     opponentsTurn: "Ход {0}",
     enemyWaters: "Воды {0}",
     yourFleet: "Ваш флот",

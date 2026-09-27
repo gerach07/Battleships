@@ -1,5 +1,8 @@
 {
   "app.title": "Морской бой",
+  "app.settings": "Настройки",
+  "app.controls": "Управление игрой",
+  "app.closePanel": "Закрыть панель",
   "app.online": "Онлайн",
   "app.offline": "Офлайн",
   "app.muteSound": "Выключить звуки",
@@ -105,6 +108,10 @@
   "battle.yourTurn": "Ваш ход — кликните, чтобы стрелять!",
   "battle.opTurn": "{0} целится…",
   "battle.extraShot": "Попадания и потопления дают дополнительный выстрел",
+  "battle.bombTargetHint": "🎯 Нажмите на цель, чтобы применить бомбу",
+  "battle.bombAlreadyUsed": "Бомба уже использована",
+  "battle.cancelBomb": "Отменить бомбу",
+  "battle.useBombTooltip": "Использовать бомбу (1 за игру)",
   "battle.leave": "Выйти",
   "battle.leaveTooltip": "Покинуть режим наблюдения",
   "battle.surrenderTooltip": "Сдаться в игре",
@@ -219,5 +226,6 @@
   "leaderboard.games": "Игры",
 
   "spectator.placementTitle": "Игроки расставляют корабли",
-  "spectator.placementHint": "Бой скоро начнётся. Вы сможете наблюдать, когда оба игрока будут готовы."
+  "spectator.placementHint": "Бой скоро начнётся. Вы сможете наблюдать, когда оба игрока будут готовы.",
+  "footer.musicCredits": "Музыка и звуковые эффекты"
 }

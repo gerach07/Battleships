@@ -15,8 +15,55 @@ input, select, textarea {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-input:focus, select:focus, textarea:focus {
+input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus {
   transform: scale(1.01);
+}
+
+/* Compact, consistent controls for the app header. */
+.header-icon-button {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.header-icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header-icon-button:focus-visible,
+.header-popover :focus-visible {
+  outline: 2px solid #67e8f9;
+  outline-offset: 2px;
+}
+
+.header-popover {
+  max-height: calc(100dvh - 4rem);
+  overflow-y: auto;
+  background: linear-gradient(145deg, rgba(9, 20, 38, 0.98), rgba(15, 34, 54, 0.97));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(1.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  animation: serverInfoSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top right;
+}
+
+.room-code-badge {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 380px) {
+  .header-icon-button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
 }
 
 /* ── Deep ocean background ──────────────────────────────────────── */
@@ -61,7 +108,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 [data-theme="light"] .theme-bg {
-  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%) !important;
+  background: linear-gradient(135deg, var(--bg-from) 0%, var(--bg-via) 50%, var(--bg-to) 100%) !important;
   color: #1e293b;
 }
 
@@ -74,6 +121,7 @@ input:focus, select:focus, textarea:focus {
 [data-theme="light"] .theme-header {
   background: rgba(15, 23, 42, 0.9) !important;
   backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 
 [data-theme="light"] .theme-card {
@@ -84,7 +132,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 [data-theme="light"] .theme-card .text-slate-400 { color: #64748b !important; }
-[data-theme="light"] .theme-card .text-white     { color: #1e293b !important; }
 [data-theme="light"] .theme-input {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;

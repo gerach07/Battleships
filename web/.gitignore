@@ -21,6 +21,7 @@ dist/
 .env.local
 .env.*.local
 server/.env
+server/.local-mongo/
 
 # Logs
 *.log

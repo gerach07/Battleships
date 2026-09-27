@@ -1,5 +1,8 @@
 {
   "app.title": "Kuģu Kaujas",
+  "app.settings": "Iestatījumi",
+  "app.controls": "Spēles vadīklas",
+  "app.closePanel": "Aizvērt paneli",
   "app.online": "Tiešsaistē",
   "app.offline": "Bezsaistē",
   "app.muteSound": "Izslēgt skaņas",
@@ -105,6 +108,10 @@
   "battle.yourTurn": "Jūsu gājiens — klikšķiniet, lai šautu!",
   "battle.opTurn": "{0} mērķē…",
   "battle.extraShot": "Trāpījumi un nogremdēšana dod papildu šāvienu",
+  "battle.bombTargetHint": "🎯 Pieskarieties mērķa šūnai, lai izmantotu bumbu",
+  "battle.bombAlreadyUsed": "Bumba jau izmantota",
+  "battle.cancelBomb": "Atcelt bumbu",
+  "battle.useBombTooltip": "Izmantot bumbu (1 spēlē)",
   "battle.leave": "Iziet",
   "battle.leaveTooltip": "Pamest skatītāja skatu",
   "battle.surrenderTooltip": "Padoties spēlē",
@@ -219,5 +226,6 @@
   "leaderboard.games": "Spēles",
 
   "spectator.placementTitle": "Spēlētāji izvieto savus kuģus",
-  "spectator.placementHint": "Cīņa drīz sāksies. Jūs varēsiet skatīties, kad abi spēlētāji būs gatavi."
+  "spectator.placementHint": "Cīņa drīz sāksies. Jūs varēsiet skatīties, kad abi spēlētāji būs gatavi.",
+  "footer.musicCredits": "Mūzikas un skaņu autori"
 }

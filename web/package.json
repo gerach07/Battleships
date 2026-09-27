@@ -6,6 +6,8 @@
   "scripts": {
     "install:all": "cd client && npm install && cd ../server && npm install",
     "dev": "node start.js",
+    "dev:local": "concurrently -k -n server,client -c cyan,green \"npm run dev:local:server\" \"npm run dev:client\"",
+    "dev:local:server": "cd server && npm run dev:local",
     "dev:internal": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "cd client && npm start",
     "dev:server": "cd server && npm run dev",

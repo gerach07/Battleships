@@ -1,5 +1,8 @@
 {
   "app.title": "Battleships",
+  "app.settings": "Settings",
+  "app.controls": "Game controls",
+  "app.closePanel": "Close panel",
   "app.online": "Online",
   "app.offline": "Offline",
   "app.muteSound": "Mute sounds",
@@ -105,6 +108,10 @@
   "battle.yourTurn": "Your turn — click to fire!",
   "battle.opTurn": "{0} is aiming…",
   "battle.extraShot": "Hits & sinks grant an extra shot",
+  "battle.bombTargetHint": "🎯 Tap a target cell to use the bomb",
+  "battle.bombAlreadyUsed": "Bomb already used",
+  "battle.cancelBomb": "Cancel bomb",
+  "battle.useBombTooltip": "Use bomb (1 per game)",
   "battle.leave": "Leave",
   "battle.leaveTooltip": "Leave spectator view",
   "battle.surrenderTooltip": "Surrender the game",
@@ -219,5 +226,6 @@
   "leaderboard.games": "Games",
 
   "spectator.placementTitle": "Players are placing their ships",
-  "spectator.placementHint": "The battle will begin shortly. You'll be able to watch once both players are ready."
+  "spectator.placementHint": "The battle will begin shortly. You'll be able to watch once both players are ready.",
+  "footer.musicCredits": "Music & sound credits"
 }

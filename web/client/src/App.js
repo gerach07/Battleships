@@ -124,6 +124,7 @@ const BackgroundShips = React.memo(function BackgroundShips() {
 
 /* ── Module-level constants ── */
 const NOOP = () => {};
+const ACTIVE_ROOM_SESSION_KEY = 'battleships-active-room-session';
 const SOCKET_EVENTS = [
   'gameJoined', 'playerJoined', 'error', 'placementFinished', 'playerReady',
   'placementUnreadied', 'playerUnreadied', 'battleStarted', 'shotResult',
@@ -135,6 +136,34 @@ const SOCKET_EVENTS = [
   'opponentReconnecting', 'opponentReconnected', 'opponentReconnectFailed', 'roomClosed',
   'bombResult', 'spectatorBombResult',
 ];
+
+function readActiveRoomSession(roomCode) {
+  if (!roomCode) return null;
+  try {
+    const session = JSON.parse(sessionStorage.getItem(ACTIVE_ROOM_SESSION_KEY) || 'null');
+    if (session?.roomId?.toUpperCase() !== roomCode.toUpperCase() || !session.sessionToken) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function saveActiveRoomSession(session) {
+  try {
+    sessionStorage.setItem(ACTIVE_ROOM_SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // Storage may be unavailable in private browsing; transient reconnect remains supported.
+  }
+}
+
+function clearActiveRoomSession() {
+  try {
+    sessionStorage.removeItem(ACTIVE_ROOM_SESSION_KEY);
+  } catch {
+    // Ignore storage access failures.
+  }
+}
+
 function formatUptime(seconds) {
   if (!seconds && seconds !== 0) return '—';
   const h = Math.floor(seconds / 3600);
@@ -147,11 +176,12 @@ function App() {
   const { socket, isConnected, serverUrl } = useSocket();
   const { t, lang, setLang } = useI18n();
   const urlInfo = useMemo(() => getRoomFromURL(), []);
+  const restoredSession = useMemo(() => readActiveRoomSession(urlInfo.roomCode), [urlInfo.roomCode]);
 
   // State
-  const [gameId, setGameId] = useState(urlInfo.roomCode || '');
-  const [roomPassword, setRoomPassword] = useState(urlInfo.password || '');
-  const [playerName, setPlayerName] = useState('');
+  const [gameId, setGameId] = useState(urlInfo.roomCode || restoredSession?.roomId || '');
+  const [roomPassword, setRoomPassword] = useState(urlInfo.password || restoredSession?.password || '');
+  const [playerName, setPlayerName] = useState(restoredSession?.playerName || '');
   const [phase, setPhase] = useState('login');
   const [loginView, setLoginView] = useState(urlInfo.roomCode ? 'join' : 'menu');
   const [playerBoard, setPlayerBoard] = useState(createEmptyBoard);
@@ -285,8 +315,10 @@ function App() {
   const [lastShot, setLastShot] = useState(null);
   const [spectatorBoards, setSpectatorBoards] = useState([]);
   const [serverInfo, setServerInfo] = useState(null);
-  const [serverInfoOpen, setServerInfoOpen] = useState(false);
+  const [headerPopover, setHeaderPopover] = useState(null);
+  const [headerPopoverPosition, setHeaderPopoverPosition] = useState({ top: 48, right: 12 });
   const serverInfoBtnRef = useRef(null);
+  const settingsBtnRef = useRef(null);
   const [isHost, setIsHost] = useState(false);
   const [opponentSocketId, setOpponentSocketId] = useState(null);
 
@@ -323,7 +355,51 @@ function App() {
   const playerNameRef = useRef('');
   const opponentNameRef = useRef('');
   const isSpectatorRef = useRef(false);
+  const savedSessionRejoinAttemptedRef = useRef(false);
   const [isJoining, setIsJoining] = useState(false);
+
+  const rejoinSavedSession = useCallback(() => {
+    if (!restoredSession || !socket?.connected || savedSessionRejoinAttemptedRef.current) return false;
+    savedSessionRejoinAttemptedRef.current = true;
+    joiningGameRef.current = true;
+    setIsJoining(true);
+    setGameId(restoredSession.roomId);
+    setRoomPassword(restoredSession.password || '');
+    setPlayerName(restoredSession.playerName);
+    socket.emit('rejoinGame', {
+      gameId: restoredSession.roomId,
+      playerName: restoredSession.playerName,
+      password: restoredSession.password || null,
+      sessionToken: restoredSession.sessionToken,
+    });
+    return true;
+  }, [restoredSession, socket]);
+
+  useEffect(() => {
+    if (!headerPopover) return;
+    const updatePosition = () => {
+      const anchor = headerPopover === 'settings' ? settingsBtnRef.current : serverInfoBtnRef.current;
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      const panelWidth = 288;
+      setHeaderPopoverPosition({
+        top: rect.bottom + 8,
+        right: Math.min(Math.max(window.innerWidth - rect.right, 12), window.innerWidth - panelWidth - 12),
+      });
+    };
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setHeaderPopover(null);
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [headerPopover]);
 
   // Keep tRef always pointing to current translation function
   useEffect(() => { tRef.current = t; }, [t]);
@@ -417,6 +493,11 @@ function App() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [phase]);
 
+  useEffect(() => {
+    if (!restoredSession || !socket?.connected || savedSessionRejoinAttemptedRef.current) return;
+    rejoinSavedSession();
+  }, [restoredSession, socket, rejoinSavedSession]);
+
   // Load saved name on mount
   useEffect(() => {
     const saved = localStorage.getItem('battleships-name');
@@ -466,6 +547,11 @@ function App() {
             } catch {
               // On network error just leave the PIN as-is
             }
+          }
+
+          if (restoredSession) {
+            setRoomIsFull(false);
+            return;
           }
 
           if (data.playerCount >= 2) {
@@ -527,6 +613,8 @@ function App() {
     setIsJoining(false);
     shootPendingRef.current = false;
     sessionTokenRef.current = null; // Clear stale session token
+    clearActiveRoomSession();
+    savedSessionRejoinAttemptedRef.current = false;
     setBombUsed(false); setBombMode(false);
     // Clear pending explosion timers to prevent stale state updates
     explosionTimersRef.current.forEach(clearTimeout);
@@ -557,6 +645,12 @@ function App() {
       setPlayerId(data.playerId);
       playerIdRef.current = data.playerId;
       sessionTokenRef.current = data.sessionToken || null;
+      saveActiveRoomSession({
+        roomId: data.roomId || gameIdRef.current || '',
+        password: data.password || roomPasswordRef.current || '',
+        playerName: playerNameRef.current || playerName,
+        sessionToken: sessionTokenRef.current,
+      });
       setIsHost(data.isHost || false);
       setBombUsed(data.bombUsed || false); setBombMode(false);
       // Cancel any pending playerLeft timer from a previous session
@@ -814,6 +908,8 @@ function App() {
 
 
     socket.on('leftRoom', () => {
+      clearActiveRoomSession();
+      savedSessionRejoinAttemptedRef.current = false;
       setChatMessages([]);
       setPhase('login'); setGameId(''); resetSunk();
       setURLRoom(null);
@@ -1078,6 +1174,8 @@ function App() {
     });
 
     socket.on('kicked', (data) => {
+      clearActiveRoomSession();
+      savedSessionRejoinAttemptedRef.current = false;
       setMessageWithTimeout(`❌ ${data.message || 'You have been kicked from the room'}`, 'error', 5000);
       setChatMessages([]);
       setPhase('login');
@@ -1101,7 +1199,14 @@ function App() {
     socket.on('connect', () => {
       if (!hasConnectedOnceRef.current) {
         hasConnectedOnceRef.current = true;
+        if (restoredSession && !savedSessionRejoinAttemptedRef.current) {
+          rejoinSavedSession();
+        }
         return; // first connection — no need to rejoin
+      }
+      if (restoredSession && !savedSessionRejoinAttemptedRef.current) {
+        rejoinSavedSession();
+        return;
       }
       // Only auto-rejoin if we were in a game (not on login screen)
       const phase = phaseRef.current;
@@ -1124,6 +1229,13 @@ function App() {
       shootPendingRef.current = false;
       setPlayerId(data.playerId);
       playerIdRef.current = data.playerId;
+      sessionTokenRef.current = data.sessionToken || sessionTokenRef.current || null;
+      saveActiveRoomSession({
+        roomId: data.roomId || gameIdRef.current || '',
+        password: roomPasswordRef.current || '',
+        playerName: playerNameRef.current || playerName,
+        sessionToken: sessionTokenRef.current,
+      });
       setIsHost(data.isHost || false);
       setBombUsed(data.bombUsed || false); setBombMode(false);
       setGameId(data.roomId);
@@ -1157,6 +1269,8 @@ function App() {
     });
 
     socket.on('rejoinFailed', (data) => {
+      clearActiveRoomSession();
+      savedSessionRejoinAttemptedRef.current = false;
       setMessageWithTimeout(`❌ ${data?.reason || 'Could not rejoin'}`, 'error', 5000);
       setPhase('login');
       setGameId('');
@@ -1487,6 +1601,11 @@ function App() {
     }
   }, [setMessageWithTimeout]);
 
+  const centeredPhases = ['login', 'waiting', 'gameOver'];
+  const mainLayoutClass = centeredPhases.includes(phase) || (phase === 'placement' && isSpectator)
+    ? 'flex-1 flex flex-col justify-center'
+    : '';
+
   return (
     <div className="min-h-screen theme-bg text-white flex flex-col" data-theme={theme}>
       {/* Skip to main content — accessible keyboard shortcut */}
@@ -1495,150 +1614,135 @@ function App() {
       </a>
       <ConnectionOverlay isConnected={isConnected} />
 
-      {/* Server info dropdown — portalled to document.body, positioned under the button */}
-      {serverInfoOpen && createPortal(
+      {headerPopover && createPortal(
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setServerInfoOpen(false)} />
-          <div
-            className="fixed z-[9999] w-72 rounded-2xl overflow-hidden shadow-2xl border border-slate-500/20"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97))',
-              backdropFilter: 'blur(24px)',
-              top: serverInfoBtnRef.current
-                ? serverInfoBtnRef.current.getBoundingClientRect().bottom + 8 + 'px'
-                : '48px',
-              right: serverInfoBtnRef.current
-                ? (window.innerWidth - serverInfoBtnRef.current.getBoundingClientRect().right) + 'px'
-                : '12px',
-              animation: 'serverInfoSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              transformOrigin: 'top right',
-            }}
+          <button
+            type="button"
+            className="fixed inset-0 z-[9998] cursor-default"
+            aria-label={t('app.closePanel')}
+            onClick={() => setHeaderPopover(null)}
+          />
+          <section
+            className="header-popover fixed z-[9999] w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border border-slate-500/20"
+            style={{ top: headerPopoverPosition.top, right: headerPopoverPosition.right }}
+            aria-label={headerPopover === 'settings' ? t('app.settings') : t('serverInfo.title')}
           >
-            {/* Header with connection status */}
-            <div className={`px-4 py-3 flex items-center gap-2.5 ${isConnected ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5' : 'bg-gradient-to-r from-red-500/15 to-red-500/5'}`}>
-              <span className={`relative w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-red-400'}`}>
-                {isConnected && <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-50" />}
-              </span>
-              <span className={`text-sm font-bold ${isConnected ? 'text-emerald-300' : 'text-red-300'}`}>
-                {isConnected ? t('app.online') : t('app.offline')}
-              </span>
-              <span className="ml-auto text-[0.6rem] text-slate-500 font-mono">
-                {serverInfo ? `v${serverInfo.version}` : ''}
-              </span>
-            </div>
-
-            {serverInfo && (
-              <div className="p-4 space-y-3 text-xs">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-800/50 rounded-xl p-3 text-center border border-slate-700/30">
-                    <p className="text-blue-400 text-2xl font-black">{serverInfo.activeRooms}</p>
-                    <p className="text-slate-500 text-[0.6rem] mt-0.5 uppercase tracking-wider font-semibold">{t('serverInfo.rooms')}</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-3 text-center border border-slate-700/30">
-                    <p className="text-blue-400 text-2xl font-black">{serverInfo.connectedSockets}</p>
-                    <p className="text-slate-500 text-[0.6rem] mt-0.5 uppercase tracking-wider font-semibold">{t('serverInfo.players')}</p>
-                  </div>
+            {headerPopover === 'settings' ? (
+              <div className="p-4 text-sm text-slate-200">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-bold">{t('app.settings')}</h2>
+                  <span className="max-w-36 truncate text-xs text-slate-500">{musicEnabled && currentTrackName ? `♪ ${currentTrackName}` : ''}</span>
                 </div>
-
-                {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent" />
-
-                {/* Detail rows */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">{t('serverInfo.uptime')}</span>
-                    <span className="text-slate-300 font-mono bg-slate-800/50 px-2 py-0.5 rounded-md">{formatUptime(serverInfo.uptime)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">{t('serverInfo.node')}</span>
-                    <span className="text-slate-300 font-mono bg-slate-800/50 px-2 py-0.5 rounded-md">{serverInfo.node}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500">{t('serverInfo.memory')}</span>
-                    <span className="text-slate-300 font-mono bg-slate-800/50 px-2 py-0.5 rounded-md">{serverInfo.memoryMB}MB</span>
-                  </div>
-                </div>
+                <label className="flex items-center justify-between gap-4 border-b border-white/10 py-3 text-sm">
+                  <span>{t('app.language')}</span>
+                  <select
+                    value={lang}
+                    onChange={e => setLang(e.target.value)}
+                    className="rounded-lg border border-white/10 bg-slate-800 px-2 py-1.5 text-sm text-white"
+                    aria-label={t('app.language')}
+                  >
+                    <option value="en">🇬🇧 English</option>
+                    <option value="lv">🇱🇻 Latviešu</option>
+                    <option value="ru">🇷🇺 Русский</option>
+                  </select>
+                </label>
+                <button type="button" onClick={toggleSound} aria-pressed={soundEnabled} className="flex min-h-11 w-full items-center justify-between border-b border-white/10 py-3 text-left">
+                  <span>{soundEnabled ? t('app.muteSound') : t('app.unmuteSound')}</span><span aria-hidden="true">{soundEnabled ? '🔊' : '🔇'}</span>
+                </button>
+                <button type="button" onClick={toggleMusic} aria-pressed={musicEnabled} className="flex min-h-11 w-full items-center justify-between border-b border-white/10 py-3 text-left">
+                  <span>{musicEnabled ? t('app.muteMusic') : t('app.unmuteMusic')}</span><span aria-hidden="true">{musicEnabled ? '🎵' : '🔕'}</span>
+                </button>
+                <button type="button" onClick={toggleTheme} className="flex min-h-11 w-full items-center justify-between py-3 text-left">
+                  <span>{t('app.toggleTheme')}</span><span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                </button>
               </div>
+            ) : (
+              <>
+                <div className={`flex items-center gap-2.5 px-4 py-3 ${isConnected ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                  <span className={`relative h-2.5 w-2.5 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-red-400'}`}>
+                    {isConnected && <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-50" />}
+                  </span>
+                  <span className={`text-sm font-bold ${isConnected ? 'text-emerald-300' : 'text-red-300'}`}>
+                    {isConnected ? t('app.online') : t('app.offline')}
+                  </span>
+                  <span className="ml-auto font-mono text-xs text-slate-500">{serverInfo ? `v${serverInfo.version}` : ''}</span>
+                </div>
+                {serverInfo && (
+                  <div className="space-y-3 p-4 text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 text-center">
+                        <p className="text-2xl font-black text-cyan-300">{serverInfo.activeRooms}</p>
+                        <p className="mt-1 text-xs text-slate-400">{t('serverInfo.rooms')}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-700/30 bg-slate-800/50 p-3 text-center">
+                        <p className="text-2xl font-black text-emerald-300">{serverInfo.connectedSockets}</p>
+                        <p className="mt-1 text-xs text-slate-400">{t('serverInfo.players')}</p>
+                      </div>
+                    </div>
+                    <div className="h-px bg-white/10" />
+                    <dl className="space-y-2 text-xs">
+                      <div className="flex justify-between gap-3"><dt className="text-slate-400">{t('serverInfo.uptime')}</dt><dd className="font-mono text-slate-200">{formatUptime(serverInfo.uptime)}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-400">{t('serverInfo.node')}</dt><dd className="font-mono text-slate-200">{serverInfo.node}</dd></div>
+                      <div className="flex justify-between gap-3"><dt className="text-slate-400">{t('serverInfo.memory')}</dt><dd className="font-mono text-slate-200">{serverInfo.memoryMB}MB</dd></div>
+                    </dl>
+                  </div>
+                )}
+              </>
             )}
-          </div>
+          </section>
         </>,
         document.body
       )}
 
-      <header className="theme-header bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/60 shadow-lg relative z-20" role="banner">
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2 relative">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl sm:text-2xl drop-shadow-lg">⚔️</span>
-            <h1 className="text-base sm:text-lg font-black tracking-tight leading-none text-white truncate">{t('app.title')}</h1>
+      <header className="theme-header relative z-20 border-b border-slate-700/60 bg-slate-900/90 shadow-lg backdrop-blur-xl" role="banner">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-3 py-2 sm:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2 border-r border-white/10 pr-3">
+            <span className="text-xl drop-shadow-lg sm:text-2xl" aria-hidden="true">⚔️</span>
+            <h1 className="min-w-0 truncate text-base font-black leading-none text-white sm:text-lg">{t('app.title')}</h1>
             {phase !== 'login' && gameId && (
-              <span className="hidden sm:inline text-[0.6rem] text-yellow-300 font-mono tracking-wider bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">{gameId}</span>
+              <span className="room-code-badge max-w-20 truncate rounded-md border border-yellow-400/20 bg-yellow-500/10 px-2 py-1 font-mono text-xs font-bold text-yellow-200 sm:max-w-none sm:text-sm" title={`${t('waiting.roomCode')}: ${gameId}`} aria-label={`${t('waiting.roomCode')}: ${gameId}`}>
+                {gameId}
+              </span>
             )}
           </div>
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            <select
-              value={lang}
-              onChange={e => setLang(e.target.value)}
-              className="bg-white/5 text-white text-[0.65rem] rounded-lg px-1 py-1 border border-white/10 cursor-pointer hover:bg-white/10 transition w-[4.5rem]"
-              title={t('app.language')}
-              aria-label={t('app.language')}
-            >
-              <option value="en" className="bg-slate-800">🇬🇧 EN</option>
-              <option value="lv" className="bg-slate-800">🇱🇻 LV</option>
-              <option value="ru" className="bg-slate-800">🇷🇺 RU</option>
-            </select>
-            <div className="flex items-center bg-white/5 rounded-lg border border-white/10" role="group" aria-label="Audio and theme controls">
-              <button onClick={toggleSound} className="p-1.5 hover:bg-white/10 rounded-l-lg active:scale-95 transition text-base" title={soundEnabled ? t('app.muteSound') : t('app.unmuteSound')} aria-label={soundEnabled ? t('app.muteSound') : t('app.unmuteSound')}>
-                {soundEnabled ? '🔊' : '🔇'}
-              </button>
-              <button onClick={toggleMusic} className="p-1.5 hover:bg-white/10 active:scale-95 transition text-base" title={musicEnabled ? t('app.muteMusic') : t('app.unmuteMusic')} aria-label={musicEnabled ? t('app.muteMusic') : t('app.unmuteMusic')}>
-                {musicEnabled ? '🎵' : '🔕'}
-              </button>
-              {musicEnabled && currentTrackName && (
-                <span className="hidden sm:flex items-center gap-1 px-2 text-[0.6rem] text-blue-300/70 max-w-[9rem] truncate" title={currentTrackName}>
-                  ♪ {currentTrackName}
-                </span>
-              )}
-              <button onClick={toggleTheme} className="p-1.5 hover:bg-white/10 rounded-r-lg active:scale-95 transition text-base" title={t('app.toggleTheme')} aria-label={t('app.toggleTheme')}>
-                {theme === 'dark' ? '☀️' : '🌙'}
-              </button>
-            </div>
-            <div className="relative flex gap-1">
+          <nav className="flex shrink-0 items-center gap-1 sm:gap-1.5" aria-label={t('app.controls')}>
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard(true)}
+              className="header-icon-button"
+              title={t('leaderboard.title')}
+              aria-label={t('leaderboard.title')}
+            >🏆</button>
+            {user && (
               <button
-                onClick={() => setShowLeaderboard(true)}
-                className="flex items-center justify-center p-1.5 hover:bg-white/10 rounded-lg active:scale-95 transition text-base"
-                title="Leaderboard" aria-label="Leaderboard"
+                type="button"
+                onClick={() => setShowProfile(true)}
+                className="header-icon-button border-emerald-500/25 text-emerald-300 hover:bg-emerald-500/15"
+                title={t('profile.title')}
+                aria-label={t('profile.title')}
               >
-                🏆
+                {user.photoUrl ? <img src={user.photoUrl} alt="" className="h-5 w-5 rounded-full" /> : '👤'}
               </button>
-              {user ? (
-                <button
-                  onClick={() => setShowProfile(true)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition cursor-pointer"
-                  title="Profile"
-                >
-                  {user.photoUrl ? (
-                    <img src={user.photoUrl} alt="Avatar" className="w-4 h-4 rounded-full" />
-                  ) : (
-                    <span className="text-[0.65rem]">👤</span>
-                  )}
-                  <span className="hidden sm:inline text-[0.65rem] font-bold max-w-[5rem] truncate">{user.name}</span>
-                </button>
-              ) : null}
-              <button
-                ref={serverInfoBtnRef}
-                onClick={() => setServerInfoOpen(o => !o)}
-                className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[0.65rem] font-semibold cursor-pointer transition border ${isConnected ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'}`}
-                title={t('serverInfo.title')}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-blue-400 animate-pulse' : 'bg-red-400'}`} />
-                <span className="hidden sm:inline">{isConnected ? t('app.online') : t('app.offline')}</span>
-              </button>
-            </div>
-            {phase !== 'login' && playerName && !user && (
-              <span className="hidden sm:block text-xs font-bold text-slate-300 max-w-[6rem] truncate" title={playerName}>{playerName}</span>
             )}
-          </div>
+            <button
+              type="button"
+              ref={settingsBtnRef}
+              onClick={() => setHeaderPopover(current => current === 'settings' ? null : 'settings')}
+              className="header-icon-button"
+              title={t('app.settings')}
+              aria-label={t('app.settings')}
+              aria-expanded={headerPopover === 'settings'}
+            >⚙️</button>
+            <button
+              type="button"
+              ref={serverInfoBtnRef}
+              onClick={() => setHeaderPopover(current => current === 'server' ? null : 'server')}
+              className={`header-icon-button ${isConnected ? 'border-cyan-400/25 text-cyan-300' : 'border-red-400/25 text-red-300'}`}
+              title={t('serverInfo.title')}
+              aria-label={`${t('serverInfo.title')}: ${isConnected ? t('app.online') : t('app.offline')}`}
+              aria-expanded={headerPopover === 'server'}
+            ><span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-cyan-300 animate-pulse' : 'bg-red-400'}`} aria-hidden="true" /></button>
+          </nav>
         </div>
       </header>
 
@@ -1647,14 +1751,16 @@ function App() {
 
       {/* Toast notification — bottom-center for less intrusion */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm transition-all duration-400 ${
+        className={`fixed left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 transition-all duration-400 ${
+          chatOpen ? 'bottom-[26rem]' : phase !== 'login' ? 'bottom-20' : 'bottom-6'
+        } ${
           message ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
         style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
         aria-live="polite"
         aria-atomic="true"
       >
-        <div className={`bg-gradient-to-r ${msgClass} border rounded-2xl px-4 py-3 text-sm font-semibold backdrop-blur-xl shadow-2xl flex items-center gap-3`}>
+        <div className={`glass-card bg-slate-950/80 bg-gradient-to-r ${msgClass} rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-3`}>
           <span className="text-base shrink-0">
             {messageType === 'success' ? '✅' : messageType === 'error' ? '⚠️' : 'ℹ️'}
           </span>
@@ -1671,7 +1777,7 @@ function App() {
         </div>
       </div>
 
-      <main id="main-content" className={`w-full max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-5 space-y-3 sm:space-y-4 relative z-10 ${['login', 'waiting', 'gameOver'].includes(phase) || (phase === 'placement' && isSpectator) ? 'flex-1 flex flex-col justify-center' : ''}`} role="main">
+      <main id="main-content" className={`w-full max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-5 space-y-3 sm:space-y-4 relative z-10 ${mainLayoutClass}`} role="main">
 
         {phase === 'login' && (
           <LoginView
@@ -1720,16 +1826,16 @@ function App() {
         {phase === 'placement' && !isSpectator && (
           <Suspense fallback={<div className="text-center py-12 text-slate-500">Loading…</div>}>
           <div className="space-y-3 animate-fade-in">
-            <div className="glass-card p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-base sm:text-lg font-black flex items-center gap-2 truncate">{t('placement.title')}</h2>
                 <p className="text-slate-400 text-[0.65rem] mt-0.5">{t('placement.hint')}</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <div className="flex w-full sm:w-auto items-stretch sm:items-center gap-2">
                 <button
                   onClick={isReady ? handleUnready : handleFinishPlace}
                   disabled={!isReady && shipsPlaced < 5}
-                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${isReady && !opponentReady
+                  className={`min-w-0 flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl font-bold text-sm text-center whitespace-normal transition-all ${isReady && !opponentReady
                     ? 'bg-yellow-500 hover:bg-yellow-400 text-white hover:scale-105 shadow-md'
                     : isReady && opponentReady
                       ? 'bg-green-700 text-green-200 cursor-not-allowed'
@@ -1742,14 +1848,14 @@ function App() {
                     ? (opponentReady ? t('placement.lockedIn') : `↩️ ${t('placement.unready')}`)
                     : `✅ ${t('placement.ready', shipsPlaced)}`}
                 </button>
-                <button onClick={handleBackToMenu} className="px-2.5 py-2 text-red-400/70 hover:text-red-300 text-xs font-semibold transition" title={t('waiting.leaveRoom')}>🚪</button>
+                <button onClick={handleBackToMenu} className="header-icon-button text-red-300" title={t('waiting.leaveRoom')} aria-label={t('waiting.leaveRoom')}>🚪</button>
               </div>
             </div>
             {/* Always render with fixed height to prevent layout shift */}
               <div className={`text-center text-xs py-1.5 rounded-lg min-h-[2rem] flex items-center justify-center transition-all duration-200 ${
-                !opponentName ? 'opacity-0' : opponentReady ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-500/20' : 'bg-slate-800/40 text-slate-500 border border-slate-700/30'
+                !opponentName ? 'invisible' : opponentReady ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-500/20' : 'bg-slate-800/40 text-slate-500 border border-slate-700/30'
               }`}>
-                {opponentName ? (opponentReady ? `✓ ${t('placement.opReady', opponentName)}` : t('placement.opWaiting', opponentName)) : '\u00A0'}
+                {opponentReady ? `✓ ${t('placement.opReady', opponentName || 'Opponent')}` : t('placement.opWaiting', opponentName || 'Opponent')}
               </div>
             <ShipPlacement key={placementKey} onShipPlaced={handleShipPlaced} locked={isReady} />
           </div>
@@ -1821,7 +1927,11 @@ function App() {
 
       <footer className="max-w-5xl mx-auto px-3 sm:px-6 py-4 text-center mt-auto relative z-10" role="contentinfo">
         <p className="text-[0.6rem] text-slate-500 font-semibold mb-2">⚓ Battleships &mdash; Created by Adrians Bergmanis</p>
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-2">
+        <details className="mx-auto mb-2 w-fit text-left">
+          <summary className="cursor-pointer list-none rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-slate-400 hover:border-cyan-400/30 hover:text-cyan-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300">
+            {t('footer.musicCredits')}
+          </summary>
+          <div className="mt-2 grid gap-1 rounded-xl border border-white/10 bg-slate-950/70 p-3 text-left sm:grid-cols-2">
           {[
             ['The Price of Freedom',  'Menu Music',           'Royalty-Free Music'],
             ['Beyond New Horizons',   'Ship Placement Music', 'Royalty-Free Music'],
@@ -1829,11 +1939,12 @@ function App() {
             ['Victory',               'Victory Sound',        'Free Sound Effect'],
             ['Waves Crash',           'Defeat Sound',         'Free Sound Effect'],
           ].map(([name, role, source]) => (
-            <span key={name} className="text-[0.5rem] text-slate-600" title={`${role} — ${source}`}>
-              ♪ &quot;{name}&quot;
+            <span key={name} className="text-xs text-slate-400" title={`${role} — ${source}`}>
+              <span className="text-cyan-300">♪</span> &quot;{name}&quot;
             </span>
           ))}
         </div>
+        </details>
         <p className="text-[0.5rem] text-slate-700">&copy; Adrians Bergmanis. All rights reserved. Music &amp; sounds are royalty-free / no-copyright.</p>
       </footer>
     </div>

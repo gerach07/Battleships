@@ -172,7 +172,7 @@ struct BattleScreen: View {
     private var normalBoards: some View {
         VStack(spacing: 14) {
             if vm.bombMode {
-                Text("🎯 Tap target cell to use Bomb")
+                Text(s.bombTargetHint)
                     .font(.caption.bold())
                     .foregroundColor(.orange)
                     .padding(.bottom, -6)

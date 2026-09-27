@@ -9,6 +9,7 @@
   "scripts": {
     "start": "NODE_ENV=production node server.js",
     "dev": "NODE_ENV=development nodemon server.js",
+    "dev:local": "node dev-local.js",
     "test": "NODE_ENV=test node test-validation.js"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "socket.io": "^4.5.4"
   },
   "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.13"
   }
 }

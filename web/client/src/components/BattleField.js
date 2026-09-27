@@ -89,7 +89,7 @@ const BattleField = memo(({
                         </p>
                         {/* Always render to prevent layout shift; hide via visibility */}
                         <p className={`text-[0.65rem] mt-0.5 font-medium transition-opacity duration-200 ${!isSpectator && isMyTurn ? 'text-emerald-300/70 opacity-100' : 'opacity-0 pointer-events-none select-none'}`}>
-                            {bombMode ? '🎯 Select target cell for BOMB' : t('battle.extraShot')}
+                            {bombMode ? t('battle.bombTargetHint') : t('battle.extraShot')}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -112,7 +112,8 @@ const BattleField = memo(({
                                                 ? 'bg-slate-800/60 text-slate-500 border-slate-700/40 cursor-not-allowed'
                                                 : 'bg-amber-900/30 text-amber-400/90 border-amber-500/30 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-400/50 hover:shadow-md hover:shadow-amber-500/10'
                                 }`}
-                                title={bombUsed ? 'Bomb already used' : bombMode ? 'Cancel bomb' : 'Use bomb (1 per game)'}
+                                title={bombUsed ? t('battle.bombAlreadyUsed') : bombMode ? t('battle.cancelBomb') : t('battle.useBombTooltip')}
+                                aria-label={bombUsed ? t('battle.bombAlreadyUsed') : bombMode ? t('battle.cancelBomb') : t('battle.useBombTooltip')}
                             >
                                 💣{bombUsed ? '' : ' 1'}
                             </button>
