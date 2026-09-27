@@ -11,6 +11,7 @@
  */
 
 const Room = require('./src/models/Room');
+const ReconnectSession = require('./src/models/ReconnectSession');
 const RateLimiter = require('./src/utils/RateLimiter');
 const { sanitizeInput } = require('./src/utils/sanitizers');
 
@@ -72,6 +73,16 @@ const LAYOUT_B_CELLS = [
 // ============================================================================
 // PHASE 5: VALIDATION TESTS
 // ============================================================================
+
+suite('PHASE 5.0: RECONNECT SESSION MODEL VALIDATION');
+assert(
+  ReconnectSession && typeof ReconnectSession.modelName === 'string',
+  'Reconnect session model is defined'
+);
+assert(
+  ReconnectSession.schema && ReconnectSession.schema.paths.sessionToken,
+  'Reconnect session model includes session token field'
+);
 
 suite('PHASE 5.1: CORE GAME LOGIC VALIDATION');
 

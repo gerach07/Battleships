@@ -16,6 +16,7 @@ require('dotenv').config();
 
 // Models & Utils
 const Room = require('./src/models/Room');
+const ReconnectSession = require('./src/models/ReconnectSession');
 const pkg = require('./package.json');
 const { GameState, DEFAULT_GAME_TIME_SECONDS, MIN_GAME_TIME_SECONDS, MAX_GAME_TIME_SECONDS, SHIPS, SHIP_NAMES } = require('./src/constants');
 const { sanitizeInput } = require('./src/utils/sanitizers');
@@ -123,8 +124,45 @@ let timerIntervalId = null;
 
 /** Grace period before treating a disconnect as a real leave (allows reconnect) */
 const DISCONNECT_GRACE_MS = 10_000;
+const RECONNECT_SESSION_TTL_MS = 30_000;
 /** Pending disconnect timers — key: "roomId:playerName", value: { timer, oldSocketId } */
 const pendingDisconnects = new Map();
+
+async function createReconnectSession({ roomId, playerName, sessionToken, socketId, ttlMs = RECONNECT_SESSION_TTL_MS }) {
+  if (!mongoose.connection.readyState) return null;
+  const expiresAt = new Date(Date.now() + ttlMs);
+  await ReconnectSession.updateOne(
+    { sessionToken },
+    {
+      roomId,
+      playerName,
+      sessionToken,
+      socketId,
+      expiresAt,
+      createdAt: new Date(),
+    },
+    { upsert: true }
+  );
+  return { roomId, playerName, sessionToken, socketId, expiresAt };
+}
+
+async function clearReconnectSession({ roomId, playerName, sessionToken }) {
+  if (!mongoose.connection.readyState) return;
+  const query = { $or: [] };
+  if (roomId && playerName) query.$or.push({ roomId, playerName });
+  if (sessionToken) query.$or.push({ sessionToken });
+  if (query.$or.length === 0) return;
+  await ReconnectSession.deleteMany(query);
+}
+
+async function findReconnectSession({ roomId, playerName, sessionToken }) {
+  if (!mongoose.connection.readyState) return null;
+  const query = { expiresAt: { $gt: new Date() } };
+  if (sessionToken) query.sessionToken = sessionToken;
+  if (roomId) query.roomId = roomId.toUpperCase();
+  if (playerName) query.playerName = playerName;
+  return ReconnectSession.findOne(query).lean();
+}
 
 /** Validate room ID format — 4-10 alphanumeric characters */
 function isValidRoomId(id) {
@@ -359,6 +397,7 @@ io.on('connection', (socket) => {
         playerToRoom[socket.id] = roomId;
         const sessionToken = crypto.randomUUID();
         room.players[socket.id].sessionToken = sessionToken;
+        await createReconnectSession({ roomId, playerName: name, sessionToken, socketId: socket.id });
         socket.join(roomId);
 
         socket.emit('gameJoined', {
@@ -405,6 +444,37 @@ io.on('connection', (socket) => {
     if (!room) return socket.emit('rejoinFailed', { reason: 'Room no longer exists' });
     if (!room.checkPassword(pwd)) return socket.emit('rejoinFailed', { reason: 'Incorrect password' });
 
+    const durableSession = await findReconnectSession({ roomId, playerName: name, sessionToken });
+    if (!durableSession) {
+      const key = `${roomId}:${name}`;
+      const pending = pendingDisconnects.get(key);
+      if (!pending) {
+        if (payload.isSpectator && room.state !== GameState.WAITING_FOR_PLAYERS) {
+          if (!room.checkPassword(pwd)) return socket.emit('rejoinFailed', { reason: 'Incorrect password' });
+          if (!room.addSpectator(socket.id)) return socket.emit('rejoinFailed', { reason: 'Spectator slots full' });
+          playerToRoom[socket.id] = roomId;
+          socket.join(roomId);
+          socket.emit('spectatorJoined', {
+            roomId: room.roomId,
+            players: room.getPlayerList(),
+            state: room.getState(),
+            timeLimit: room.timeLimit,
+            playerTimeLeft: room.playerTimeLeft,
+            turnStartedAt: room.turnStartedAt,
+            currentTurn: room.currentTurn,
+            boards: room.getSpectatorBoards(),
+            sunkShipData: room.getSunkShipData(),
+            chatHistory: room.chatMessages || [],
+            serverNow: Date.now(),
+          });
+          io.to(roomId).emit('spectatorUpdate', { count: room.spectators.size });
+          room.touch();
+          return;
+        }
+        return socket.emit('rejoinFailed', { reason: 'Session expired' });
+      }
+    }
+
     // Check for a pending disconnect grace period for this player
     const key = `${roomId}:${name}`;
     const pending = pendingDisconnects.get(key);
@@ -436,14 +506,16 @@ io.on('connection', (socket) => {
       return socket.emit('rejoinFailed', { reason: 'Session expired' });
     }
 
-    if (pending.sessionToken && pending.sessionToken !== sessionToken) {
+    if ((pending && pending.sessionToken && pending.sessionToken !== sessionToken) || (durableSession && durableSession.sessionToken && durableSession.sessionToken !== sessionToken)) {
       return socket.emit('rejoinFailed', { reason: 'Invalid or missing session token. Cannot hijack session.' });
     }
 
     // Cancel the grace timer — player made it back in time
-    clearTimeout(pending.timer);
-    pendingDisconnects.delete(key);
-    const oldSocketId = pending.oldSocketId;
+    if (pending) {
+      clearTimeout(pending.timer);
+      pendingDisconnects.delete(key);
+    }
+    const oldSocketId = pending?.oldSocketId || durableSession?.socketId;
 
     // Acquire room lock — rejoin mutates room state and must not race with shots/timers
     const release = await acquireRoomLock(roomId);
@@ -492,6 +564,11 @@ io.on('connection', (socket) => {
       // Update global tracking
       delete playerToRoom[oldSocketId];
       playerToRoom[socket.id] = roomId;
+      await clearReconnectSession({ roomId, playerName: name, sessionToken });
+      const refreshedSession = await createReconnectSession({ roomId, playerName: name, sessionToken, socketId: socket.id });
+      if (refreshedSession) {
+        room.players[socket.id].sessionToken = sessionToken;
+      }
       socket.join(roomId);
 
       // Send full state restore to the reconnected client
@@ -1007,6 +1084,9 @@ io.on('connection', (socket) => {
       const playerName = room.players[socket.id].name;
       const sessionToken = room.players[socket.id].sessionToken;
       const key = `${roomId}:${playerName}`;
+      if (sessionToken) {
+        await createReconnectSession({ roomId, playerName, sessionToken, socketId: socket.id, ttlMs: RECONNECT_SESSION_TTL_MS });
+      }
       console.log(`Disconnect (grace period ${DISCONNECT_GRACE_MS}ms): ${socket.id} from room ${roomId}`);
 
       // Cancel any existing grace timer for the same player (prevents stale timer leak)
@@ -1025,6 +1105,9 @@ io.on('connection', (socket) => {
       const oldSocketId = socket.id;
       const timer = setTimeout(async () => {
         pendingDisconnects.delete(key);
+        if (sessionToken) {
+          await clearReconnectSession({ roomId, playerName, sessionToken });
+        }
         // Notify opponent grace period expired — re-read room in case it changed
         const currentRoom = rooms[roomId];
         if (currentRoom && currentRoom.players[oldSocketId]) {
