@@ -31,6 +31,14 @@ import com.anasio.battleships.util.createEmptyBoard
 import com.anasio.battleships.util.generateRandomPlacement
 import com.anasio.battleships.viewmodel.GameViewModel
 
+private fun boardFromPlacements(placements: List<PlacedShip>): List<List<String>> {
+    val board = createEmptyBoard().map { it.toMutableList() }
+    placements.forEach { placement ->
+        placement.cells.forEach { (row, col) -> board[row][col] = CellState.SHIP }
+    }
+    return board.map { it.toList() }
+}
+
 @Composable
 fun PlacementScreen(viewModel: GameViewModel) {
     val message by viewModel.message.collectAsState()
@@ -46,17 +54,8 @@ fun PlacementScreen(viewModel: GameViewModel) {
     val c = LocalColorPalette.current
 
     // Local placement state (reset when placementKey changes, restored from ViewModel after config change)
-    val savedPlacements by viewModel.clientPlacements.collectAsState()
-    var board by remember(placementKey) {
-        val initialPlacements = viewModel.clientPlacements.value
-        val initialBoard = if (initialPlacements.isNotEmpty()) {
-            val b = createEmptyBoard().toMutableList().map { it.toMutableList() }
-            initialPlacements.forEach { p -> p.cells.forEach { (cr, cc) -> b[cr][cc] = CellState.SHIP } }
-            b.map { it.toList() }
-        } else createEmptyBoard()
-        mutableStateOf(initialBoard)
-    }
     var placements by remember(placementKey) { mutableStateOf(viewModel.clientPlacements.value) }
+    val board = remember(placements) { boardFromPlacements(placements) }
     var selectedShip by remember(placementKey) {
         val placedIds = viewModel.clientPlacements.value.map { it.shipId }.toSet()
         val next = SHIPS.firstOrNull { sh -> sh.id !in placedIds }
@@ -68,6 +67,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
     var dragShipId by remember { mutableStateOf<Int?>(null) }
     var dragDirection by remember { mutableStateOf("horizontal") }
     var dragOffsetInShip by remember { mutableIntStateOf(0) }
+    var dragMoved by remember { mutableStateOf(false) }
     var dragOriginalPlacement by remember { mutableStateOf<PlacedShip?>(null) }
     var dragTargetRow by remember { mutableIntStateOf(0) }
     var dragTargetCol by remember { mutableIntStateOf(0) }
@@ -94,7 +94,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
         canPlaceShipOnBoard(board, dragTargetRow, dragTargetCol, ship.length, dragDirection).first
     }
 
-    val placedIds = (placements + savedPlacements).map { it.shipId }.toSet()
+    val placedIds = placements.map { it.shipId }.toSet()
     val allPlaced = placedIds.size == SHIPS.size
 
     if (isSpectator) {
@@ -244,7 +244,6 @@ fun PlacementScreen(viewModel: GameViewModel) {
                 RandomPlacementButton(enabled = !isReady) {
                     val result = generateRandomPlacement()
                     if (result != null) {
-                        board = result.first
                         placements = result.second
                         viewModel.handleShipPlaced(result.second)
                         SoundManager.playPlace()
@@ -252,7 +251,6 @@ fun PlacementScreen(viewModel: GameViewModel) {
                 }
                 Spacer(Modifier.width(6.dp))
                 SmallBtn("🗑️", false, !isReady && placements.isNotEmpty()) {
-                    board = createEmptyBoard()
                     placements = emptyList()
                     viewModel.handleShipPlaced(emptyList())
                     selectedShip = 0
@@ -327,10 +325,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
                 // If tapping on an existing ship, remove it
                 val existing = placements.find { p -> (r to c) in p.cells }
                 if (existing != null) {
-                    val newBoard = createEmptyBoard().toMutableList().map { it.toMutableList() }
                     val newPlacements = placements.filter { it.shipId != existing.shipId }
-                    newPlacements.forEach { p -> p.cells.forEach { (cr, cc) -> newBoard[cr][cc] = CellState.SHIP } }
-                    board = newBoard.map { it.toList() }
                     placements = newPlacements
                     viewModel.handleShipPlaced(newPlacements)
                     selectedShip = existing.shipId
@@ -344,10 +339,6 @@ fun PlacementScreen(viewModel: GameViewModel) {
                     viewModel.setMessage("❌ ${s.cantPlaceThere}", "error")
                     return@GameBoard
                 }
-                val newBoard = board.map { it.toMutableList() }
-                cells.forEach { (cr, cc) -> newBoard[cr][cc] = CellState.SHIP }
-                board = newBoard.map { it.toList() }
-
                 val placed = PlacedShip(ship.id, r, c, ship.length, direction, cells)
                 val newPlacements = placements + placed
                 placements = newPlacements
@@ -367,15 +358,13 @@ fun PlacementScreen(viewModel: GameViewModel) {
 
                     // Remove ship temporarily
                     val newPlacements = placements.filter { it.shipId != existing.shipId }
-                    val newBoard = createEmptyBoard().toMutableList().map { it.toMutableList() }
-                    newPlacements.forEach { p -> p.cells.forEach { (cr, cc) -> newBoard[cr][cc] = CellState.SHIP } }
-                    board = newBoard.map { it.toList() }
                     placements = newPlacements
                     viewModel.handleShipPlaced(newPlacements)
 
                     dragShipId = existing.shipId
                     dragDirection = existing.direction
                     dragOffsetInShip = offsetInShip
+                    dragMoved = false
                     dragOriginalPlacement = existing
                     dragTargetRow = existing.row
                     dragTargetCol = existing.col
@@ -383,6 +372,7 @@ fun PlacementScreen(viewModel: GameViewModel) {
                 }
             } } else null,
             onDragMove = if (!isReady && dragShipId != null) { { r, c ->
+                dragMoved = true
                 val targetR = if (dragDirection == "horizontal") r else r - dragOffsetInShip
                 val targetC = if (dragDirection == "horizontal") c - dragOffsetInShip else c
                 dragTargetRow = targetR
@@ -394,38 +384,27 @@ fun PlacementScreen(viewModel: GameViewModel) {
                 val orig = dragOriginalPlacement
 
                 if (id != null && ship != null && orig != null) {
-                    val (valid, cells) = canPlaceShipOnBoard(board, dragTargetRow, dragTargetCol, ship.length, dragDirection)
-                    if (valid) {
-                        val newBoard = board.map { it.toMutableList() }
-                        cells.forEach { (cr, cc) -> newBoard[cr][cc] = CellState.SHIP }
-                        board = newBoard.map { it.toList() }
-                        val newPlacements = placements + PlacedShip(id, dragTargetRow, dragTargetCol, ship.length, dragDirection, cells)
-                        placements = newPlacements
-                        viewModel.handleShipPlaced(newPlacements)
-                        viewModel.setMessage("✅ ${s.shipMoved}", "success")
-                        SoundManager.playPlace()
-                    } else {
-                        // Restore to original position — this should always succeed since we just vacated it
-                        val (origValid, origCells) = canPlaceShipOnBoard(board, orig.row, orig.col, ship.length, orig.direction)
-                        val newBoard = board.map { it.toMutableList() }
-                        if (origValid) {
-                            origCells.forEach { (cr, cc) -> newBoard[cr][cc] = CellState.SHIP }
-                            board = newBoard.map { it.toList() }
-                            placements = placements + orig
-                        } else {
-                            // Fallback: force-restore using the original cells
-                            orig.cells.forEach { (cr, cc) ->
-                                if (cr in 0 until GRID_SIZE && cc in 0 until GRID_SIZE) newBoard[cr][cc] = CellState.SHIP
-                            }
-                            board = newBoard.map { it.toList() }
-                            placements = placements + orig
-                        }
+                    if (!dragMoved) {
+                        placements = placements + orig
                         viewModel.handleShipPlaced(placements)
-                        viewModel.setMessage("❌ ${s.cantPlaceThere}", "error")
+                    } else {
+                        val (valid, cells) = canPlaceShipOnBoard(board, dragTargetRow, dragTargetCol, ship.length, dragDirection)
+                        if (valid) {
+                            val newPlacements = placements + PlacedShip(id, dragTargetRow, dragTargetCol, ship.length, dragDirection, cells)
+                            placements = newPlacements
+                            viewModel.handleShipPlaced(newPlacements)
+                            viewModel.setMessage("✅ ${s.shipMoved}", "success")
+                            SoundManager.playPlace()
+                        } else {
+                            placements = placements + orig
+                            viewModel.handleShipPlaced(placements)
+                            viewModel.setMessage("❌ ${s.cantPlaceThere}", "error")
+                        }
                     }
                 }
                 dragShipId = null
                 dragOriginalPlacement = null
+                dragMoved = false
             } } else null,
             )
         }

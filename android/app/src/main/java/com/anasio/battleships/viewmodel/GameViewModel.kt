@@ -196,6 +196,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val turnStartedAt: StateFlow<Long?> = _turnStartedAt
     private val _spectatorBoards = MutableStateFlow<List<SpectatorBoard>>(emptyList())
     val spectatorBoards: StateFlow<List<SpectatorBoard>> = _spectatorBoards
+    private val spectatorSunkDict = mutableMapOf<String, MutableSet<String>>()
 
     private val listeners = mutableMapOf<String, Emitter.Listener>()
     // ── Internal ──
@@ -629,6 +630,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _opponentSocketId.value = null
         _isHost.value = false
         _spectatorBoards.value = emptyList()
+        spectatorSunkDict.clear()
     }
 
     private fun resetSunk() { playerSunk.clear(); opponentSunk.clear() }
@@ -956,8 +958,24 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     _bombUsed.value = true
                 }
 
+                val cellsArr = data.optJSONArray("cells")
+                val anyHit = cellsArr?.let { cells ->
+                    (0 until cells.length()).any { i ->
+                        cells.optJSONObject(i)?.optBoolean("isHit", false) == true
+                    }
+                } == true
+                val anySunk = cellsArr?.let { cells ->
+                    (0 until cells.length()).any { i ->
+                        cells.optJSONObject(i)?.optBoolean("shipSunk", false) == true
+                    }
+                } == true
+
                 if (SoundManager.enabled) {
-                    SoundManager.playHit()
+                    when {
+                        anySunk -> SoundManager.playSunk()
+                        anyHit -> SoundManager.playHit()
+                        else -> SoundManager.playMiss()
+                    }
                     if (!iShot && _currentTurn.value == playerIdRef) {
                         viewModelScope.launch {
                             kotlinx.coroutines.delay(400)
@@ -965,9 +983,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
-                if (!iShot) vibratePattern(longArrayOf(0, 100, 50, 200))
+                if (!iShot && anyHit) vibratePattern(longArrayOf(0, 100, 50, 200))
 
-                val cellsArr = data.optJSONArray("cells")
                 if (cellsArr != null) {
                     val expState = if (iShot) _opponentExplosionKeys else _playerExplosionKeys
                     val expKeys = mutableSetOf<String>()
@@ -1031,6 +1048,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         reg("spectatorBombResult") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             try {
+                updateSpectatorSunkOverlay(data)
                 parseSpectatorBoards(data.optJSONArray("boards"))
                 _currentTurn.value = data.optString("currentTurn").ifEmpty { null }
                 data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
@@ -1170,6 +1188,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _bombMode.value = false
                 _winner.value = data.optString("winner").ifEmpty { null }
                 _opponentName.value = data.optString("opponentName", "").ifEmpty { "" }
+                _opponentSocketId.value = data.optString("opponentSocketId").ifEmpty { null }
                 val shipsPlaced = data.optBoolean("shipsPlaced", false)
                 _isReady.value = shipsPlaced
 
@@ -1290,6 +1309,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 joiningGame = false
                 _isSpectator.value = true
                 data.optString("roomId").ifEmpty { null }?.let { _gameId.value = it }
+                spectatorSunkDict.clear()
+                applySpectatorSunkData(data.optJSONArray("sunkShipData"))
                 parseSpectatorBoards(data.optJSONArray("boards"))
                 data.optJSONArray("chatHistory")?.let { arr ->
                     if (arr.length() > 0) {
@@ -1333,6 +1354,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         reg("spectatorShotResult") { args ->
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             try {
+                updateSpectatorSunkOverlay(data)
                 parseSpectatorBoards(data.optJSONArray("boards"))
                 _currentTurn.value = data.optString("currentTurn").ifEmpty { null }
                 data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
@@ -1350,6 +1372,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val data = args.getOrNull(0) as? JSONObject ?: return@reg
             try {
                 _phase.value = "battle"
+                spectatorSunkDict.clear()
                 parseSpectatorBoards(data.optJSONArray("boards"))
                 _currentTurn.value = data.optString("currentTurn").ifEmpty { null }
                 data.optJSONObject("playerTimeLeft")?.let { _playerTimeLeft.value = parseTimeLeft(it) }
@@ -1384,12 +1407,64 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (arr == null) return
         _spectatorBoards.value = (0 until arr.length()).map { i ->
             val b = arr.getJSONObject(i)
+            val playerId = b.optString("playerId", "")
+            val rawBoard = b.optJSONArray("board")?.let { parseBoardFromJson(it) } ?: createEmptyBoard()
             SpectatorBoard(
-                playerId = b.optString("playerId", ""),
+                playerId = playerId,
                 playerName = b.optString("playerName", ""),
-                board = b.optJSONArray("board")?.let { parseBoardFromJson(it) } ?: createEmptyBoard(),
+                board = overlayBoard(rawBoard, spectatorSunkDict[playerId] ?: emptySet()),
             )
         }
+    }
+
+    private fun applySpectatorSunkData(data: JSONArray?) {
+        if (data == null) return
+        for (i in 0 until data.length()) {
+            val playerData = data.optJSONObject(i) ?: continue
+            val playerId = playerData.optString("playerId", "")
+            val ships = playerData.optJSONArray("sunkShips") ?: continue
+            for (j in 0 until ships.length()) {
+                val ship = ships.optJSONObject(j) ?: continue
+                addSpectatorSunkShip(playerId, ship.optJSONArray("cells"))
+            }
+        }
+    }
+
+    private fun updateSpectatorSunkOverlay(data: JSONObject) {
+        val boards = data.optJSONArray("boards") ?: return
+        val shooterId = data.optString("shooterId", "")
+        val targetPlayerId = (0 until boards.length())
+            .mapNotNull { boards.optJSONObject(it) }
+            .firstOrNull { it.optString("playerId", "") != shooterId }
+            ?.optString("playerId", "")
+            .orEmpty()
+        if (targetPlayerId.isEmpty()) return
+
+        val bombCells = data.optJSONArray("cells")
+        if (bombCells != null) {
+            for (i in 0 until bombCells.length()) {
+                val cell = bombCells.optJSONObject(i) ?: continue
+                if (cell.optBoolean("shipSunk", false)) {
+                    addSpectatorSunkShip(targetPlayerId, cell.optJSONArray("sunkShipCells"))
+                }
+            }
+        } else if (data.optBoolean("shipSunk", false)) {
+            addSpectatorSunkShip(targetPlayerId, data.optJSONArray("sunkShipCells"))
+        }
+    }
+
+    private fun addSpectatorSunkShip(playerId: String, cells: JSONArray?) {
+        if (playerId.isEmpty() || cells == null) return
+        val tuples = (0 until cells.length()).mapNotNull { i ->
+            val cell = cells.optJSONObject(i) ?: return@mapNotNull null
+            val row = cell.optInt("row", -1)
+            val col = cell.optInt("col", -1)
+            if (row >= 0 && col >= 0) row to col else null
+        }
+        if (tuples.isEmpty()) return
+        val sunkSet = spectatorSunkDict.getOrPut(playerId) { mutableSetOf() }
+        tuples.forEach { (row, col) -> sunkSet.add("$row,$col") }
+        getSurroundingKeys(tuples).forEach { sunkSet.add("${it}_safe") }
     }
 
     // ── Auth Methods ──

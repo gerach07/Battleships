@@ -11,15 +11,26 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
     const { t } = useI18n();
     const [selected, setSelected] = useState(0);
     const [direction, setDirection] = useState('horizontal');
-    const [board, setBoard] = useState(createEmptyBoard);
-    const [placed, setPlaced] = useState(new Set());
     const [placements, setPlacements] = useState([]); // {shipId,row,col,length,direction,cells}[]
     const [hovered, setHovered] = useState(null);
-    const [msg, setMsg] = useState('');
+    const [msg, setRawMsg] = useState('');
+    const [msgType, setMsgType] = useState('info');
     const [dragState, setDragState] = useState(null); // { shipId, direction, length, offsetInShip, originalPlacement, targetRow, targetCol, hasMoved }
     const gridRef = useRef(null);
     /** Cached grid geometry — computed once on drag start to avoid reflow on every pointermove */
     const gridGeomRef = useRef(null);
+    const board = useMemo(() => {
+        const nextBoard = createEmptyBoard();
+        placements.forEach(placement => {
+            placement.cells.forEach(cell => { nextBoard[cell.row][cell.col] = CELL.SHIP; });
+        });
+        return nextBoard;
+    }, [placements]);
+    const placed = useMemo(() => new Set(placements.map(placement => placement.shipId)), [placements]);
+    const setMsg = useCallback((text, type = 'info') => {
+        setRawMsg(text);
+        setMsgType(type);
+    }, []);
     const canPlace = useCallback(
         (row, col, len, dir) => canPlaceShipOnBoard(board, row, col, len, dir),
         [board]
@@ -60,10 +71,7 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
         const existing = placements.find(p => p.cells.some(c => c.row === ri && c.col === ci));
         if (existing) {
             const newPlacements = placements.filter(p => p.shipId !== existing.shipId);
-            const newPlaced = new Set(placed); newPlaced.delete(existing.shipId);
-            const newBoard = createEmptyBoard();
-            newPlacements.forEach(p => p.cells.forEach(c => { newBoard[c.row][c.col] = CELL.SHIP; }));
-            setBoard(newBoard); setPlaced(newPlaced); setPlacements(newPlacements);
+            setPlacements(newPlacements);
             setSelected(existing.shipId);
             notifyParent(newPlacements);
             setMsg(t('ship.removed', SHIPS[existing.shipId].name));
@@ -73,45 +81,39 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
         if (placed.has(selected)) { setMsg(t('ship.alreadyPlaced', SHIPS[selected].name)); return; }
         const ship = SHIPS[selected];
         const { valid, cells } = canPlace(ri, ci, ship.length, direction);
-        if (!valid) { setMsg(t('ship.cantPlace')); return; }
-        const nb = board.map(r => [...r]);
-        cells.forEach(c => { nb[c.row][c.col] = CELL.SHIP; });
-        setBoard(nb);
-        const ns = new Set(placed); ns.add(selected); setPlaced(ns);
+        if (!valid) { setMsg(t('ship.cantPlace'), 'error'); return; }
         const newPlacements = [...placements, { shipId: selected, row: ri, col: ci, length: ship.length, direction, cells }];
         setPlacements(newPlacements);
         notifyParent(newPlacements);
         playSound('place');
-        setMsg(t('ship.placed', ship.name));
-        const next = SHIPS.findIndex(s => !ns.has(s.id));
+        setMsg(t('ship.placed', ship.name), 'success');
+        const next = SHIPS.findIndex(s => !newPlacements.some(placement => placement.shipId === s.id));
         if (next !== -1) setSelected(next);
-    }, [placed, selected, direction, board, canPlace, placements, notifyParent, t]);
+    }, [placed, selected, direction, canPlace, placements, notifyParent, setMsg, t]);
 
     const handleRandomize = useCallback(() => {
         const result = generateRandomPlacement();
         if (!result) return;
         // Build placements with cell positions
-        const newPlacements = result.placements.map((p, i) => {
+        const newPlacements = result.placements.map(p => {
             const cells = [];
             if (p.direction === 'horizontal') {
                 for (let j = 0; j < p.length; j++) cells.push({ row: p.row, col: p.col + j });
             } else {
                 for (let j = 0; j < p.length; j++) cells.push({ row: p.row + j, col: p.col });
             }
-            return { shipId: SHIPS[i].id, row: p.row, col: p.col, length: p.length, direction: p.direction, cells };
+            return { shipId: p.shipId, row: p.row, col: p.col, length: p.length, direction: p.direction, cells };
         });
-        setBoard(result.board);
         setPlacements(newPlacements);
         setSelected(0);
-        const all = new Set(SHIPS.map(s => s.id)); setPlaced(all);
         notifyParent(newPlacements);
-        setMsg(t('ship.randomised'));
-    }, [notifyParent, t]);
+        setMsg(t('ship.randomised'), 'success');
+    }, [notifyParent, setMsg, t]);
 
     const handleClear = useCallback(() => {
-        setBoard(createEmptyBoard()); setPlaced(new Set()); setPlacements([]); setSelected(0); setMsg('');
+        setPlacements([]); setSelected(0); setMsg('');
         notifyParent([]);
-    }, [notifyParent]);
+    }, [notifyParent, setMsg]);
 
     /** Calculate grid cell from screen coordinates using cached grid geometry */
     const getCellFromPointer = useCallback((clientX, clientY) => {
@@ -150,10 +152,7 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
         const offsetInShip = existing.direction === 'horizontal' ? ci - existing.col : ri - existing.row;
         // Remove ship from board temporarily
         const newPlacements = placements.filter(p => p.shipId !== existing.shipId);
-        const newBoard = createEmptyBoard();
-        newPlacements.forEach(p => p.cells.forEach(c => { newBoard[c.row][c.col] = CELL.SHIP; }));
-        const newPlaced = new Set(placed); newPlaced.delete(existing.shipId);
-        setBoard(newBoard); setPlacements(newPlacements); setPlaced(newPlaced);
+        setPlacements(newPlacements);
         setSelected(existing.shipId);
         setDragState({
             shipId: existing.shipId, direction: existing.direction, length: ship.length,
@@ -161,7 +160,7 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
             targetRow: existing.row, targetCol: existing.col, hasMoved: false,
         });
         setMsg(t('ship.dragToReposition', ship.name));
-    }, [locked, placements, placed, t]);
+    }, [locked, placements, setMsg, t]);
 
     /** Pointer move during drag (stable callback — uses functional updater) */
     const handlePointerMove = useCallback((e) => {
@@ -193,46 +192,34 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
 
         const { valid, cells } = canPlace(targetRow, targetCol, length, dir);
         if (valid) {
-            const nb = board.map(r => [...r]);
-            cells.forEach(c => { nb[c.row][c.col] = CELL.SHIP; });
-            setBoard(nb);
-            const ns = new Set(placed); ns.add(shipId); setPlaced(ns);
             const np = [...placements, { shipId, row: targetRow, col: targetCol, length, direction: dir, cells }];
             setPlacements(np); notifyParent(np);
             playSound('place');
-            setMsg(t('ship.moved', ship.name));
+            setMsg(t('ship.moved', ship.name), 'success');
         } else {
             // Restore to original position
-            const { valid: ov, cells: oc } = canPlace(originalPlacement.row, originalPlacement.col, length, dir);
+            const { valid: ov } = canPlace(originalPlacement.row, originalPlacement.col, length, dir);
             if (ov) {
-                const nb = board.map(r => [...r]);
-                oc.forEach(c => { nb[c.row][c.col] = CELL.SHIP; });
-                setBoard(nb);
-                const ns = new Set(placed); ns.add(shipId); setPlaced(ns);
                 const np = [...placements, originalPlacement];
                 setPlacements(np); notifyParent(np);
             }
-            setMsg(t('ship.cantPlaceReturn'));
+            setMsg(t('ship.cantPlaceReturn'), 'error');
         }
-    }, [dragState, canPlace, board, placed, placements, notifyParent, t]);
+    }, [dragState, canPlace, placements, notifyParent, setMsg, t]);
 
     /** Handle drag cancel (e.g. system interrupt) — restore ship */
     const handleDragCancel = useCallback(() => {
         if (!dragState) return;
-        const { shipId, originalPlacement, direction: dir, length } = dragState;
+        const { originalPlacement, direction: dir, length } = dragState;
         setDragState(null);
         gridGeomRef.current = null;
-        const { valid, cells } = canPlace(originalPlacement.row, originalPlacement.col, length, dir);
+        const { valid } = canPlace(originalPlacement.row, originalPlacement.col, length, dir);
         if (valid) {
-            const nb = board.map(r => [...r]);
-            cells.forEach(c => { nb[c.row][c.col] = CELL.SHIP; });
-            setBoard(nb);
-            const ns = new Set(placed); ns.add(shipId); setPlaced(ns);
             const np = [...placements, originalPlacement];
             setPlacements(np); notifyParent(np);
         }
         setMsg('');
-    }, [dragState, canPlace, board, placed, placements, notifyParent]);
+    }, [dragState, canPlace, placements, notifyParent, setMsg]);
 
     return (
         <div className={`space-y-3 ${locked ? 'pointer-events-none' : ''}`}>
@@ -300,8 +287,8 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
                 </div>
 
                 {msg && (
-                    <p className={`text-xs sm:text-sm text-center rounded-xl px-4 py-2 font-semibold shadow-sm ${msg.startsWith('❌') ? 'bg-red-900/50 text-red-300 border border-red-500/30' :
-                        msg.startsWith('✅') || msg.startsWith('🎲') || msg.startsWith('↩️') ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/30' :
+                    <p className={`text-xs sm:text-sm text-center rounded-xl px-4 py-2 font-semibold shadow-sm ${msgType === 'error' ? 'bg-red-900/50 text-red-300 border border-red-500/30' :
+                        msgType === 'success' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/30' :
                             'bg-slate-700/60 text-slate-300 border border-slate-600/40'
                         }`}>{msg}</p>
                 )}
@@ -351,6 +338,7 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
                                     <button
                                         key={ci}
                                         type="button"
+                                        aria-label={`${COL_HEADERS[ci]}${ri + 1}, ${isShip ? 'ship' : 'empty'}`}
                                         className={`aspect-square w-full border border-slate-800/40 transition-all duration-75
                       ${isShip ? (locked ? 'bg-emerald-500 cursor-default' : 'bg-emerald-500 hover:bg-red-400 cursor-grab active:cursor-grabbing') :
                                                 isPrev ? prevClass :
@@ -371,7 +359,6 @@ const ShipPlacement = memo(({ onShipPlaced, locked = false }) => {
                 {/* Transparent overlay captures all pointer events during drag */}
                 {dragState && (
                     <div
-                        ref={el => { if (el) try { el.setPointerCapture(1); } catch {} }}
                         className="fixed inset-0 z-[9999] cursor-grabbing"
                         style={{ touchAction: 'none' }}
                         onPointerMove={handlePointerMove}

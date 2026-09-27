@@ -6,6 +6,8 @@ struct PlacementScreen: View {
     @State private var hoverCell: (Int, Int)?
     @State private var draggingPlacement: PlacedShip? = nil
     @State private var dragTargetCell: (Int, Int)? = nil
+    @State private var dragMoved = false
+    @State private var dragOffsetInShip: (Int, Int)? = nil
 
     private var s: I18nStrings { vm.s }
     private let colHeaders = (0..<GRID_SIZE).map { String(UnicodeScalar(65 + $0)!) }
@@ -156,9 +158,8 @@ struct PlacementScreen: View {
                 .disabled(vm.isReady)
 
                 Button {
-                    vm.clientPlacements = []
-                    vm.playerBoard = createEmptyBoard()
-                    vm.shipsPlaced = 0
+                    vm.clearPlacement()
+                    selectedShip = 0
                 } label: {
                     Text("🗑️")
                         .padding(.horizontal, 14)
@@ -176,7 +177,7 @@ struct PlacementScreen: View {
                         .font(.caption2)
                         .foregroundColor(.gray)
                     Spacer()
-                    Text("\(SHIPS.count - vm.clientPlacements.count) remaining")
+                    Text("\(SHIPS.count - vm.clientPlacements.count) \(s.shipsRemaining)")
                         .font(.caption2)
                         .foregroundColor(.gray)
                 }
@@ -274,7 +275,7 @@ struct PlacementScreen: View {
                         }
                         .contentShape(Rectangle())
                         .gesture(
-                            DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                            DragGesture(minimumDistance: 8, coordinateSpace: .local)
                                 .onChanged { gesture in
                                     guard !vm.isReady && !vm.isSpectator else { return }
                                     guard geo.size.width > 0 && geo.size.height > 0 else { return }
@@ -296,11 +297,18 @@ struct PlacementScreen: View {
                                             draggingPlacement = existing
                                             vm.unplaceShip(shipId: existing.shipId)
                                             selectedShip = existing.shipId
+                                            dragMoved = false
+                                            dragOffsetInShip = (startRow - existing.row, startCol - existing.col)
                                         }
                                     }
 
                                     if draggingPlacement != nil {
-                                        dragTargetCell = (row, col)
+                                        if let ship = draggingPlacement {
+                                            let offset = dragOffsetInShip ?? (0, 0)
+                                            let target = (row - offset.0, col - offset.1)
+                                            dragTargetCell = target
+                                            dragMoved = target.0 != ship.row || target.1 != ship.col
+                                        }
                                     }
                                 }
                                 .onEnded { gesture in
@@ -308,17 +316,23 @@ struct PlacementScreen: View {
                                     let targetRow = dragTargetCell?.0 ?? ship.row
                                     let targetCol = dragTargetCell?.1 ?? ship.col
 
-                                    let (valid, _) = canPlaceShipOnBoard(board: vm.playerBoard, row: targetRow, col: targetCol, length: ship.length, dir: ship.direction)
-                                    if valid {
-                                        vm.placeShip(shipId: ship.shipId, row: targetRow, col: targetCol)
-                                        vm.setMessage(s.shipMoved, "success", duration: 1)
-                                    } else {
+                                    if !dragMoved {
                                         vm.placeShip(shipId: ship.shipId, row: ship.row, col: ship.col)
-                                        vm.setMessage(s.cantPlaceThere, "error", duration: 1)
+                                    } else {
+                                        let (valid, _) = canPlaceShipOnBoard(board: vm.playerBoard, row: targetRow, col: targetCol, length: ship.length, dir: ship.direction)
+                                        if valid {
+                                            vm.placeShip(shipId: ship.shipId, row: targetRow, col: targetCol)
+                                            vm.setMessage(s.shipMoved, "success", duration: 1)
+                                        } else {
+                                            vm.placeShip(shipId: ship.shipId, row: ship.row, col: ship.col)
+                                            vm.setMessage(s.cantPlaceThere, "error", duration: 1)
+                                        }
                                     }
 
                                     draggingPlacement = nil
                                     dragTargetCell = nil
+                                    dragMoved = false
+                                    dragOffsetInShip = nil
                                 }
                         )
                     }

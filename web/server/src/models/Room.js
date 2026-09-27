@@ -18,6 +18,7 @@ const {
     isValidCoordinate,
 } = require('../utils/sanitizers');
 const RateLimiter = require('../utils/RateLimiter');
+const SORTED_SHIP_LENGTHS = [...SHIPS].sort((a, b) => a - b);
 
 class Room {
     constructor(roomId, password = null, hostName = null, timeLimit = DEFAULT_GAME_TIME_SECONDS, hostId = null) {
@@ -286,8 +287,7 @@ class Room {
         const placed = this.players[playerId].ships;
         if (placed.length !== SHIPS.length) return false;
         const placedLengths = placed.map(s => s.length).sort((a, b) => a - b);
-        const expectedLengths = [...SHIPS].sort((a, b) => a - b);
-        return placedLengths.every((len, i) => len === expectedLengths[i]);
+        return placedLengths.every((len, i) => len === SORTED_SHIP_LENGTHS[i]);
     }
 
     markPlayerReady(playerId) {
@@ -311,9 +311,8 @@ class Room {
             }
             this.firstPlayer = this.currentTurn;
             // Initialize per-player chess clocks
-            const pids = this.getPlayerIds();
             this.playerTimeLeft = {};
-            pids.forEach(pid => { this.playerTimeLeft[pid] = this.timeLimit; });
+            playerIds.forEach(pid => { this.playerTimeLeft[pid] = this.timeLimit; });
             this.turnStartedAt = Date.now();
         }
 

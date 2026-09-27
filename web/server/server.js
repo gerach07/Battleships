@@ -20,6 +20,7 @@ const pkg = require('./package.json');
 const { GameState, DEFAULT_GAME_TIME_SECONDS, MIN_GAME_TIME_SECONDS, MAX_GAME_TIME_SECONDS, SHIPS, SHIP_NAMES } = require('./src/constants');
 const { sanitizeInput } = require('./src/utils/sanitizers');
 const { TimestampTracker } = require('./src/utils/RateLimiter');
+const EXPECTED_SHIP_LENGTHS = [...SHIPS].sort((a, b) => a - b);
 
 // Auth & API
 const { initFirebase, verifyToken } = require('./src/auth/firebase');
@@ -465,6 +466,12 @@ io.on('connection', (socket) => {
           delete freshRoom.playerTimeLeft[oldSocketId];
         }
 
+        // Swap bomb-used flag
+        if (freshRoom.bombUsed[oldSocketId] !== undefined) {
+          freshRoom.bombUsed[socket.id] = freshRoom.bombUsed[oldSocketId];
+          delete freshRoom.bombUsed[oldSocketId];
+        }
+
         // Swap current turn reference
         if (freshRoom.currentTurn === oldSocketId) freshRoom.currentTurn = socket.id;
         if (freshRoom.winner === oldSocketId) freshRoom.winner = socket.id;
@@ -509,6 +516,7 @@ io.on('connection', (socket) => {
         winner: freshRoom.winner,
         chatHistory: freshRoom.chatMessages || [],
         opponentName: opponent?.name || null,
+        opponentSocketId: opponentId || null,
         shipsPlaced: freshRoom.players[socket.id]?.shipsPlaced || false,
         serverNow: Date.now(),
         bombUsed: freshRoom.bombUsed[socket.id] || false,
@@ -547,13 +555,12 @@ io.on('connection', (socket) => {
     if (!Array.isArray(ships) || ships.length !== SHIPS.length) return;
 
     // Validate that submitted ship lengths match the expected fleet exactly
-    const expectedLengths = [...SHIPS].sort((a, b) => a - b);
     const submittedLengths = ships
       .filter(s => s && typeof s.length === 'number' && Number.isInteger(s.length))
       .map(s => s.length)
       .sort((a, b) => a - b);
-    if (submittedLengths.length !== expectedLengths.length ||
-        !submittedLengths.every((len, i) => len === expectedLengths[i])) {
+    if (submittedLengths.length !== EXPECTED_SHIP_LENGTHS.length ||
+        !submittedLengths.every((len, i) => len === EXPECTED_SHIP_LENGTHS[i])) {
       return socket.emit('error', { error: 'Invalid fleet composition' });
     }
 

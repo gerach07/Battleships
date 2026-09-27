@@ -7,6 +7,10 @@ export function createEmptyBoard() {
 /** Pure — checks 1-cell buffer including diagonals */
 export function canPlaceShipOnBoard(board, row, col, length, dir) {
     const cells = [];
+    if (!Number.isInteger(row) || !Number.isInteger(col) || !Number.isInteger(length) ||
+        row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE || length <= 0) {
+        return { valid: false, cells: [] };
+    }
     if (dir === 'horizontal') {
         if (col + length > GRID_SIZE) return { valid: false, cells: [] };
         for (let i = 0; i < length; i++) {
@@ -49,7 +53,7 @@ export function generateRandomPlacement() {
                 const { valid, cells } = canPlaceShipOnBoard(board, row, col, ship.length, dir);
                 if (valid) {
                     cells.forEach(c => { board[c.row][c.col] = CELL.SHIP; });
-                    placements.push({ row, col, length: ship.length, direction: dir });
+                    placements.push({ shipId: ship.id, row, col, length: ship.length, direction: dir });
                     placed = true;
                     break;
                 }

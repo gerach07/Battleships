@@ -8,6 +8,9 @@ func canPlaceShipOnBoard(
     board: Board, row: Int, col: Int, length: Int, dir: String
 ) -> (Bool, [(Int, Int)]) {
     var cells: [(Int, Int)] = []
+    guard row >= 0, row < GRID_SIZE, col >= 0, col < GRID_SIZE, length > 0 else {
+        return (false, [])
+    }
     if dir == "horizontal" {
         guard col + length <= GRID_SIZE else { return (false, []) }
         for i in 0..<length {

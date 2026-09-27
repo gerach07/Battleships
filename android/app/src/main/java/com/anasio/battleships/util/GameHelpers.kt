@@ -14,6 +14,9 @@ fun canPlaceShipOnBoard(
     board: Board, row: Int, col: Int, length: Int, dir: String
 ): Pair<Boolean, List<Pair<Int, Int>>> {
     val cells = mutableListOf<Pair<Int, Int>>()
+    if (row !in 0 until GRID_SIZE || col !in 0 until GRID_SIZE || length <= 0) {
+        return false to emptyList()
+    }
     if (dir == "horizontal") {
         if (col + length > GRID_SIZE) return false to emptyList()
         for (i in 0 until length) {

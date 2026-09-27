@@ -1135,6 +1135,7 @@ function App() {
       if (data.timeLimit) setGameTimeLimit(data.timeLimit);
       setWinner(data.winner || null);
       setOpponentName(data.opponentName || '');
+      setOpponentSocketId(data.opponentSocketId || null);
       if (data.shipsPlaced) setIsReady(true);
       if (data.chatHistory?.length > 0) {
         setChatMessages(data.chatHistory.slice(-100).map(msg => ({
@@ -1282,7 +1283,7 @@ function App() {
     } catch {
       setMessageWithTimeout(tRef.current('login.failedValidate'), 'error', 4000);
     }
-  }, [joinRoomCode, serverUrl, setMessageWithTimeout]);
+  }, [firebaseAuthToken, gameTimeLimit, joinRoomCode, serverUrl, setMessageWithTimeout, socket]);
 
   const handleSetLoginView = useCallback((view, join) => {
     if (view === 'enterName' && firebaseAuthToken) {

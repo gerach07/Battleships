@@ -123,6 +123,7 @@ final class GameViewModel: ObservableObject {
     private var playerId = ""
     private(set) var playerIdRef = ""
     private var joiningGame = false
+    private var rejoinInFlight = false
     private var shootPending = false
     private var shootTimeoutWork: DispatchWorkItem?
     private var hasConnectedOnce = false
@@ -153,7 +154,9 @@ final class GameViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] connected in
                 guard let self else { return }
-                if connected && self.hasConnectedOnce && !self.gameId.isEmpty {
+                if !connected { self.rejoinInFlight = false }
+                if connected && self.hasConnectedOnce && !self.gameId.isEmpty && !self.rejoinInFlight {
+                    self.rejoinInFlight = true
                     self.setMessage("🔄 \(self.s.reconnectingToGame)", "info")
                     var payload: [String: Any] = [
                         "gameId": self.gameId,
@@ -174,7 +177,8 @@ final class GameViewModel: ObservableObject {
         socketManager.forceReconnect()
         // Spectators have no grace period on the server — proactively re-register
         // so we get fresh board state even when the socket never fully dropped.
-        if isSpectator && !gameId.isEmpty && socketManager.isConnected {
+        if isSpectator && !gameId.isEmpty && socketManager.isConnected && !rejoinInFlight {
+            rejoinInFlight = true
             socketManager.emit("rejoinGame", [
                 "gameId": gameId,
                 "playerName": playerName,
@@ -305,6 +309,12 @@ final class GameViewModel: ObservableObject {
         clientPlacements.removeAll { $0.shipId == shipId }
         shipsPlaced = clientPlacements.count
         SoundManager.shared.playPlace()
+    }
+
+    func clearPlacement() {
+        clientPlacements = []
+        playerBoard = createEmptyBoard()
+        shipsPlaced = 0
     }
 
     func randomPlacement() {
@@ -615,6 +625,7 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 self.joiningGame = false
+                self.rejoinInFlight = false
                 let pid = data["playerId"] as? String ?? ""
                 self.playerId = pid
                 self.playerIdRef = pid
@@ -683,8 +694,14 @@ final class GameViewModel: ObservableObject {
                   data["error"] != nil || data["message"] != nil else { return }
             DispatchQueue.main.async {
                 self.joiningGame = false
+                self.rejoinInFlight = false
                 let msg = data["error"] as? String ?? data["message"] as? String ?? self.s.unknownError
                 self.setMessage("❌ \(msg)", "error")
+                if self.phase == "placement" && (msg.localizedCaseInsensitiveContains("invalid") ||
+                    msg.localizedCaseInsensitiveContains("placement") ||
+                    msg.localizedCaseInsensitiveContains("coordinates")) {
+                    self.isReady = false
+                }
                 if msg.contains("does not exist") || msg.contains("Incorrect password") || msg.contains("not found") {
                     self.loginView = "join"
                     self.gameId = ""
@@ -948,7 +965,22 @@ final class GameViewModel: ObservableObject {
         sm.on("spectatorBombResult") { [weak self] args in
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
-                if let boards = data["boards"] as? [[String: Any]] {
+                let boards = data["boards"] as? [[String: Any]] ?? []
+                if let shooterId = data["shooterId"] as? String,
+                   let targetPid = boards.first(where: { ($0["playerId"] as? String) != shooterId })?["playerId"] as? String {
+                    let cells = data["cells"] as? [[String: Any]] ?? []
+                    for cell in cells where cell["shipSunk"] as? Bool == true {
+                        guard let sunkCells = cell["sunkShipCells"] as? [[String: Any]] else { continue }
+                        let tuples = sunkCells.compactMap { c -> (Int, Int)? in
+                            guard let row = c["row"] as? Int, let col = c["col"] as? Int else { return nil }
+                            return (row, col)
+                        }
+                        if self.spectatorSunkDict[targetPid] == nil { self.spectatorSunkDict[targetPid] = [] }
+                        tuples.forEach { self.spectatorSunkDict[targetPid]?.insert("\($0.0),\($0.1)") }
+                        getSurroundingKeys(shipCells: tuples).forEach { self.spectatorSunkDict[targetPid]?.insert($0 + "_safe") }
+                    }
+                }
+                if !boards.isEmpty {
                     self.spectatorBoards = self.buildSpectatorBoards(boards)
                 }
                 self.currentTurn = data["currentTurn"] as? String
@@ -1158,6 +1190,7 @@ final class GameViewModel: ObservableObject {
             guard let self, let data = args.first as? [String: Any] else { return }
             DispatchQueue.main.async {
                 self.joiningGame = false
+                self.rejoinInFlight = false
                 self.isSpectator = true
                 if let rid = data["roomId"] as? String, !rid.isEmpty { self.gameId = rid }
                 let state = data["state"] as? String ?? ""
@@ -1270,8 +1303,11 @@ final class GameViewModel: ObservableObject {
                 if let tl = data["playerTimeLeft"] as? [String: Any] { self.playerTimeLeft = parseTimeLeft(tl) }
                 if let ts = data["turnStartedAt"] as? Double, ts > 0 { self.turnStartedAt = self.localizeTs(data, ts) }
                 if let tl = data["timeLimit"] as? Int, tl > 0 { self.gameTimeLimit = tl }
+                self.bombUsed = data["bombUsed"] as? Bool ?? false
+                self.bombMode = false
                 self.winner = data["winner"] as? String
                 self.opponentName = (data["opponentName"] as? String) ?? ""
+                self.opponentSocketId = data["opponentSocketId"] as? String
                 if data["shipsPlaced"] as? Bool == true { self.isReady = true }
 
                 // Restore chat
@@ -1308,6 +1344,7 @@ final class GameViewModel: ObservableObject {
         sm.on("rejoinFailed") { [weak self] args in
             guard let self else { return }
             DispatchQueue.main.async {
+                self.rejoinInFlight = false
                 let data = args.first as? [String: Any]
                 let reason = (data?["reason"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? self.s.couldNotRejoin
                 self.setMessage("❌ \(reason)", "error")

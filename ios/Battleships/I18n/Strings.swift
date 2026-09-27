@@ -115,6 +115,7 @@ struct I18nStrings {
     let opponentPlacing: String
     let lockedHint: String
     let shipsCount: String
+    let shipsRemaining: String
     let notReady: String
     let ready: String
     let placeAllFirst: String
@@ -313,6 +314,7 @@ let stringsEN = I18nStrings(
     opponentPlacing: "Waiting for {0} to place ships…",
     lockedHint: "Fleet locked in — tap Unready to make changes",
     shipsCount: "Ships",
+    shipsRemaining: "remaining",
     notReady: "Not Ready",
     ready: "Ready",
     placeAllFirst: "Place all ships first",
@@ -494,6 +496,7 @@ let stringsLV = I18nStrings(
     opponentPlacing: "Gaida, kamēr {0} izvieto kuģus…",
     lockedHint: "Flote apstiprināta — nospiediet Atsaukt, lai mainītu",
     shipsCount: "Kuģi",
+    shipsRemaining: "atlikuši",
     notReady: "Nav gatavs",
     ready: "Gatavs",
     placeAllFirst: "Vispirms izvietojiet visus kuģus",
@@ -675,6 +678,7 @@ let stringsRU = I18nStrings(
     opponentPlacing: "Ожидание, пока {0} расставит корабли…",
     lockedHint: "Флот подтверждён — нажмите Отменить, чтобы изменить",
     shipsCount: "Корабли",
+    shipsRemaining: "осталось",
     notReady: "Не готов",
     ready: "Готов",
     placeAllFirst: "Сначала расставьте все корабли",
