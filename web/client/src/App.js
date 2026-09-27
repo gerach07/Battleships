@@ -366,12 +366,14 @@ function App() {
     setGameId(restoredSession.roomId);
     setRoomPassword(restoredSession.password || '');
     setPlayerName(restoredSession.playerName);
-    socket.emit('rejoinGame', {
+    const payload = {
       gameId: restoredSession.roomId,
       playerName: restoredSession.playerName,
       password: restoredSession.password || null,
       sessionToken: restoredSession.sessionToken,
-    });
+    };
+    console.log('[client] emitting saved-session rejoin', payload);
+    socket.emit('rejoinGame', payload);
     return true;
   }, [restoredSession, socket]);
 
@@ -1269,6 +1271,14 @@ function App() {
     });
 
     socket.on('rejoinFailed', (data) => {
+      console.log('[client] rejoinFailed', {
+        reason: data?.reason,
+        restoredSession,
+        gameId: gameIdRef.current,
+        playerName: playerNameRef.current,
+        roomPassword: roomPasswordRef.current,
+        sessionToken: sessionTokenRef.current,
+      });
       clearActiveRoomSession();
       savedSessionRejoinAttemptedRef.current = false;
       setMessageWithTimeout(`❌ ${data?.reason || 'Could not rejoin'}`, 'error', 5000);

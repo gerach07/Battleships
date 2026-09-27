@@ -444,7 +444,17 @@ io.on('connection', (socket) => {
     if (!room) return socket.emit('rejoinFailed', { reason: 'Room no longer exists' });
     if (!room.checkPassword(pwd)) return socket.emit('rejoinFailed', { reason: 'Incorrect password' });
 
+    console.log('[server] rejoin request', {
+      roomId,
+      playerName: name,
+      sessionToken: sessionToken || null,
+      mongoReady: mongoose.connection.readyState === 1,
+      mongoUriSet: !!process.env.MONGODB_URI,
+      pendingGrace: !!pendingDisconnects.get(`${roomId}:${name}`),
+    });
+
     const durableSession = await findReconnectSession({ roomId, playerName: name, sessionToken });
+    console.log('[server] durableSession lookup', durableSession);
     if (!durableSession) {
       const key = `${roomId}:${name}`;
       const pending = pendingDisconnects.get(key);
